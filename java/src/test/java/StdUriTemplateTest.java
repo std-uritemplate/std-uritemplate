@@ -27,4 +27,12 @@ public class StdUriTemplateTest {
         assert("/v/value".equals(result));
     }
 
+    @Test
+    void toDebug3() {
+        var substs = new HashMap();
+        substs.put("undef", new HashMap());
+        var result = StdUriTemplate.expand("X{.undef}", substs);
+        System.out.println(result);
+        assert("X".equals(result));
+    }
 }

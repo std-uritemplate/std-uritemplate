@@ -70,13 +70,13 @@ public class StdUriTemplate {
 
         @Override
         String expand(String key, String value, int maxChar) {
-            return trim(value.replace(" ", "%20"), maxChar);
+            return freeValue(value, maxChar);
         }
 
         // TODO: verify!
         @Override
         String expandNext(String key, String value, int maxChar) {
-            return trim(value.replace(" ", "%20"), maxChar);
+            return freeValue(value, maxChar);
         }
     }
 
@@ -89,13 +89,13 @@ public class StdUriTemplate {
         }
         @Override
         String expand(String key, String value, int maxChar) {
-            return trim(value.replace(" ", "%20"), maxChar);
+            return freeValue(value, maxChar);
         }
 
         // TODO: verify!
         @Override
         String expandNext(String key, String value, int maxChar) {
-            return trim(value.replace(" ", "%20"), maxChar);
+            return freeValue(value, maxChar);
         }
     }
 
@@ -251,9 +251,18 @@ public class StdUriTemplate {
         return (maxChar < 0) ? value : value.substring(0, Math.min(maxChar, value.length()));
     }
 
+    // Double check correctness
     static String expandValue(String value, int maxChar) {
         return URLEncoder.encode(trim(value, maxChar), StandardCharsets.UTF_8)
                 .replace("+", "%20");
+    }
+
+    // Double check correctness
+    static String freeValue(String value, int maxChar) {
+        return trim(value
+                .replace("%", "%25")
+                .replace(" ", "%20")
+                , maxChar);
     }
 
     public static Modifier getModifier(String token) {
@@ -287,12 +296,25 @@ public class StdUriTemplate {
         Modifier firstMod = null;
         for (var token: tokens) {
             var mod = getModifier(token);
-            // composite is handled poorly :-( review again!
+            // composite handling is a little messy, couldn't find anything better
 
             if (substitutions.containsKey(mod.key())) {
                 Object value = substitutions.get(mod.key());
-                if (value == null) {
+
+                // null and equivalent, simply skip
+                if (value == null ||
+                        (value instanceof List && ((List) value).isEmpty()) || // verify -> not sure its tested
+                        (value instanceof Map && ((Map) value).isEmpty())) {
                     continue;
+                }
+
+                // Number are supported apparently, should they be supported even in List and Maps?
+                // This seems like a dumb but working mechanism
+                if (value instanceof Integer ||
+                    value instanceof Long ||
+                    value instanceof Float ||
+                    value instanceof Double) {
+                    value = value.toString();
                 }
 
                 if (firstMod == null) {
@@ -303,58 +325,51 @@ public class StdUriTemplate {
                 }
                 if (value instanceof String) {
                     result.append(firstMod.expand(mod.key(), (String) value, mod.maxChar()));
+                } else if (value instanceof Integer) {
                 } else if (value instanceof List) {
                     boolean first = true;
-                    if (mod.composite) {
-                        for (var subst : (List<String>) value) {
-                            if (first) {
-                                first = false;
-                            } else {
-                                result.append(firstMod.separator());
-                            }
+                    for (var subst : (List<String>) value) {
+                        if (first) {
+                            first = false;
                             result.append(firstMod.expand(mod.key(), subst, mod.maxChar()));
-                        }
-                    } else {
-                        for (var subst : (List<String>) value) {
-                            if (first) {
-                                first = false;
+                        } else {
+                            if (mod.composite) {
+                                result.append(firstMod.separator());
                                 result.append(firstMod.expand(mod.key(), subst, mod.maxChar()));
                             } else {
                                 result.append(',');
-                                // TODO: verify expandNext -> is it the right abstraction?
                                 result.append(firstMod.expandNext(mod.key(), subst, mod.maxChar()));
                             }
                         }
                     }
                 } else if (value instanceof Map) {
                     boolean first = true;
-                    if (mod.composite) {
-                        for (var subst: ((Map<String, String>) value).entrySet()) {
-                            if (first) {
-                                first = false;
+                    for (var subst: ((Map<String, String>) value).entrySet()) {
+                        if (first) {
+                            first = false;
+                            if (mod.composite()) {
+                                result.append(firstMod.expandNext(mod.key(), subst.getKey(), mod.maxChar()));
                             } else {
-                                result.append(firstMod.separator());
-                            }
-                            // TODO: Verify expandNext here
-                            result.append(firstMod.expandNext(mod.key(), subst.getKey(), mod.maxChar()));
-                            result.append('=');
-                            result.append(firstMod.expandNext(mod.key(), subst.getValue(), mod.maxChar()));
-                        }
-                    } else {
-                        for (var subst: ((Map<String, String>) value).entrySet()) {
-                            if (first) {
-                                first = false;
                                 result.append(firstMod.expand(mod.key(), subst.getKey(), mod.maxChar()));
+                            }
+                        } else {
+                            if (mod.composite()) {
+                                result.append(firstMod.separator());
                             } else {
                                 result.append(',');
-                                result.append(firstMod.expandNext(mod.key(), subst.getKey(), mod.maxChar()));
                             }
-                            result.append(',');
-                            result.append(firstMod.expandNext(mod.key(), subst.getValue(), mod.maxChar()));
+                            result.append(firstMod.expandNext(mod.key(), subst.getKey(), mod.maxChar()));
                         }
+
+                        if (mod.composite()) {
+                            result.append('=');
+                        } else {
+                            result.append(',');
+                        }
+                        result.append(firstMod.expandNext(mod.key(), subst.getValue(), mod.maxChar()));
                     }
                 } else {
-                    throw new IllegalArgumentException("Substitution type not supported, found " + value.getClass() + ", but only String, List<String> and Map<String, String> are allowed.");
+                    throw new IllegalArgumentException("Substitution type not supported, found " + value.getClass() + ", but only Integer, Float, Long, Double, String, List<String> and Map<String, String> are allowed.");
                 }
             }
         }
