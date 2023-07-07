@@ -287,18 +287,20 @@ public class StdUriTemplate {
         Modifier firstMod = null;
         for (var token: tokens) {
             var mod = getModifier(token);
-            if (firstMod == null) {
-                firstMod = mod;
-                result.append(mod.prefix());
-            } else {
-                result.append(firstMod.separator());
-            }
-
             // composite is handled poorly :-( review again!
 
             if (substitutions.containsKey(mod.key())) {
                 Object value = substitutions.get(mod.key());
+                if (value == null) {
+                    continue;
+                }
 
+                if (firstMod == null) {
+                    firstMod = mod;
+                    result.append(mod.prefix());
+                } else {
+                    result.append(firstMod.separator());
+                }
                 if (value instanceof String) {
                     result.append(firstMod.expand(mod.key(), (String) value, mod.maxChar()));
                 } else if (value instanceof List) {
