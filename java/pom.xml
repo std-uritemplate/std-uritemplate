@@ -5,7 +5,7 @@
   <groupId>org.uritemplate</groupId>
   <artifactId>std-uritemplate</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  
+
   <name>Standard Uri Template</name>
 
   <properties>
@@ -15,5 +15,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>RELEASE</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
 </project>

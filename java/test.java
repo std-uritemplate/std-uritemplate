@@ -1,6 +1,6 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 
-//SOURCES src/main/java/org/uritemplate/StdUriTemplate.java
+//SOURCES src/main/java/org/uritemplate/StdUriTemplate2.java
 //DEPS com.fasterxml.jackson.core:jackson-databind:2.13.0
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.HashMap;
 import static java.lang.System.*;
 
-import org.uritemplate.StdUriTemplate;
+import org.uritemplate.StdUriTemplate2;
 
 public class test {
 
@@ -21,7 +21,7 @@ public class test {
         var objectReader = new ObjectMapper().readerFor(Map.class);
 
         try (var fis = new FileInputStream(args[1])) {
-            out.println(StdUriTemplate.expand(args[0], objectReader.readValue(fis)));
+            out.println(StdUriTemplate2.expand(args[0], objectReader.readValue(fis)));
         } catch (Exception e) {
             e.printStackTrace();
             // * false - if the second member is boolean false, expansion is expected to fail (i.e., the template was invalid).

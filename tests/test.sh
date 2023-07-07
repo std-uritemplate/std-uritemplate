@@ -29,6 +29,8 @@ for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER
 
     echo "Testing Section with Key: '${LEVEL_KEY}'"
     PARAMS=$(jq -rc ".[\"${LEVEL_KEY}\"].variables" ${SPEC_FILE})
+    # passing strings with spaces seems to break a lot of stuffs, using a File instead to keep it simpler
+    echo "${PARAMS}" > ${SCRIPT_DIR}/substitutions.json
 
     jq -rc ".[\"${LEVEL_KEY}\"].testcases[]" ${SPEC_FILE} | while read -r testcase; do
       TEMPLATE=$(echo $testcase | jq -rc '.[0]')
@@ -37,9 +39,6 @@ for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER
       echo 0 > "${SCRIPT_DIR}/result"
       RESULT=$(${SCRIPT_DIR}/../${LANGUAGE}/test.sh "$TEMPLATE" "${SCRIPT_DIR}/substitutions.json")
       echo ${POSSIBLE_RESULTS} | jq -rc ".[]" | while read -r possible_result; do
-
-        # passing strings with spaces seems to break a lot of stuffs, using a File instead to keep it simpler
-        echo "${PARAMS}" > ${SCRIPT_DIR}/substitutions.json
         if [ "${possible_result}" == "${RESULT}" ]; then
           echo 1 > "${SCRIPT_DIR}/result"
         fi
