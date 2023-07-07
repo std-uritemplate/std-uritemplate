@@ -53,7 +53,11 @@ public class StdUriTemplate {
             }
         }
 
-        return result.toString();
+        if (token == null) {
+            return result.toString();
+        } else {
+            throw new IllegalArgumentException("Unterminated token");
+        }
     }
 
     static final class NoMod extends Modifier {

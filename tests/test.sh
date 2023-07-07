@@ -6,7 +6,7 @@ LANGUAGE=${1}
 FILE_FILTER=${2:-"*.json"}
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-echo "Going to test Level 1 compatibility with language ${LANGUAGE}"
+echo "Going to test compatibility with language ${LANGUAGE}"
 
 if [ ! -d ${SCRIPT_DIR}/../${LANGUAGE} ]; then
   echo "Language ${LANGUAGE} doesn't exists! Please first create a folder and follow the instructions to create a new implementation"
@@ -34,7 +34,7 @@ for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER
 
     jq -rc ".[\"${LEVEL_KEY}\"].testcases[]" ${SPEC_FILE} | while read -r testcase; do
       TEMPLATE=$(echo $testcase | jq -rc '.[0]')
-      POSSIBLE_RESULTS=$(echo $testcase | jq -rc '.[1] | if type=="string" then [.] else . end')
+      POSSIBLE_RESULTS=$(echo $testcase | jq -rc '.[1] | if type=="string" then [.] else if type=="boolean" then [.] else . end end')
       
       echo 0 > "${SCRIPT_DIR}/result"
       RESULT=$(${SCRIPT_DIR}/../${LANGUAGE}/test.sh "$TEMPLATE" "${SCRIPT_DIR}/substitutions.json")
