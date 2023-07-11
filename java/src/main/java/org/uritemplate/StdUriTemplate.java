@@ -3,6 +3,7 @@ package org.uritemplate;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -185,13 +186,39 @@ public class StdUriTemplate {
         }
     }
 
-    static class Modifier {
+    static class Modifier extends Token {
+        Modifier(String token) {
+            super(token);
+        }
+
+        String expand(String key, String value, int maxChar) {
+            return expandValue(value, maxChar);
+        }
+
+        String expandNext(String key, String value, int maxChar) {
+            return expandValue(value, maxChar);
+        }
+
+        char separator() {
+            return ',';
+        }
+
+        String key() {
+            return sanitized.substring(1);
+        }
+
+        String prefix() {
+            return "";
+        }
+    }
+
+    static class Token {
         protected final String token;
         protected final String sanitized;
         protected final int maxChar;
         protected final boolean composite;
 
-        Modifier(String token) {
+        Token(String token) {
             this.token = token;
 
             var sanitized = token;
@@ -214,18 +241,6 @@ public class StdUriTemplate {
             this.sanitized = sanitized;
         }
 
-        String expand(String key, String value, int maxChar) {
-            return expandValue(value, maxChar);
-        }
-
-        String expandNext(String key, String value, int maxChar) {
-            return expandValue(value, maxChar);
-        }
-
-        String key() {
-            return sanitized.substring(1);
-        }
-
         String sanitized() {
             return sanitized;
         }
@@ -237,14 +252,6 @@ public class StdUriTemplate {
         int maxChar() {
             return maxChar;
         }
-
-        char separator() {
-            return ',';
-        }
-
-        String prefix() {
-            return "";
-        }
     }
 
     static String expandKV(String key, String value, int maxChar) {
@@ -255,18 +262,93 @@ public class StdUriTemplate {
         return (maxChar < 0) ? value : value.substring(0, Math.min(maxChar, value.length()));
     }
 
+    private static final Map<String, String> RESERVED = new HashMap<>() {{
+            put(":", URLEncoder.encode(":", StandardCharsets.UTF_8));
+            put("/", URLEncoder.encode("/", StandardCharsets.UTF_8));
+            put("?", URLEncoder.encode("?", StandardCharsets.UTF_8));
+            put("#", URLEncoder.encode("#", StandardCharsets.UTF_8));
+            put("[", URLEncoder.encode("[", StandardCharsets.UTF_8));
+            put("]", URLEncoder.encode("]", StandardCharsets.UTF_8));
+            put("@", URLEncoder.encode("@", StandardCharsets.UTF_8));
+            put("!", URLEncoder.encode("!", StandardCharsets.UTF_8));
+            put("$", URLEncoder.encode("$", StandardCharsets.UTF_8));
+            put("&", URLEncoder.encode("&", StandardCharsets.UTF_8));
+            put("(", URLEncoder.encode("(", StandardCharsets.UTF_8));
+            put(")", URLEncoder.encode(")", StandardCharsets.UTF_8));
+            put("*", URLEncoder.encode("*", StandardCharsets.UTF_8));
+            put("+", URLEncoder.encode("+", StandardCharsets.UTF_8));
+            put(",", URLEncoder.encode(",", StandardCharsets.UTF_8));
+            put(";", URLEncoder.encode(";", StandardCharsets.UTF_8));
+            put("=", URLEncoder.encode("=", StandardCharsets.UTF_8));
+            put(" ", "%20");
+    }};
+
     // Double check correctness
     static String expandValue(String value, int maxChar) {
-        return URLEncoder.encode(trim(value, maxChar), StandardCharsets.UTF_8)
-                .replace("+", "%20");
+        return expandValueImpl(value, maxChar, true);
+    }
+
+    // TODO: improve this!
+    static String expandValueImpl(String value, int maxChar, boolean replaceReserved) {
+        int i = 0;
+        StringBuilder result = new StringBuilder();
+        StringBuilder percentageBuffer = null;
+        for (var byt: value.getBytes()) {
+            i++;
+            if (maxChar != -1 && i > maxChar) {
+                break;
+            }
+
+            char character = (char) byt;
+            if (character == '%') {
+                percentageBuffer = new StringBuilder();
+                percentageBuffer.append(character);
+            }
+
+            if (percentageBuffer != null) {
+                if (percentageBuffer.length() <= 3) {
+                    percentageBuffer.append(character);
+                } else {
+                    boolean isReserved = false;
+                    for (var v: RESERVED.values()) {
+                        if (percentageBuffer.toString().equals(v)) {
+                            isReserved = true;
+                            break;
+                        }
+                    }
+                    if (isReserved) {
+                        result.append(percentageBuffer);
+                        percentageBuffer = null;
+                    } else {
+                        result.append("%25");
+                        result.append(expandValue(percentageBuffer.substring(1), -1));
+                        percentageBuffer = null;
+                    }
+                }
+            } else {
+                // TODO: this comparison can be much cheaper
+                var subst = RESERVED.get("" + character);
+                if (subst == null) {
+                    result.append(character);
+                } else if (replaceReserved || (!replaceReserved && character == ' ')) {
+                    result.append(subst);
+                } else {
+                    result.append(character);
+                }
+            }
+        }
+
+        if (percentageBuffer != null) {
+            // not found, just appending
+            result.append(percentageBuffer);
+        }
+
+        return result.toString();
     }
 
     // Double check correctness
     static String freeValue(String value, int maxChar) {
-        return trim(value
-                .replace("%", "%25")
-                .replace(" ", "%20")
-                , maxChar);
+        return expandValueImpl(value, maxChar, false);
     }
 
     public static Modifier getModifier(String token) {
@@ -297,13 +379,21 @@ public class StdUriTemplate {
     private static String expandTokens(List<String> tokens, Map<String, Object> substitutions) {
         StringBuilder result = new StringBuilder();
 
-        Modifier firstMod = null;
+        boolean firstToken = true;
+        Modifier mod = null;
+        String key;
         for (var token: tokens) {
-            var mod = getModifier(token);
+            Token tok = new Token(token);
+            if (mod == null) {
+                mod = getModifier(token);
+                key = mod.key();
+            } else {
+                key = tok.sanitized();
+            }
             // composite handling is a little messy, couldn't find anything better
 
-            if (substitutions.containsKey(mod.key())) {
-                Object value = substitutions.get(mod.key());
+            if (substitutions.containsKey(key)) {
+                Object value = substitutions.get(key);
 
                 // null and equivalent, simply skip
                 if (value == null ||
@@ -321,28 +411,29 @@ public class StdUriTemplate {
                     value = value.toString();
                 }
 
-                if (firstMod == null) {
-                    firstMod = mod;
+
+                if (firstToken) {
                     result.append(mod.prefix());
                 } else {
-                    result.append(firstMod.separator());
+                    result.append(mod.separator());
                 }
+
                 if (value instanceof String) {
-                    result.append(firstMod.expand(mod.key(), (String) value, mod.maxChar()));
+                    result.append(mod.expand(key, (String) value, tok.maxChar()));
                 } else if (value instanceof Integer) {
                 } else if (value instanceof List) {
                     boolean first = true;
                     for (var subst : (List<String>) value) {
                         if (first) {
                             first = false;
-                            result.append(firstMod.expand(mod.key(), subst, mod.maxChar()));
+                            result.append(mod.expand(key, subst, tok.maxChar()));
                         } else {
-                            if (mod.composite) {
-                                result.append(firstMod.separator());
-                                result.append(firstMod.expand(mod.key(), subst, mod.maxChar()));
+                            if (tok.composite) {
+                                result.append(mod.separator());
+                                result.append(mod.expand(key, subst, tok.maxChar()));
                             } else {
                                 result.append(',');
-                                result.append(firstMod.expandNext(mod.key(), subst, mod.maxChar()));
+                                result.append(mod.expandNext(key, subst, tok.maxChar()));
                             }
                         }
                     }
@@ -351,18 +442,18 @@ public class StdUriTemplate {
                     for (var subst: ((Map<String, String>) value).entrySet()) {
                         if (first) {
                             first = false;
-                            if (mod.composite()) {
-                                result.append(firstMod.expandNext(mod.key(), subst.getKey(), mod.maxChar()));
+                            if (tok.composite()) {
+                                result.append(mod.expandNext(key, subst.getKey(), tok.maxChar()));
                             } else {
-                                result.append(firstMod.expand(mod.key(), subst.getKey(), mod.maxChar()));
+                                result.append(mod.expand(key, subst.getKey(), tok.maxChar()));
                             }
                         } else {
                             if (mod.composite()) {
-                                result.append(firstMod.separator());
+                                result.append(mod.separator());
                             } else {
                                 result.append(',');
                             }
-                            result.append(firstMod.expandNext(mod.key(), subst.getKey(), mod.maxChar()));
+                            result.append(mod.expandNext(key, subst.getKey(), mod.maxChar()));
                         }
 
                         if (mod.composite()) {
@@ -370,11 +461,13 @@ public class StdUriTemplate {
                         } else {
                             result.append(',');
                         }
-                        result.append(firstMod.expandNext(mod.key(), subst.getValue(), mod.maxChar()));
+                        result.append(mod.expandNext(key, subst.getValue(), mod.maxChar()));
                     }
                 } else {
                     throw new IllegalArgumentException("Substitution type not supported, found " + value.getClass() + ", but only Integer, Float, Long, Double, String, List<String> and Map<String, String> are allowed.");
                 }
+
+                firstToken = false;
             }
         }
 
