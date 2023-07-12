@@ -205,7 +205,16 @@ public class StdUriTemplate {
         }
 
         String key() {
-            return sanitized.substring(1);
+            var key = sanitized.substring(1);
+            // validation
+            // TODO: check if this is the right level to do this ...
+            for (var res: RESERVED) {
+                if (key.contains(res)) {
+                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the " + res + " character");
+                }
+            }
+
+            return key;
         }
 
         String prefix() {
@@ -239,13 +248,6 @@ public class StdUriTemplate {
                 composite = true;
             } else {
                 composite = false;
-            }
-
-            // validation
-            for (var res: RESERVED) {
-                if (sanitized.contains(res)) {
-                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the " + res + " character");
-                }
             }
 
             this.sanitized = sanitized;

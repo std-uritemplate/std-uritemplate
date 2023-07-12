@@ -1,4 +1,5 @@
 uritemplate-test
 tests/substitutions.json
+tests/template.txt
 tests/result
 .idea

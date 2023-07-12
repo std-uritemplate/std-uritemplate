@@ -5,6 +5,9 @@
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import static java.lang.System.*;
@@ -21,7 +24,11 @@ public class test {
         var objectReader = new ObjectMapper().readerFor(Map.class);
 
         try (var fis = new FileInputStream(args[1])) {
-            out.println(StdUriTemplate.expand(args[0], objectReader.readValue(fis)));
+            var template = new String(Files.readAllBytes(Paths.get(args[0])));
+            out.println(StdUriTemplate.expand(template, objectReader.readValue(fis)));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
         } catch (Exception e) {
             e.printStackTrace();
             // * false - if the second member is boolean false, expansion is expected to fail (i.e., the template was invalid).
