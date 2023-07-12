@@ -41,7 +41,7 @@ public class StdUriTemplate {
                         tokens.add(token.toString());
                         token = new StringBuilder();
                         break;
-                    };
+                    }
                     // Intentional fall-through for commas outside the {}
                 default:
                     if (token != null) {
@@ -61,7 +61,9 @@ public class StdUriTemplate {
     }
 
     private static final class NoMod extends Modifier {
-        NoMod(String token) { super(token); }
+        NoMod(String token) {
+            super(token);
+        }
 
         @Override
         String key() {
@@ -70,12 +72,15 @@ public class StdUriTemplate {
     }
 
     private static final class Plus extends Modifier {
-        Plus(String token) { super(token); }
+        Plus(String token) {
+            super(token);
+        }
 
         @Override
         String expand(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
         }
+
         @Override
         String expandElements(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
@@ -83,16 +88,20 @@ public class StdUriTemplate {
     }
 
     private static final class Dash extends Modifier {
-        Dash(String token) { super(token); }
+        Dash(String token) {
+            super(token);
+        }
 
         @Override
         String prefix() {
             return "#";
         }
+
         @Override
         String expand(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
         }
+
         @Override
         String expandElements(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
@@ -100,12 +109,15 @@ public class StdUriTemplate {
     }
 
     private static final class Dot extends Modifier {
-        Dot(String token) { super(token); }
+        Dot(String token) {
+            super(token);
+        }
 
         @Override
         char separator() {
             return '.';
         }
+
         @Override
         String prefix() {
             return ".";
@@ -113,12 +125,15 @@ public class StdUriTemplate {
     }
 
     private static final class Slash extends Modifier {
-        Slash(String token) { super(token); }
+        Slash(String token) {
+            super(token);
+        }
 
         @Override
         char separator() {
             return '/';
         }
+
         @Override
         String prefix() {
             return "/";
@@ -126,16 +141,20 @@ public class StdUriTemplate {
     }
 
     private static final class Semicolon extends Modifier {
-        Semicolon(String token) { super(token); }
+        Semicolon(String token) {
+            super(token);
+        }
 
         @Override
         char separator() {
             return ';';
         }
+
         @Override
         String prefix() {
             return ";";
         }
+
         @Override
         String expand(String key, String value, int maxChar) {
             var encoded = expandValue(value, maxChar);
@@ -148,16 +167,20 @@ public class StdUriTemplate {
     }
 
     private static final class QuestionMark extends Modifier {
-        QuestionMark(String token) { super(token); }
+        QuestionMark(String token) {
+            super(token);
+        }
 
         @Override
         char separator() {
             return '&';
         }
+
         @Override
         String prefix() {
             return "?";
         }
+
         @Override
         String expand(String key, String value, int maxChar) {
             return expandKV(key, value, maxChar);
@@ -165,16 +188,20 @@ public class StdUriTemplate {
     }
 
     private static final class At extends Modifier {
-        At(String token) { super(token); }
+        At(String token) {
+            super(token);
+        }
 
         @Override
         char separator() {
             return '&';
         }
+
         @Override
         String prefix() {
             return "&";
         }
+
         @Override
         String expand(String key, String value, int maxChar) {
             return expandKV(key, value, maxChar);
@@ -264,7 +291,7 @@ public class StdUriTemplate {
         if (token.isEmpty()) {
             throw new IllegalArgumentException("Empty key found");
         }
-        for (var res: RESERVED) {
+        for (var res : RESERVED) {
             if (token.contains(res)) {
                 throw new IllegalArgumentException("Found a key with invalid content: `" + token + "` contains the '" + res + "' character");
             }
@@ -340,7 +367,6 @@ public class StdUriTemplate {
         return result.toString();
     }
 
-    // Double check correctness
     private static String freeValue(String value, int maxChar) {
         return expandValueImpl(value, maxChar, false);
     }
@@ -372,7 +398,7 @@ public class StdUriTemplate {
         boolean firstToken = true;
         Modifier mod = null;
         String key;
-        for (var token: tokens) {
+        for (var token : tokens) {
             Token tok = new Token(token);
             if (mod == null) {
                 mod = getModifier(token);
@@ -388,17 +414,17 @@ public class StdUriTemplate {
 
                 // null and equivalent, simply skip
                 if (value == null ||
-                    (value instanceof List && ((List) value).isEmpty()) || // verify -> not sure its tested
-                    (value instanceof Map && ((Map) value).isEmpty())) {
+                        (value instanceof List && ((List) value).isEmpty()) || // verify -> not sure its tested
+                        (value instanceof Map && ((Map) value).isEmpty())) {
                     continue;
                 }
 
-                // Number are supported apparently, should they be supported even in List and Maps?
-                // This seems like a dumb but working mechanism
+                // Number are supported, should they be supported even in List and Maps?
+                // This seems like a dumb but working way of supporting them
                 if (value instanceof Integer ||
-                    value instanceof Long ||
-                    value instanceof Float ||
-                    value instanceof Double) {
+                        value instanceof Long ||
+                        value instanceof Float ||
+                        value instanceof Double) {
                     value = value.toString();
                 }
 
@@ -430,7 +456,7 @@ public class StdUriTemplate {
                     }
                 } else if (value instanceof Map) {
                     boolean first = true;
-                    for (var subst: ((Map<String, String>) value).entrySet()) {
+                    for (var subst : ((Map<String, String>) value).entrySet()) {
                         if (tok.maxChar() != -1) {
                             throw new IllegalArgumentException("Value trimming is not allowed on Maps");
                         }
