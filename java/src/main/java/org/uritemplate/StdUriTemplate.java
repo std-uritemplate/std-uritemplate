@@ -10,11 +10,11 @@ import java.util.Map;
 public class StdUriTemplate {
 
     // Public API
-    // the substitutions map accepts: String, List<String> and Map<String, String>
     public static String expand(final String template, final Map<String, Object> substitutions) {
         return expandImpl(template, substitutions);
     }
 
+    // Private implementation
     private static String expandImpl(String str, Map<String, Object> substitutions) {
         StringBuilder result = new StringBuilder();
 
