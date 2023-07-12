@@ -1,9 +1,11 @@
 package org.uritemplate;
 
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +22,7 @@ public class StdUriTemplate {
 
         StringBuilder token = null;
         List<String> tokens = null;
-        for (var byt : str.getBytes()) {
-            char character = (char) byt;
+        for (var character : str.toCharArray()) {
 
             switch (character) {
                 case '{':
@@ -262,89 +263,214 @@ public class StdUriTemplate {
         return (maxChar < 0) ? value : value.substring(0, Math.min(maxChar, value.length()));
     }
 
-    private static final Map<String, String> RESERVED = new HashMap<>() {{
-            put(":", URLEncoder.encode(":", StandardCharsets.UTF_8));
-            put("/", URLEncoder.encode("/", StandardCharsets.UTF_8));
-            put("?", URLEncoder.encode("?", StandardCharsets.UTF_8));
-            put("#", URLEncoder.encode("#", StandardCharsets.UTF_8));
-            put("[", URLEncoder.encode("[", StandardCharsets.UTF_8));
-            put("]", URLEncoder.encode("]", StandardCharsets.UTF_8));
-            put("@", URLEncoder.encode("@", StandardCharsets.UTF_8));
-            put("!", URLEncoder.encode("!", StandardCharsets.UTF_8));
-            put("$", URLEncoder.encode("$", StandardCharsets.UTF_8));
-            put("&", URLEncoder.encode("&", StandardCharsets.UTF_8));
-            put("(", URLEncoder.encode("(", StandardCharsets.UTF_8));
-            put(")", URLEncoder.encode(")", StandardCharsets.UTF_8));
-            put("*", URLEncoder.encode("*", StandardCharsets.UTF_8));
-            put("+", URLEncoder.encode("+", StandardCharsets.UTF_8));
-            put(",", URLEncoder.encode(",", StandardCharsets.UTF_8));
-            put(";", URLEncoder.encode(";", StandardCharsets.UTF_8));
-            put("=", URLEncoder.encode("=", StandardCharsets.UTF_8));
-            put(" ", "%20");
-    }};
+//    private static final Map<Character, String> RESERVED = new HashMap<>() {{
+//            put(':', URLEncoder.encode(":", StandardCharsets.UTF_8));
+//            put('/', URLEncoder.encode("/", StandardCharsets.UTF_8));
+//            put('?', URLEncoder.encode("?", StandardCharsets.UTF_8));
+//            put('#', URLEncoder.encode("#", StandardCharsets.UTF_8));
+//            put('[', URLEncoder.encode("[", StandardCharsets.UTF_8));
+//            put(']', URLEncoder.encode("]", StandardCharsets.UTF_8));
+//            put('@', URLEncoder.encode("@", StandardCharsets.UTF_8));
+//            put('!', URLEncoder.encode("!", StandardCharsets.UTF_8));
+//            put('$', URLEncoder.encode("$", StandardCharsets.UTF_8));
+//            put('&', URLEncoder.encode("&", StandardCharsets.UTF_8));
+//            put('(', URLEncoder.encode("(", StandardCharsets.UTF_8));
+//            put(')', URLEncoder.encode(")", StandardCharsets.UTF_8));
+//            put('*', URLEncoder.encode("*", StandardCharsets.UTF_8));
+//            put('+', URLEncoder.encode("+", StandardCharsets.UTF_8));
+//            put(',', URLEncoder.encode(",", StandardCharsets.UTF_8));
+//            put(';', URLEncoder.encode(";", StandardCharsets.UTF_8));
+//            put('=', URLEncoder.encode("=", StandardCharsets.UTF_8));
+//            put(' ', "%20");
+//
+//            // Discovered by the extended tests - hopefully this doesn't break the basis
+//            put('<', URLEncoder.encode("<", StandardCharsets.UTF_8));
+//            put('>', URLEncoder.encode(">", StandardCharsets.UTF_8));
+//            put('{', URLEncoder.encode("{", StandardCharsets.UTF_8));
+//            put('}', URLEncoder.encode("}", StandardCharsets.UTF_8));
+//    }};
 
     // Double check correctness
     static String expandValue(String value, int maxChar) {
         return expandValueImpl(value, maxChar, true);
     }
 
-    // TODO: improve this!
     static String expandValueImpl(String value, int maxChar, boolean replaceReserved) {
-        int i = 0;
-        StringBuilder result = new StringBuilder();
-        StringBuilder percentageBuffer = null;
-        for (var byt: value.getBytes()) {
-            i++;
-            if (maxChar != -1 && i > maxChar) {
-                break;
+        var max = (maxChar != -1) ? Math.min(maxChar, value.length()) : value.length();
+        var chars = value.toCharArray();
+        var result = new StringBuilder();
+        StringBuilder reservedBuffer = null;
+
+        for (var i = 0; i < max; i++) {
+            char character = chars[i];
+
+            if (character == '%' && !replaceReserved) {
+                reservedBuffer = new StringBuilder();
             }
 
-            char character = (char) byt;
-            if (character == '%') {
-                percentageBuffer = new StringBuilder();
-                percentageBuffer.append(character);
-            }
+            if (reservedBuffer != null) { // only if !replaceReserved
+                reservedBuffer.append(character);
 
-            if (percentageBuffer != null) {
-                if (percentageBuffer.length() <= 3) {
-                    percentageBuffer.append(character);
-                } else {
-                    boolean isReserved = false;
-                    for (var v: RESERVED.values()) {
-                        if (percentageBuffer.toString().equals(v)) {
-                            isReserved = true;
-                            break;
-                        }
+                if (reservedBuffer.length() == 3) {
+                    boolean isEncoded = false;
+                    try {
+                        URLDecoder.decode(reservedBuffer.toString(), StandardCharsets.UTF_8);
+                        isEncoded = true;
+                    } catch (Exception e) {
+                        // ignore
                     }
-                    if (isReserved) {
-                        result.append(percentageBuffer);
-                        percentageBuffer = null;
+
+                    if (isEncoded) {
+                        result.append(reservedBuffer);
                     } else {
                         result.append("%25");
-                        result.append(expandValue(percentageBuffer.substring(1), -1));
-                        percentageBuffer = null;
+                        result.append(URLEncoder.encode(reservedBuffer.substring(1), StandardCharsets.UTF_8));
                     }
+                    reservedBuffer = null;
                 }
             } else {
-                // TODO: this comparison can be much cheaper
-                var subst = RESERVED.get("" + character);
-                if (subst == null) {
-                    result.append(character);
-                } else if (replaceReserved || (!replaceReserved && character == ' ')) {
-                    result.append(subst);
+                if (character == ' ') {
+                    result.append("%20");
                 } else {
-                    result.append(character);
+                    if (replaceReserved) {
+                        result.append(URLEncoder.encode("" + character, StandardCharsets.UTF_8));
+                    } else {
+                        result.append(character);
+                    }
                 }
             }
         }
 
-        if (percentageBuffer != null) {
-            // not found, just appending
-            result.append(percentageBuffer);
+        if (reservedBuffer != null) {
+            result.append("%25");
+            if (replaceReserved) {
+                result.append(URLEncoder.encode(reservedBuffer.substring(1), StandardCharsets.UTF_8));
+            } else {
+                result.append(reservedBuffer.substring(1));
+            }
         }
 
         return result.toString();
     }
+
+//    static String expandValueImpl(String value, int maxChar, boolean replaceReserved) {
+//        var max = (maxChar != -1) ? Math.min(maxChar, value.length()) : value.length();
+//        var bytes = value.getBytes(StandardCharsets.UTF_8);
+//        var result = new StringBuilder();
+//        StringBuilder reservedBuffer = null;
+//        for (var i = 0; i < max; i++) {
+//            char character = (char)bytes[i];
+//
+//            if (character == '%' && replaceReserved) {
+//                reservedBuffer = new StringBuilder();
+//                reservedBuffer.append(character);
+//            } else if (character == '%') {
+//                result.append("%25");
+//            } else {
+//                if (reservedBuffer != null) {
+//                    reservedBuffer.append(character);
+//                } else if (replaceReserved) {
+//                    if (character == ' ') {
+//                        result.append("%20");
+//                    } else {
+//                        result.append(URLEncoder.encode("" + character, StandardCharsets.UTF_8));
+//                    }
+//                } else {
+//                    if (character == ' ') {
+//                        result.append("%20");
+//                    } else {
+//                        result.append(character);
+//                    }
+//                }
+//
+//                if (reservedBuffer != null && reservedBuffer.length() == 3) {
+//                    boolean isReserved = false;
+//                    if (reservedBuffer.toString().equals("%25")) {
+//                        isReserved = true;
+//                    }
+//
+//                    if (isReserved) {
+//                        result.append(reservedBuffer);
+//                    } else {
+//                        result.append("%25");
+//                        result.append(reservedBuffer.substring(1));
+//                    }
+//                    reservedBuffer = null;
+//                }
+//            }
+//        }
+//
+//        if (reservedBuffer != null) {
+//            result.append("%25");
+//            result.append(reservedBuffer.substring(1));
+//        }
+//
+//        return result.toString();
+//    }
+    // TODO: improve this!
+//    static String expandValueImpl(String value, int maxChar, boolean replaceReserved) {
+//        int i = 0;
+//        StringBuilder result = new StringBuilder();
+//        StringBuilder percentageBuffer = null;
+//        for (var byt: value.getBytes()) {
+//            i++;
+//            if (maxChar != -1 && i > maxChar) {
+//                break;
+//            }
+//
+//            char character = (char) byt;
+//
+//            if (percentageBuffer != null) {
+//                if (percentageBuffer.length() < 2) {
+//                    percentageBuffer.append(character);
+//                } else if (percentageBuffer.length() == 2) {
+//                    percentageBuffer.append(character);
+//
+//                    boolean isReserved = false;
+//                    for (var v : RESERVED.values()) {
+//                        if (percentageBuffer.toString().equals(v)) {
+//                            isReserved = true;
+//                            break;
+//                        }
+//                    }
+//
+//                    if (isReserved) {
+//                        result.append(percentageBuffer);
+//                    } else {
+//                        result.append("%25");
+//                        result.append(expandValue(percentageBuffer.substring(1), -1));
+//                    }
+//                    percentageBuffer = null;
+//                } else {
+//                    result.append("%25");
+//                    result.append(expandValue(percentageBuffer.substring(1), -1));
+//                    percentageBuffer = null;
+//                }
+//            }
+//
+//            if (character == '%') {
+//                percentageBuffer = new StringBuilder();
+//                percentageBuffer.append(character);
+//            } else {
+//                if (percentageBuffer == null) {
+//                    var subst = RESERVED.get(character);
+//                    if (subst == null) {
+//                        result.append(character);
+//                    } else if (replaceReserved || (!replaceReserved && character == ' ')) {
+//                        result.append(subst);
+//                    } else {
+//                        result.append(character);
+//                    }
+//                }
+//            }
+//        }
+//
+//        if (percentageBuffer != null) {
+//            result.append(percentageBuffer);
+//        }
+//
+//        return result.toString();
+//    }
 
     // Double check correctness
     static String freeValue(String value, int maxChar) {
@@ -428,7 +554,7 @@ public class StdUriTemplate {
                             first = false;
                             result.append(mod.expand(key, subst, tok.maxChar()));
                         } else {
-                            if (tok.composite) {
+                            if (tok.composite()) {
                                 result.append(mod.separator());
                                 result.append(mod.expand(key, subst, tok.maxChar()));
                             } else {
@@ -448,7 +574,7 @@ public class StdUriTemplate {
                                 result.append(mod.expand(key, subst.getKey(), tok.maxChar()));
                             }
                         } else {
-                            if (mod.composite()) {
+                            if (tok.composite()) {
                                 result.append(mod.separator());
                             } else {
                                 result.append(',');
@@ -456,7 +582,7 @@ public class StdUriTemplate {
                             result.append(mod.expandNext(key, subst.getKey(), mod.maxChar()));
                         }
 
-                        if (mod.composite()) {
+                        if (tok.composite()) {
                             result.append('=');
                         } else {
                             result.append(',');
