@@ -28,6 +28,8 @@ Uri Template is(likely) going to be included in the next OpenAPI specification a
 The plan is to start with a pure hand-crafted implementation in Java that is not using RegExp and, possibly scans the strings the least number of times.
 As soon as a full implementation is done I plan to use ChatGPT to scaffold other languages and fix bugs using the BASH testing infrastructure.
 
+The Java implementation already passes all of the tests in the upstream reference repo.
+
 ## Design decisions
 
 This has to be done, we want to keep the number of options as low as possible, rough things might be:
@@ -38,6 +40,6 @@ This has to be done, we want to keep the number of options as low as possible, r
 - portable implementation across languages based on widely available patterns
 - target Level support is 4
 
-Speed vs. Maintainability -> TODO: let's start with a naive implementation from https://github.com/uri-templates/uritemplate-py and improve over it
+Speed vs. Maintainability: the current implementation "should" be fast enough
 
 Let's try with a single pass -> input to output
