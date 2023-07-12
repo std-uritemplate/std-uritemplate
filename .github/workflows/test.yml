@@ -18,7 +18,7 @@ jobs:
           - java
     steps:
       # Language specific setup
-      
+
       # Java setup
       - name: Set up JDK 11
         if: matrix.language == 'java'
@@ -27,7 +27,9 @@ jobs:
           java-version: "11"
           distribution: "temurin"
       - name: Install jbang
-        run: curl -Ls https://sh.jbang.dev | bash -s - app setup
+        run: |
+          curl -Ls https://sh.jbang.dev | bash -s - app setup
+          echo "$HOME/.jbang/bin" >> $GITHUB_PATH
 
       # Common testing
       - name: Checkout
