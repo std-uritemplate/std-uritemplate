@@ -3,6 +3,7 @@ import org.uritemplate.StdUriTemplate;
 
 import java.util.HashMap;
 
+// Those tests are available just as a convenience to use with the debug mode in the IDE
 public class StdUriTemplateTest {
 
     @Test

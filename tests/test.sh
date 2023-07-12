@@ -51,8 +51,10 @@ for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER
       else
         echo "Test not passed. ❌"
 
+        echo "Template: \"${TEMPLATE}\""
+        echo "Substitutions: ${PARAMS}"
         echo "Expected result in those: ${POSSIBLE_RESULTS}"
-        echo "but got: ${RESULT}"
+        echo "but got: \"${RESULT}\""
         exit 1
       fi
     done

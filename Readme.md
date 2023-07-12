@@ -25,8 +25,8 @@ Uri Template is(likely) going to be included in the next OpenAPI specification a
 
 ## Implementation
 
-As a first iteration I'm going to exploit a reg-exp based implementation as presented here:
-https://medialize.github.io/URI.js/uri-template.html
+The plan is to start with a pure hand-crafted implementation in Java that is not using RegExp and, possibly scans the strings the least number of times.
+As soon as a full implementation is done I plan to use ChatGPT to scaffold other languages and fix bugs using the BASH testing infrastructure.
 
 ## Design decisions
 

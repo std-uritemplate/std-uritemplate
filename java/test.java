@@ -1,7 +1,7 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 
 //SOURCES src/main/java/org/uritemplate/StdUriTemplate.java
-//DEPS com.fasterxml.jackson.core:jackson-databind:2.13.0
+//DEPS com.fasterxml.jackson.core:jackson-databind:2.15.2
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.FileInputStream;
@@ -18,9 +18,10 @@ public class test {
 
     public static void main(String... args) {
         // Here it goes the logic to parse the arguments in a positional manner, first attempt:
-        // args[0] = template
-        // args[1] = the dictionary to be parsed in JSON format
-        // return the expanded template on stdout
+        // args[0] = A file that contains the template
+        // args[1] = A file that contains the dictionary to be parsed in JSON format
+        // return the expanded template to stdout
+        // stderr can be used for debugging purposes
         var objectReader = new ObjectMapper().readerFor(Map.class);
 
         try (var fis = new FileInputStream(args[1])) {
@@ -28,6 +29,7 @@ public class test {
             out.println(StdUriTemplate.expand(template, objectReader.readValue(fis)));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            // this is an error in the testing infrastructure
             System.exit(-1);
         } catch (Exception e) {
             e.printStackTrace();

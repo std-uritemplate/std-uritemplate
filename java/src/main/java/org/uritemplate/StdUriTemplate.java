@@ -62,7 +62,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class NoMod extends Modifier {
+    private static final class NoMod extends Modifier {
         NoMod(String token) { super(token); }
 
         @Override
@@ -71,7 +71,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class Plus extends Modifier {
+    private static final class Plus extends Modifier {
         Plus(String token) { super(token); }
 
         @Override
@@ -86,7 +86,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class Dash extends Modifier {
+    private static final class Dash extends Modifier {
         Dash(String token) { super(token); }
 
         @Override
@@ -105,7 +105,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class Dot extends Modifier {
+    private static final class Dot extends Modifier {
         Dot(String token) { super(token); }
 
         @Override
@@ -118,7 +118,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class Slash extends Modifier {
+    private static final class Slash extends Modifier {
         Slash(String token) { super(token); }
 
         @Override
@@ -131,7 +131,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class Semicolon extends Modifier {
+    private static final class Semicolon extends Modifier {
         Semicolon(String token) { super(token); }
 
         @Override
@@ -153,7 +153,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class QuestionMark extends Modifier {
+    private static final class QuestionMark extends Modifier {
         QuestionMark(String token) { super(token); }
 
         @Override
@@ -170,7 +170,7 @@ public class StdUriTemplate {
         }
     }
 
-    static final class At extends Modifier {
+    private static final class At extends Modifier {
         At(String token) { super(token); }
 
         @Override
@@ -187,9 +187,21 @@ public class StdUriTemplate {
         }
     }
 
-    static class Modifier extends Token {
+    private static class Modifier extends Token {
         Modifier(String token) {
             super(token);
+        }
+
+        @Override
+        void validate() {
+            if (key().isEmpty()) {
+                throw new IllegalArgumentException("Empty key found");
+            }
+            for (var res: RESERVED) {
+                if (key().contains(res)) {
+                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the '" + res + "' character");
+                }
+            }
         }
 
         String expand(String key, String value, int maxChar) {
@@ -205,16 +217,7 @@ public class StdUriTemplate {
         }
 
         String key() {
-            var key = sanitized.substring(1);
-            // validation
-            // TODO: check if this is the right level to do this ...
-            for (var res: RESERVED) {
-                if (key.contains(res)) {
-                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the " + res + " character");
-                }
-            }
-
-            return key;
+            return sanitized.substring(1);
         }
 
         String prefix() {
@@ -222,7 +225,7 @@ public class StdUriTemplate {
         }
     }
 
-    private final static String[] RESERVED = new String[]{"+", "#", ".", "/", ";", "?", "&", " ", "!"};
+    private final static String[] RESERVED = new String[]{"+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"};
 
     private static class Token {
         protected final String token;
@@ -244,6 +247,9 @@ public class StdUriTemplate {
 
             suffixIndex = token.indexOf('*');
             if (suffixIndex != -1) {
+                if (suffixIndex != (token.length() - 1)) {
+                    throw new IllegalArgumentException("The '*' modifier doesn't occur at the end of the token.");
+                }
                 sanitized = token.substring(0, suffixIndex);
                 composite = true;
             } else {
@@ -251,6 +257,17 @@ public class StdUriTemplate {
             }
 
             this.sanitized = sanitized;
+        }
+
+        void validate() {
+            if (sanitized.isEmpty()) {
+                throw new IllegalArgumentException("Empty key found");
+            }
+            for (var res: RESERVED) {
+                if (sanitized.contains(res)) {
+                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the '" + res + "' character");
+                }
+            }
         }
 
         String sanitized() {
@@ -266,19 +283,19 @@ public class StdUriTemplate {
         }
     }
 
-    static String expandKV(String key, String value, int maxChar) {
+    private static String expandKV(String key, String value, int maxChar) {
         return key + "=" + expandValue(value, maxChar);
     }
 
-    static String trim(String value, int maxChar) {
+    private static String trim(String value, int maxChar) {
         return (maxChar < 0) ? value : value.substring(0, Math.min(maxChar, value.length()));
     }
 
-    static String expandValue(String value, int maxChar) {
+    private static String expandValue(String value, int maxChar) {
         return expandValueImpl(value, maxChar, true);
     }
 
-    static String expandValueImpl(String value, int maxChar, boolean replaceReserved) {
+    private static String expandValueImpl(String value, int maxChar, boolean replaceReserved) {
         var max = (maxChar != -1) ? Math.min(maxChar, value.length()) : value.length();
         var chars = value.toCharArray();
         var result = new StringBuilder();
@@ -337,7 +354,7 @@ public class StdUriTemplate {
     }
 
     // Double check correctness
-    static String freeValue(String value, int maxChar) {
+    private static String freeValue(String value, int maxChar) {
         return expandValueImpl(value, maxChar, false);
     }
 
@@ -373,8 +390,10 @@ public class StdUriTemplate {
             if (mod == null) {
                 mod = getModifier(token);
                 key = mod.key();
+                mod.validate();
             } else {
                 key = tok.sanitized();
+                tok.validate();
             }
             // composite handling is a little messy, couldn't find anything better
 
@@ -426,6 +445,9 @@ public class StdUriTemplate {
                 } else if (value instanceof Map) {
                     boolean first = true;
                     for (var subst: ((Map<String, String>) value).entrySet()) {
+                        if (tok.maxChar() != -1) {
+                            throw new IllegalArgumentException("Value trimming is not allowed on Maps");
+                        }
                         if (first) {
                             first = false;
                             if (tok.composite()) {
