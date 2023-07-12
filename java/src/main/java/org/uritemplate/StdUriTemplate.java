@@ -2,9 +2,7 @@ package org.uritemplate;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -78,8 +76,6 @@ public class StdUriTemplate {
         String expand(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
         }
-
-        // TODO: verify!
         @Override
         String expandNext(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
@@ -97,8 +93,6 @@ public class StdUriTemplate {
         String expand(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
         }
-
-        // TODO: verify!
         @Override
         String expandNext(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
@@ -194,14 +188,7 @@ public class StdUriTemplate {
 
         @Override
         void validate() {
-            if (key().isEmpty()) {
-                throw new IllegalArgumentException("Empty key found");
-            }
-            for (var res: RESERVED) {
-                if (key().contains(res)) {
-                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the '" + res + "' character");
-                }
-            }
+            validateToken(key());
         }
 
         String expand(String key, String value, int maxChar) {
@@ -225,8 +212,6 @@ public class StdUriTemplate {
         }
     }
 
-    private final static String[] RESERVED = new String[]{"+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"};
-
     private static class Token {
         protected final String token;
         protected final String sanitized;
@@ -247,9 +232,6 @@ public class StdUriTemplate {
 
             suffixIndex = token.indexOf('*');
             if (suffixIndex != -1) {
-                if (suffixIndex != (token.length() - 1)) {
-                    throw new IllegalArgumentException("The '*' modifier doesn't occur at the end of the token.");
-                }
                 sanitized = token.substring(0, suffixIndex);
                 composite = true;
             } else {
@@ -260,14 +242,7 @@ public class StdUriTemplate {
         }
 
         void validate() {
-            if (sanitized.isEmpty()) {
-                throw new IllegalArgumentException("Empty key found");
-            }
-            for (var res: RESERVED) {
-                if (sanitized.contains(res)) {
-                    throw new IllegalArgumentException("Found a key with invalid content: " + sanitized + " contains the '" + res + "' character");
-                }
-            }
+            validateToken(sanitized);
         }
 
         String sanitized() {
@@ -283,12 +258,21 @@ public class StdUriTemplate {
         }
     }
 
-    private static String expandKV(String key, String value, int maxChar) {
-        return key + "=" + expandValue(value, maxChar);
+    private final static String[] RESERVED = new String[]{"+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"};
+
+    private static void validateToken(String token) {
+        if (token.isEmpty()) {
+            throw new IllegalArgumentException("Empty key found");
+        }
+        for (var res: RESERVED) {
+            if (token.contains(res)) {
+                throw new IllegalArgumentException("Found a key with invalid content: `" + token + "` contains the '" + res + "' character");
+            }
+        }
     }
 
-    private static String trim(String value, int maxChar) {
-        return (maxChar < 0) ? value : value.substring(0, Math.min(maxChar, value.length()));
+    private static String expandKV(String key, String value, int maxChar) {
+        return key + "=" + expandValue(value, maxChar);
     }
 
     private static String expandValue(String value, int maxChar) {
@@ -308,7 +292,7 @@ public class StdUriTemplate {
                 reservedBuffer = new StringBuilder();
             }
 
-            if (reservedBuffer != null) { // only if !replaceReserved
+            if (reservedBuffer != null) {
                 reservedBuffer.append(character);
 
                 if (reservedBuffer.length() == 3) {
@@ -324,7 +308,8 @@ public class StdUriTemplate {
                         result.append(reservedBuffer);
                     } else {
                         result.append("%25");
-                        result.append(URLEncoder.encode(reservedBuffer.substring(1), StandardCharsets.UTF_8));
+                        // only if !replaceReserved
+                        result.append(reservedBuffer.substring(1));
                     }
                     reservedBuffer = null;
                 }
@@ -395,15 +380,14 @@ public class StdUriTemplate {
                 key = tok.sanitized();
                 tok.validate();
             }
-            // composite handling is a little messy, couldn't find anything better
 
             if (substitutions.containsKey(key)) {
                 Object value = substitutions.get(key);
 
                 // null and equivalent, simply skip
                 if (value == null ||
-                        (value instanceof List && ((List) value).isEmpty()) || // verify -> not sure its tested
-                        (value instanceof Map && ((Map) value).isEmpty())) {
+                    (value instanceof List && ((List) value).isEmpty()) || // verify -> not sure its tested
+                    (value instanceof Map && ((Map) value).isEmpty())) {
                     continue;
                 }
 
