@@ -77,7 +77,7 @@ public class StdUriTemplate {
             return freeValue(value, maxChar);
         }
         @Override
-        String expandNext(String key, String value, int maxChar) {
+        String expandElements(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
         }
     }
@@ -94,7 +94,7 @@ public class StdUriTemplate {
             return freeValue(value, maxChar);
         }
         @Override
-        String expandNext(String key, String value, int maxChar) {
+        String expandElements(String key, String value, int maxChar) {
             return freeValue(value, maxChar);
         }
     }
@@ -195,7 +195,7 @@ public class StdUriTemplate {
             return expandValue(value, maxChar);
         }
 
-        String expandNext(String key, String value, int maxChar) {
+        String expandElements(String key, String value, int maxChar) {
             return expandValue(value, maxChar);
         }
 
@@ -316,6 +316,8 @@ public class StdUriTemplate {
             } else {
                 if (character == ' ') {
                     result.append("%20");
+                } else if (character == '%') {
+                    result.append("%25");
                 } else {
                     if (replaceReserved) {
                         result.append(URLEncoder.encode(new String(new char[]{character}), StandardCharsets.UTF_8));
@@ -422,7 +424,7 @@ public class StdUriTemplate {
                                 result.append(mod.expand(key, subst, tok.maxChar()));
                             } else {
                                 result.append(',');
-                                result.append(mod.expandNext(key, subst, tok.maxChar()));
+                                result.append(mod.expandElements(key, subst, tok.maxChar()));
                             }
                         }
                     }
@@ -435,7 +437,7 @@ public class StdUriTemplate {
                         if (first) {
                             first = false;
                             if (tok.composite()) {
-                                result.append(mod.expandNext(key, subst.getKey(), tok.maxChar()));
+                                result.append(mod.expandElements(key, subst.getKey(), tok.maxChar()));
                             } else {
                                 result.append(mod.expand(key, subst.getKey(), tok.maxChar()));
                             }
@@ -445,7 +447,7 @@ public class StdUriTemplate {
                             } else {
                                 result.append(',');
                             }
-                            result.append(mod.expandNext(key, subst.getKey(), mod.maxChar()));
+                            result.append(mod.expandElements(key, subst.getKey(), mod.maxChar()));
                         }
 
                         if (tok.composite()) {
@@ -453,7 +455,7 @@ public class StdUriTemplate {
                         } else {
                             result.append(',');
                         }
-                        result.append(mod.expandNext(key, subst.getValue(), mod.maxChar()));
+                        result.append(mod.expandElements(key, subst.getValue(), mod.maxChar()));
                     }
                 } else {
                     throw new IllegalArgumentException("Substitution type not supported, found " + value.getClass() + ", but only Integer, Float, Long, Double, String, List<String> and Map<String, String> are allowed.");
