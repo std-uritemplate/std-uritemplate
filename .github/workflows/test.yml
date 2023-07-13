@@ -32,6 +32,10 @@ jobs:
           curl -Ls https://sh.jbang.dev | bash -s - app setup
           echo "$HOME/.jbang/bin" >> $GITHUB_PATH
 
+      # Python setup
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
       # Common testing
       - name: Checkout
         uses: actions/checkout@v3
