@@ -238,9 +238,6 @@ class StdUriTemplate:
         for i in range(max_length):
             character = value[i]
 
-            import sys
-            print(replace_reserved, file=sys.stderr)
-
             if character == '%' and not replace_reserved:
                 reserved_buffer = []
 
