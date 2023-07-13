@@ -165,10 +165,7 @@ class Token:
     def _get_max_char(self):
         suffix_index = self.token.find(':')
         if suffix_index != -1:
-            try:
-                return int(self.token[suffix_index + 1:])
-            except ValueError:
-                pass
+            return int(self.token[suffix_index + 1:])
         return -1
 
     def _is_composite_token(self):
