@@ -19,6 +19,8 @@ jobs:
           - java
           - python
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       # Language specific setup
 
       # Java setup
@@ -43,7 +45,5 @@ jobs:
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       # Common testing
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Run Tests on ${{ matrix.language }}
         run: ./tests/test.sh ${{ matrix.language }}
