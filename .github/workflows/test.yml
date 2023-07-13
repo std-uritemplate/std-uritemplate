@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Test uritemplate implementations
+    name: Test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
