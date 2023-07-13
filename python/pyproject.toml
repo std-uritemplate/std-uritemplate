@@ -3,7 +3,7 @@ name = "std-uritemplate"
 version = "0.0.1"
 description = ""
 authors = ["Andrea Peruffo <andrea.peruffo1982@gmail.com>"]
-readme = "README.md"
+readme = "../Readme.md"
 packages = [{include = "stduritemplate"}]
 exclude = [
     { path = "stduritemplate/__pycache__", format=["sdist", "wheel"] },
