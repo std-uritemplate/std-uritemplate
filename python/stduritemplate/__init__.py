@@ -201,6 +201,7 @@ class StdUriTemplate:
                     tokens.append(token)
                     token = None
                     result.append(StdUriTemplate._expand_tokens(tokens, substitutions))
+                    tokens = []
                 else:
                     raise ValueError("Failed to expand token, invalid.")
             elif character == ',':
@@ -232,22 +233,25 @@ class StdUriTemplate:
     def _expand_value_impl(value: str, max_char: int, replace_reserved: bool) -> str:
         max_length = min(max_char, len(value)) if max_char != -1 else len(value)
         result = []
-        reserved_buffer = []
+        reserved_buffer = None
 
         for i in range(max_length):
             character = value[i]
 
+            import sys
+            print(replace_reserved, file=sys.stderr)
+
             if character == '%' and not replace_reserved:
                 reserved_buffer = []
 
-            if reserved_buffer:
+            if reserved_buffer != None:
                 reserved_buffer.append(character)
 
                 if len(reserved_buffer) == 3:
                     is_encoded = False
                     try:
-                        urllib.parse.unquote(''.join(reserved_buffer), encoding='utf-8', errors='strict')
-                        is_encoded = True
+                        unquoted = urllib.parse.unquote(''.join(reserved_buffer), encoding='utf-8', errors='strict')
+                        is_encoded = (unquoted != ''.join(reserved_buffer))
                     except Exception:
                         pass
 
