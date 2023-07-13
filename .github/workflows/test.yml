@@ -29,13 +29,18 @@ jobs:
           java-version: "11"
           distribution: "temurin"
       - name: Install jbang
+        if: matrix.language == 'java'
         run: |
           curl -Ls https://sh.jbang.dev | bash -s - app setup
           echo "$HOME/.jbang/bin" >> $GITHUB_PATH
 
       # Python setup
       - name: Install Poetry
+        if: matrix.language == 'python'
         uses: snok/install-poetry@v1
+      - name: Add Poetry to PATH
+        if: matrix.language == 'python'
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       # Common testing
       - name: Checkout
