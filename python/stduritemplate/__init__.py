@@ -4,214 +4,131 @@
 import urllib.parse
 from typing import List, Union, Dict
 
-class StdUriTemplate:
-    @staticmethod
-    def expand(template: str, substitutions: Dict[str, Union[None, int, float, str, List[str], Dict[str, str]]]) -> str:
-        return StdUriTemplate._expand_impl(template, substitutions)
+# class StdUriTemplate:
+#     @staticmethod
+#     def expand(template: str, substitutions: Dict[str, Union[None, int, float, str, List[str], Dict[str, str]]]) -> str:
+#         return StdUriTemplate._expand_impl(template, substitutions)
 
-    @staticmethod
-    def _expand_impl(template: str, substitutions: Dict[str, Union[None, int, float, str, List[str], Dict[str, str]]]) -> str:
-        result = []
-        token = None
-        tokens = None
+#     @staticmethod
+#     def _expand_impl(template: str, substitutions: Dict[str, Union[None, int, float, str, List[str], Dict[str, str]]]) -> str:
+#         result = []
+#         token = None
+#         tokens = None
 
-        for character in template:
-            if character == '{':
-                token = []
-                tokens = []
-            elif character == '}':
-                if token is not None:
-                    tokens.append(''.join(token))
-                    token = None
-                    result.append(StdUriTemplate._expand_tokens(tokens, substitutions))
-                else:
-                    raise RuntimeError("Failed to expand token, invalid.")
-            elif character == ',':
-                if token is not None:
-                    tokens.append(''.join(token))
-                    token = []
-                else:
-                    result.append(character)
-            else:
-                if token is not None:
-                    token.append(character)
-                else:
-                    result.append(character)
+#         for character in template:
+#             if character == '{':
+#                 token = []
+#                 tokens = []
+#             elif character == '}':
+#                 if token is not None:
+#                     tokens.append(''.join(token))
+#                     token = None
+#                     result.append(StdUriTemplate._expand_tokens(tokens, substitutions))
+#                 else:
+#                     raise RuntimeError("Failed to expand token, invalid.")
+#             elif character == ',':
+#                 if token is not None:
+#                     tokens.append(''.join(token))
+#                     token = []
+#                 else:
+#                     result.append(character)
+#             else:
+#                 if token is not None:
+#                     token.append(character)
+#                 else:
+#                     result.append(character)
 
-        if token is None:
-            return ''.join(result)
-        else:
-            raise ValueError("Unterminated token")
+#         if token is None:
+#             return ''.join(result)
+#         else:
+#             raise ValueError("Unterminated token")
 
-    @staticmethod
-    def _expand_kv(key: str, value: str, max_char: int) -> str:
-        return f"{key}={StdUriTemplate._expand_value(value, max_char)}"
+#     @staticmethod
+#     def _expand_kv(key: str, value: str, max_char: int) -> str:
+#         return f"{key}={StdUriTemplate._expand_value(value, max_char)}"
 
-    @staticmethod
-    def _expand_value(value: str, max_char: int) -> str:
-        return StdUriTemplate._expand_value_impl(value, max_char, True)
+#     @staticmethod
+#     def _expand_value(value: str, max_char: int) -> str:
+#         return StdUriTemplate._expand_value_impl(value, max_char, True)
 
-    @staticmethod
-    def _expand_value_impl(value: str, max_char: int, replace_reserved: bool) -> str:
-        max_length = min(max_char, len(value)) if max_char != -1 else len(value)
-        result = []
-        reserved_buffer = []
+#     @staticmethod
+#     def _expand_value_impl(value: str, max_char: int, replace_reserved: bool) -> str:
+#         max_length = min(max_char, len(value)) if max_char != -1 else len(value)
+#         result = []
+#         reserved_buffer = []
 
-        for i in range(max_length):
-            character = value[i]
+#         for i in range(max_length):
+#             character = value[i]
 
-            if character == '%' and not replace_reserved:
-                reserved_buffer = []
+#             if character == '%' and not replace_reserved:
+#                 reserved_buffer = []
 
-            if reserved_buffer:
-                reserved_buffer.append(character)
+#             if reserved_buffer:
+#                 reserved_buffer.append(character)
 
-                if len(reserved_buffer) == 3:
-                    is_encoded = False
-                    try:
-                        urllib.parse.unquote(''.join(reserved_buffer), encoding='utf-8', errors='strict')
-                        is_encoded = True
-                    except Exception:
-                        pass
+#                 if len(reserved_buffer) == 3:
+#                     is_encoded = False
+#                     try:
+#                         urllib.parse.unquote(''.join(reserved_buffer), encoding='utf-8', errors='strict')
+#                         is_encoded = True
+#                     except Exception:
+#                         pass
 
-                    if is_encoded:
-                        result.extend(reserved_buffer)
-                    else:
-                        result.append("%25")
-                        result.extend(reserved_buffer[1:])
-                    reserved_buffer = None
-            else:
-                if character == ' ':
-                    result.append("%20")
-                elif character == '%':
-                    result.append("%25")
-                else:
-                    if replace_reserved:
-                        result.append(urllib.parse.quote(character, safe=''))
-                    else:
-                        result.append(character)
+#                     if is_encoded:
+#                         result.extend(reserved_buffer)
+#                     else:
+#                         result.append("%25")
+#                         result.extend(reserved_buffer[1:])
+#                     reserved_buffer = None
+#             else:
+#                 if character == ' ':
+#                     result.append("%20")
+#                 elif character == '%':
+#                     result.append("%25")
+#                 else:
+#                     if replace_reserved:
+#                         result.append(urllib.parse.quote(character, safe=''))
+#                     else:
+#                         result.append(character)
 
-        if reserved_buffer:
-            result.append("%25")
-            if replace_reserved:
-                result.append(urllib.parse.quote(''.join(reserved_buffer[1:]), safe=''))
-            else:
-                result.extend(reserved_buffer[1:])
+#         if reserved_buffer:
+#             result.append("%25")
+#             if replace_reserved:
+#                 result.append(urllib.parse.quote(''.join(reserved_buffer[1:]), safe=''))
+#             else:
+#                 result.extend(reserved_buffer[1:])
 
-        return ''.join(result)
+#         return ''.join(result)
 
-    @staticmethod
-    def _expand_tokens(tokens: List[str], substitutions: Dict[str, Union[None, int, float, str, List[str], Dict[str, str]]]) -> str:
-        result = []
-        first_token = True
-        mod = None
-        key = None
+#     @staticmethod
+#     def _get_modifier(token: str):
+#         token_char = token[0]
+#         if token_char == '+':
+#             return Plus(token)
+#         elif token_char == '#':
+#             return Dash(token)
+#         elif token_char == '.':
+#             return Dot(token)
+#         elif token_char == '/':
+#             return Slash(token)
+#         elif token_char == ';':
+#             return Semicolon(token)
+#         elif token_char == '?':
+#             return QuestionMark(token)
+#         elif token_char == '&':
+#             return At(token)
+#         else:
+#             return NoMod(token)
 
-        for token in tokens:
-            if mod is None:
-                mod = StdUriTemplate._get_modifier(token)
-                key = mod.key()
-                mod.validate()
-            else:
-                key = StdUriTemplate._sanitize_token(token)
-                StdUriTemplate._validate_token(key)
+#     @staticmethod
+#     def _validate_token(token: str):
+#         if not token:
+#             raise ValueError("Empty key found")
 
-            if key in substitutions:
-                value = substitutions[key]
-
-                if value is None or (isinstance(value, list) and len(value) == 0) or (isinstance(value, dict) and len(value) == 0):
-                    continue
-
-                if isinstance(value, (int, float)):
-                    value = str(value)
-
-                if first_token:
-                    result.append(mod.prefix())
-                else:
-                    result.append(mod.separator())
-
-                if isinstance(value, str):
-                    result.append(mod.expand(key, value, -1))
-                elif isinstance(value, list):
-                    first = True
-                    for subst in value:
-                        if first:
-                            first = False
-                            result.append(mod.expand(key, subst, -1))
-                        else:
-                            if mod.composite():
-                                result.append(mod.separator())
-                                result.append(mod.expand(key, subst, -1))
-                            else:
-                                result.append(',')
-                                result.append(mod.expand_elements(key, subst, -1))
-                elif isinstance(value, dict):
-                    first = True
-                    for subst_key, subst_value in value.items():
-                        if mod.max_char() != -1:
-                            raise ValueError("Value trimming is not allowed on Maps")
-                        if first:
-                            first = False
-                            if mod.composite():
-                                result.append(mod.expand_elements(key, subst_key, -1))
-                            else:
-                                result.append(mod.expand(key, subst_key, -1))
-                        else:
-                            if mod.composite():
-                                result.append(mod.separator())
-                            else:
-                                result.append(',')
-                            result.append(mod.expand_elements(key, subst_key, mod.max_char()))
-
-                        if mod.composite():
-                            result.append('=')
-                        else:
-                            result.append(',')
-                        result.append(mod.expand_elements(key, subst_value, mod.max_char()))
-                else:
-                    raise ValueError("Substitution type not supported, found {0}, but only None, int, float, str, list, and dict are allowed.".format(type(value).__name__))
-
-                first_token = False
-
-        return ''.join(result)
-
-    @staticmethod
-    def _get_modifier(token: str):
-        token_char = token[0]
-        if token_char == '+':
-            return Plus(token)
-        elif token_char == '#':
-            return Dash(token)
-        elif token_char == '.':
-            return Dot(token)
-        elif token_char == '/':
-            return Slash(token)
-        elif token_char == ';':
-            return Semicolon(token)
-        elif token_char == '?':
-            return QuestionMark(token)
-        elif token_char == '&':
-            return At(token)
-        else:
-            return NoMod(token)
-
-    @staticmethod
-    def _sanitize_token(token: str) -> str:
-        suffix_index = token.find(':')
-        if suffix_index != -1:
-            return token[:suffix_index]
-        return token
-
-    @staticmethod
-    def _validate_token(token: str):
-        if not token:
-            raise ValueError("Empty key found")
-
-        reserved = ["+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"]
-        for res in reserved:
-            if res in token:
-                raise ValueError("Found a key with invalid content: '{0}' contains the '{1}' character".format(token, res))
-
+#         reserved = ["+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"]
+#         for res in reserved:
+#             if res in token:
+#                 raise ValueError("Found a key with invalid content: '{0}' contains the '{1}' character".format(token, res))
 
 class Modifier:
     def __init__(self, token):
@@ -239,7 +156,7 @@ class Modifier:
         return StdUriTemplate._expand_value(value, max_char)
 
     def sanitized(self):
-        return self.token
+        return Token._sanitize_token(self.token)
 
 
 class NoMod(Modifier):
@@ -352,18 +269,24 @@ class At(Modifier):
 class Token:
     def __init__(self, token):
         self.token = token
-        self.sanitized = self._sanitize_token()
+        self.sanitized = Token._sanitize_token(token)
         self.max_char = self._get_max_char()
         self.composite = self._is_composite_token()
 
     def validate(self):
         StdUriTemplate._validate_token(self.sanitized)
 
-    def _sanitize_token(self):
-        suffix_index = self.token.find(':')
+    @staticmethod
+    def _sanitize_token(token: str) -> str:
+        suffix_index = token.find(':')
+        result = token
         if suffix_index != -1:
-            return self.token[:suffix_index]
-        return self.token
+            result = token[:suffix_index]
+
+        suffix_index = token.find('*')
+        if suffix_index != -1:
+            result = token[:suffix_index]
+        return result
 
     def _get_max_char(self):
         suffix_index = self.token.find(':')
@@ -377,12 +300,6 @@ class Token:
     def _is_composite_token(self):
         return '*' in self.token
 
-    def sanitized(self):
-        return self.sanitized
-
-    def max_char(self):
-        return self.max_char
-
 
 class StdUriTemplate:
     RESERVED = ["+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"]
@@ -395,9 +312,6 @@ class StdUriTemplate:
     def _expand_impl(template: str, substitutions: Dict[str, Union[None, int, float, str, List[str], Dict[str, str]]]) -> str:
         result = []
 
-        first_token = True
-        mod = None
-        key = None
         tokens = []
         token = None
 
@@ -498,13 +412,14 @@ class StdUriTemplate:
         key = None
 
         for token in tokens:
+            tok = Token(token)
             if mod is None:
                 mod = StdUriTemplate._get_modifier(token)
                 key = mod.key()
                 mod.validate()
             else:
-                key = token
-                StdUriTemplate._validate_token(key)
+                key = tok.sanitized
+                tok.validate()
 
             if key in substitutions:
                 value = substitutions[key]
@@ -521,43 +436,43 @@ class StdUriTemplate:
                     result.append(mod.separator())
 
                 if isinstance(value, str):
-                    result.append(mod.expand(key, value, -1))
+                    result.append(mod.expand(key, value, tok.max_char))
                 elif isinstance(value, list):
                     first = True
                     for subst in value:
                         if first:
                             first = False
-                            result.append(mod.expand(key, subst, -1))
+                            result.append(mod.expand(key, subst, tok.max_char))
                         else:
-                            if mod.composite():
+                            if tok.composite:
                                 result.append(mod.separator())
-                                result.append(mod.expand(key, subst, -1))
+                                result.append(mod.expand(key, subst, tok.max_char))
                             else:
                                 result.append(',')
-                                result.append(mod.expand_elements(key, subst, -1))
+                                result.append(mod.expand_elements(key, subst, tok.max_char))
                 elif isinstance(value, dict):
                     first = True
                     for subst_key, subst_value in value.items():
-                        if mod.max_char() != -1:
+                        if tok.max_char != -1:
                             raise ValueError("Value trimming is not allowed on Maps")
                         if first:
                             first = False
-                            if mod.composite():
-                                result.append(mod.expand_elements(key, subst_key, -1))
+                            if tok.composite:
+                                result.append(mod.expand_elements(key, subst_key, tok.max_char))
                             else:
-                                result.append(mod.expand(key, subst_key, -1))
+                                result.append(mod.expand(key, subst_key, tok.max_char))
                         else:
-                            if mod.composite():
+                            if tok.composite:
                                 result.append(mod.separator())
                             else:
                                 result.append(',')
-                            result.append(mod.expand_elements(key, subst_key, mod.max_char()))
+                            result.append(mod.expand_elements(key, subst_key, tok.max_char))
 
-                        if mod.composite():
+                        if tok.composite:
                             result.append('=')
                         else:
                             result.append(',')
-                        result.append(mod.expand_elements(key, subst_value, mod.max_char()))
+                        result.append(mod.expand_elements(key, subst_value, tok.max_char))
                 else:
                     raise ValueError("Substitution type not supported, found {0}, but only None, int, float, str, list, and dict are allowed.".format(type(value).__name__))
 

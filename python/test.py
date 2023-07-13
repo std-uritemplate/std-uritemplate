@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import json
+import traceback
 
 from stduritemplate import StdUriTemplate
 
@@ -30,4 +31,5 @@ try:
     sys.stdout.write(result)
 except Exception as e:
     sys.stderr.write(f"Error expanding template: {str(e)}\n")
+    print(traceback.format_exc(), file=sys.stderr)
     sys.stdout.write("false\n")

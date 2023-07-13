@@ -22,6 +22,10 @@ if [ ! -d ${SCRIPT_DIR}/../uritemplate-test ]; then
   git clone --depth=1 --branch=master https://github.com/uri-templates/uritemplate-test.git
 fi
 
+echo "Initialize"
+$(${SCRIPT_DIR}/../${LANGUAGE}/init.sh)
+echo "Initialization done"
+
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER}" -type f); do
 
   echo "Test file: ${SPEC_FILE}"
