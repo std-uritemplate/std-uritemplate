@@ -23,7 +23,7 @@ if [ ! -d ${SCRIPT_DIR}/../uritemplate-test ]; then
 fi
 
 echo "Initialize"
-$(${SCRIPT_DIR}/../${LANGUAGE}/init.sh)
+bash ${SCRIPT_DIR}/../${LANGUAGE}/init.sh
 echo "Initialization done"
 
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER}" -type f); do
