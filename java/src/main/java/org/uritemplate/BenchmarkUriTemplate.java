@@ -47,7 +47,7 @@ public class BenchmarkUriTemplate {
         } else  if (name.equals("New")) {
             uriTemplate = new StdUriTemplateNew();
         } else if (name.equals("Micronaut")) {
-            uriTemplate = new UriTemplateMicronaut(null);
+            uriTemplate = new UriTemplateMicronautWrapper();
         } else {
             throw new IllegalArgumentException("No implementation found for " + name);
         }

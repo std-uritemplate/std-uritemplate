@@ -43,11 +43,7 @@ import java.util.regex.Pattern;
  * @author Graeme Rocher
  * @since 1.0
  */
-class UriTemplateMicronaut implements Comparable<UriTemplateMicronaut>, UriTemplate {
-
-    public String benchmark(final String template, final Map<String, Object> substitutions) {
-        return new UriTemplateMicronaut(template).expand(substitutions);
-    }
+class UriTemplateMicronaut implements Comparable<UriTemplateMicronaut> {
 
     private static final String STRING_PATTERN_SCHEME = "([^:/?#]+):";
     private static final String STRING_PATTERN_USER_INFO = "([^@\\[/?#]*)";
