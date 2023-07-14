@@ -19,9 +19,13 @@ if [ ! -f ${SCRIPT_DIR}/../${LANGUAGE}/test.sh ]; then
 fi
 
 if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ]; then
-  echo "Please clone this repo and all of the submodules"
+  echo "Please clone this repo and all of the submodules with \"git clone --recurse-submodules\""
   exit 1
 fi
+
+echo "Initialize"
+bash ${SCRIPT_DIR}/../${LANGUAGE}/init.sh
+echo "Initialization done"
 
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER}" -type f); do
 

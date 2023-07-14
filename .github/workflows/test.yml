@@ -10,31 +10,31 @@ on:
 
 jobs:
   test:
-    name: Test uritemplate implementations
+    name: Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
         language:
           - java
     steps:
+      - name: Common - Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       # Language specific setup
 
       # Java setup
-      - name: Set up JDK 11
+      - name: Java - Set up JDK 11
         if: matrix.language == 'java'
         uses: actions/setup-java@v3
         with:
           java-version: "11"
           distribution: "temurin"
-      - name: Install jbang
+      - name: Java - Install jbang
         run: |
           curl -Ls https://sh.jbang.dev | bash -s - app setup
           echo "$HOME/.jbang/bin" >> $GITHUB_PATH
 
       # Common testing
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: 'true'
-      - name: Run Tests on ${{ matrix.language }}
+      - name: Common - Run Tests for ${{ matrix.language }}
         run: ./tests/test.sh ${{ matrix.language }}

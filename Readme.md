@@ -40,6 +40,9 @@ This has to be done, we want to keep the number of options as low as possible, r
 - portable implementation across languages based on widely available patterns
 - target Level support is 4
 
-Speed vs. Maintainability: the current implementation "should" be fast enough
+Speed vs. Maintainability: the decided implementation "should" be fast enough
 
-Let's try with a single pass -> input to output
+# Adding a new language
+
+1. Clone this repository with submodules `git clone --recurse-submodules ...`
+2. // TODO when we have a final setup
