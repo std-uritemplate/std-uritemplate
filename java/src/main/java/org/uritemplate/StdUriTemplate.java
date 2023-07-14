@@ -4,6 +4,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,24 +17,28 @@ public class StdUriTemplate {
 
     // Private implementation
     private static String expandImpl(String str, Map<String, Object> substitutions) {
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder(str.length() * 2);
 
         StringBuilder token = null;
         List<String> tokens = null;
-        for (var character : str.toCharArray()) {
+        int col = 0;
+        int debugCol = 0;
+        for (var i = 0; i < str.length(); i++) {
+            var character = str.charAt(i);
 
             switch (character) {
                 case '{':
                     token = new StringBuilder();
                     tokens = new ArrayList<>();
+                    debugCol = col;
                     break;
                 case '}':
                     if (token != null) {
                         tokens.add(token.toString());
                         token = null;
-                        result.append(expandTokens(tokens, substitutions));
+                        expandTokens(tokens, substitutions, debugCol, result);
                     } else {
-                        throw new RuntimeException("Failed to expand token, invalid.");
+                        throw new RuntimeException("Failed to expand token, invalid at col:" + col);
                     }
                     break;
                 case ',':
@@ -51,12 +56,13 @@ public class StdUriTemplate {
                     }
                     break;
             }
+            col++;
         }
 
         if (token == null) {
             return result.toString();
         } else {
-            throw new IllegalArgumentException("Unterminated token");
+            throw new IllegalArgumentException("Unterminated token at col:" + col);
         }
     }
 
@@ -214,8 +220,8 @@ public class StdUriTemplate {
         }
 
         @Override
-        void validate() {
-            validateToken(key());
+        void validate(int debugCol) {
+            validateToken(key(), debugCol);
         }
 
         String expand(String key, String value, int maxChar) {
@@ -268,8 +274,8 @@ public class StdUriTemplate {
             this.sanitized = sanitized;
         }
 
-        void validate() {
-            validateToken(sanitized);
+        void validate(int debugCol) {
+            validateToken(sanitized, debugCol);
         }
 
         String sanitized() {
@@ -287,13 +293,13 @@ public class StdUriTemplate {
 
     private final static String[] RESERVED = new String[]{"+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-"};
 
-    private static void validateToken(String token) {
+    private static void validateToken(String token, int debugCol) {
         if (token.isEmpty()) {
-            throw new IllegalArgumentException("Empty key found");
+            throw new IllegalArgumentException("Empty key found at col:" + debugCol);
         }
         for (var res : RESERVED) {
             if (token.contains(res)) {
-                throw new IllegalArgumentException("Found a key with invalid content: `" + token + "` contains the '" + res + "' character");
+                throw new IllegalArgumentException("Found a key with invalid content: `" + token + "` contains the '" + res + "' character at col:" + debugCol);
             }
         }
     }
@@ -392,25 +398,26 @@ public class StdUriTemplate {
         }
     }
 
-    private static String expandTokens(List<String> tokens, Map<String, Object> substitutions) {
-        StringBuilder result = new StringBuilder();
+    private static String expandTokens(List<String> tokens, Map<String, Object> substitutions, int debugCol, StringBuilder result) {
 
         boolean firstToken = true;
+        // TODO: Modifier -> static methods with switch inside
         Modifier mod = null;
         String key;
         for (var token : tokens) {
+            // TODO: Token tutti metodi statici
             Token tok = new Token(token);
             if (mod == null) {
                 mod = getModifier(token);
                 key = mod.key();
-                mod.validate();
+                mod.validate(debugCol);
             } else {
                 key = tok.sanitized();
-                tok.validate();
+                tok.validate(debugCol);
             }
 
-            if (substitutions.containsKey(key)) {
-                Object value = substitutions.get(key);
+            Object value = substitutions.get(key);
+            if (value != null) {
 
                 // null and equivalent, simply skip
                 if (value == null ||
@@ -435,10 +442,12 @@ public class StdUriTemplate {
                     result.append(mod.separator());
                 }
 
+
                 if (value instanceof String) {
                     result.append(mod.expand(key, (String) value, tok.maxChar()));
-                } else if (value instanceof Integer) {
-                } else if (value instanceof List) {
+                } else if (value instanceof ArrayList || // fast path on std lib concrete type
+                        value instanceof List) {
+                    // TODO: refactor in methods
                     boolean first = true;
                     for (var subst : (List<String>) value) {
                         if (first) {
@@ -454,11 +463,13 @@ public class StdUriTemplate {
                             }
                         }
                     }
-                } else if (value instanceof Map) {
+                } else if (value instanceof HashMap || // fast path on std lib concrete type
+                        value instanceof Map) {
+                    // TODO: refactor in methods
                     boolean first = true;
                     for (var subst : ((Map<String, String>) value).entrySet()) {
                         if (tok.maxChar() != -1) {
-                            throw new IllegalArgumentException("Value trimming is not allowed on Maps");
+                            throw new IllegalArgumentException("Value trimming is not allowed on Maps at col:" + debugCol);
                         }
                         if (first) {
                             first = false;
@@ -484,9 +495,8 @@ public class StdUriTemplate {
                         result.append(mod.expandElements(key, subst.getValue(), mod.maxChar()));
                     }
                 } else {
-                    throw new IllegalArgumentException("Substitution type not supported, found " + value.getClass() + ", but only Integer, Float, Long, Double, String, List<String> and Map<String, String> are allowed.");
+                    throw new IllegalArgumentException("Substitution type not supported, found " + value.getClass() + ", but only Integer, Float, Long, Double, String, List<String> and Map<String, String> are allowed at col:" + debugCol);
                 }
-
                 firstToken = false;
             }
         }
