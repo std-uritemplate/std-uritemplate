@@ -18,8 +18,9 @@ if [ ! -f ${SCRIPT_DIR}/../${LANGUAGE}/test.sh ]; then
   exit 1;
 fi
 
-if [ ! -d ${SCRIPT_DIR}/../uritemplate-test ]; then
-  git clone --depth=1 --branch=master https://github.com/uri-templates/uritemplate-test.git
+if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ]; then
+  echo "Please clone this repo and all of the submodules"
+  exit 1
 fi
 
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER}" -type f); do

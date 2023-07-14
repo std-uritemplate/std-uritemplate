@@ -34,5 +34,7 @@ jobs:
       # Common testing
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - name: Run Tests on ${{ matrix.language }}
         run: ./tests/test.sh ${{ matrix.language }}
