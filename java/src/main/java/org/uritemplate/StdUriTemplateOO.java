@@ -7,7 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StdUriTemplate {
+public class StdUriTemplateOO implements UriTemplate {
+
+    // Benchmark Wrapper
+    public String benchmark(final String template, final Map<String, Object> substitutions) {
+        return expand(template, substitutions);
+    }
 
     // Public API
     public static String expand(final String template, final Map<String, Object> substitutions) {
