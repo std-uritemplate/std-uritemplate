@@ -19,10 +19,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 5)
-@Measurement(iterations = 10)
+@Warmup(iterations = 2)
+@Measurement(iterations = 5)
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Fork(2)
+@Fork(1)
 public class BenchmarkUriTemplate {
 
     @Param({"OO", "New", "Micronaut"})
