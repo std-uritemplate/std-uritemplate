@@ -17,6 +17,7 @@ jobs:
         language:
           - java
           - python
+          - typescript
     steps:
       - name: Common - Checkout
         uses: actions/checkout@v3
@@ -43,6 +44,11 @@ jobs:
       - name: Python - Add Poetry to PATH
         if: matrix.language == 'python'
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - uses: actions/setup-node@v3
+        if: matrix.language == 'typescript'
+        with:
+          node-version: 18
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
