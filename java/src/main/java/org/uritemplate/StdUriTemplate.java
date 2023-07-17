@@ -16,8 +16,6 @@ public class StdUriTemplate {
     }
 
     // Private implementation
-    private final static Character[] RESERVED = new Character[]{'+', '#', '/', ';', '?', '&', ' ', '!', '=', '$', '|', '*', ':', '~', '-' };
-
     private enum Modifier {
         NO_MOD,
         PLUS,
@@ -30,10 +28,25 @@ public class StdUriTemplate {
     }
 
     private static void validateLiteral(Character c, int col) {
-        for (var reserved: RESERVED) {
-            if (reserved.equals(c)) {
+        switch (c) {
+            case '+':
+            case '#':
+            case '/':
+            case ';':
+            case '?':
+            case '&':
+            case ' ':
+            case '!':
+            case '=':
+            case '$':
+            case '|':
+            case '*':
+            case ':':
+            case '~':
+            case '-':
                 throw new IllegalArgumentException("Illegal character identified in the token at col:" + col);
-            }
+            default:
+                break;
         }
     }
 
