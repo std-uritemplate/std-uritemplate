@@ -1,0 +1,16 @@
+{
+  "name": "std-uritemplate",
+  "version": "0.0.1",
+  "description": "Standard URI template implementation fot TS/JS",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+  },
+  "keywords": [ "uritemplate", "uritemplates", "std-uritemplate"],
+  "author": "Andrea Peruffo <andrea.peruffo1982@gmail.com>",
+  "license": "APACHE2",
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
