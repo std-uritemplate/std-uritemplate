@@ -49,5 +49,24 @@ the decided implementation "should" be fast enough
 
 # Adding a new language
 
+This section explains the steps that are currently used to add a new language implementation:
+
 1. Clone this repository with submodules `git clone --recurse-submodules ...`
-2. // TODO when we have a final setup
+2. Create a new folder named after the language
+3. Create a `<lang>/init.sh` script that will do the setup and, if applicable, compile and bundle the implementation
+4. Create a `<lang>/test.sh` script that should:
+  - read `argv[0]` read the content of the referenced file and use it as the first argument (`template`)
+  - read `argv[1]` read the content to a Map/Dictionary structure from json and use it as the second argument (`substitutions`)
+  - invoke `StdUriTemplate.expand(template, substitutions)` and return the result to std-out(tip: you can use std-err for debugging purposes), in case of exceptions, return the string "false"
+5. Test locally the implementation by filtering one example file at the time, a suggested order would be:
+  - `./tests/test.sh <lang> spec-examples.json`
+  - `./tests/test.sh <lang> spec-examples-by-section.json`
+  - `./tests/test.sh <lang> extended-tests.json`
+  - `./tests/test.sh <lang> negative-tests.json`
+6. If a test doesn't pass you can easily re-run just the latest invocation by running: `./tests/re-test.sh <lang>`
+7. Verify one last time that everything works by running `./tests/test.sh <lang>`
+8. Add the language to the GH Action Matrix CI:
+  - add the language to the matrix
+  - add the setup with appropriate conditionals
+  - run it in CI to verify that everything is passing
+9. Add the setup to publish the implementation to a package manager or support this discussion with the repo maintainers

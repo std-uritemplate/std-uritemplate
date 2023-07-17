@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "std-uritemplate"
+version = "0.0.1"
+description = ""
+authors = ["Andrea Peruffo <andrea.peruffo1982@gmail.com>"]
+readme = "../Readme.md"
+packages = [{include = "stduritemplate"}]
+exclude = [
+    { path = "stduritemplate/__pycache__", format=["sdist", "wheel"] },
+]
+license = "Apache 2.0"
+homepage = "https://github.com/andreaTP/std-uritemplate"
+repository = "https://github.com/andreaTP/std-uritemplate"
+keywords = ["std-uritemplate", "uritemplate", "uritemplates", "stduritemplate"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"

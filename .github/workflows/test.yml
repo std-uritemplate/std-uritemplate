@@ -16,6 +16,7 @@ jobs:
       matrix:
         language:
           - java
+          - python
     steps:
       - name: Common - Checkout
         uses: actions/checkout@v3
@@ -34,6 +35,14 @@ jobs:
         run: |
           curl -Ls https://sh.jbang.dev | bash -s - app setup
           echo "$HOME/.jbang/bin" >> $GITHUB_PATH
+
+      # Python setup
+      - name: Python - Install Poetry
+        if: matrix.language == 'python'
+        uses: snok/install-poetry@v1
+      - name: Python - Add Poetry to PATH
+        if: matrix.language == 'python'
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
