@@ -42,6 +42,7 @@ This has to be done, we want to keep the number of options as low as possible, r
 - target Level support is 4 (should pass all the canonical tests)
 - favor maintenance
 - performance until they compromise readability
+- one implementation per ecosystem/runtime (e.g. 1 implementation in Java and no Kotlin/Scala/Closure ...)
 
 Speed vs. Maintainability:
 the decided implementation "should" be fast enough
