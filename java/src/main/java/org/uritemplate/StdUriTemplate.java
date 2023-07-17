@@ -250,13 +250,14 @@ public class StdUriTemplate {
 
     private static void addExpandedValue(String value, StringBuilder result, int maxChar, boolean replaceReserved) {
         var max = (maxChar != -1) ? Math.min(maxChar, value.length()) : value.length();
+        result.ensureCapacity(max * 2); // hint to SB
         StringBuilder reservedBuffer = null;
 
         for (var i = 0; i < max; i++) {
             char character = value.charAt(i);
 
             if (character == '%' && !replaceReserved) {
-                reservedBuffer = new StringBuilder();
+                reservedBuffer = new StringBuilder(3);
             }
 
             if (reservedBuffer != null) {
@@ -287,7 +288,7 @@ public class StdUriTemplate {
                     result.append("%25");
                 } else {
                     if (replaceReserved) {
-                        result.append(URLEncoder.encode(new String(new char[]{character}), StandardCharsets.UTF_8));
+                        result.append(URLEncoder.encode(Character.toString(character), StandardCharsets.UTF_8));
                     } else {
                         result.append(character);
                     }
