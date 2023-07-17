@@ -35,7 +35,7 @@ class StdUriTemplate:
             return -1
         else:
             try:
-                return int(buffer)
+                return int(''.join(buffer))
             except ValueError:
                 raise ValueError(f"Cannot parse max chars at col: {col}")
 
@@ -181,8 +181,9 @@ class StdUriTemplate:
                 reserved_buffer.append(character)
                 if len(reserved_buffer) == 3:
                     try:
-                        urllib.parse.unquote(''.join(reserved_buffer))
-                        is_encoded = True
+                        reserved = ''.join(reserved_buffer)
+                        decoded = urllib.parse.unquote(reserved, encoding='utf-8', errors='strict')
+                        is_encoded = (decoded != reserved)
                     except Exception:
                         is_encoded = False
                     if is_encoded:
@@ -198,7 +199,7 @@ class StdUriTemplate:
                     result.append("%25")
                 else:
                     if replace_reserved:
-                        result.append(urllib.parse.quote(character))
+                        result.append(urllib.parse.quote(character, encoding='utf-8', safe=''))
                     else:
                         result.append(character)
 

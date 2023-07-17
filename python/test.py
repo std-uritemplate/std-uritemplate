@@ -5,7 +5,6 @@ import traceback
 
 from stduritemplate import StdUriTemplate
 
-
 template_file = sys.argv[1]
 data_file = sys.argv[2]
 
