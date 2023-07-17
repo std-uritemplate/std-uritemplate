@@ -42,6 +42,7 @@ for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER
       echo "${TEMPLATE}" > ${SCRIPT_DIR}/template.txt
 
       POSSIBLE_RESULTS=$(echo $testcase | jq -rc '.[1] | if type=="string" then [.] else if type=="boolean" then [.] else . end end')
+      echo ${POSSIBLE_RESULTS} > ${SCRIPT_DIR}/possible-results.json
       
       echo 0 > "${SCRIPT_DIR}/result"
       RESULT=$(${SCRIPT_DIR}/../${LANGUAGE}/test.sh "${SCRIPT_DIR}/template.txt" "${SCRIPT_DIR}/substitutions.json")

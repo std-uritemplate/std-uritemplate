@@ -37,10 +37,15 @@ This has to be done, we want to keep the number of options as low as possible, r
 - zero dependencies
 - only single expansion will be supported
 - as little public API as possible
+- no language idiomatic API, only low level primitives
 - portable implementation across languages based on widely available patterns
-- target Level support is 4
+- target Level support is 4 (should pass all the canonical tests)
+- favor maintenance
+- performance until they compromise readability
+- one implementation per ecosystem/runtime (e.g. 1 implementation in Java and no Kotlin/Scala/Closure ...)
 
-Speed vs. Maintainability: the decided implementation "should" be fast enough
+Speed vs. Maintainability:
+the decided implementation "should" be fast enough
 
 # Adding a new language
 
