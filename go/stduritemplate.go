@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -12,7 +13,8 @@ type Substitutions map[string]interface{}
 type Modifier int
 
 const (
-	NO_MOD Modifier = iota
+	UNDEFINED Modifier = iota
+	NO_MOD
 	PLUS
 	DASH
 	DOT
@@ -48,41 +50,44 @@ func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 		} else {
 			maxChar, err := strconv.Atoi(value)
 			if err != nil {
-				return -1, fmt.Errorf("Cannot parse max chars at col: %d", col)
+				return 0, fmt.Errorf("Cannot parse max chars at col: %d", col)
 			}
 			return maxChar, nil
 		}
 	}
 }
 
-func getModifier(c string, token *strings.Builder, col int) Modifier {
+func getModifier(c string, token *strings.Builder, col int) (Modifier, error) {
 	switch c {
 	case "+":
-		return PLUS
+		return PLUS, nil
 	case "#":
-		return DASH
+		return DASH, nil
 	case ".":
-		return DOT
+		return DOT, nil
 	case "/":
-		return SLASH
+		return SLASH, nil
 	case ";":
-		return SEMICOLON
+		return SEMICOLON, nil
 	case "?":
-		return QUESTION_MARK
+		return QUESTION_MARK, nil
 	case "&":
-		return AT
+		return AT, nil
 	default:
-		validateLiteral(c, col)
+		err := validateLiteral(c, col)
+		if err != nil {
+			return UNDEFINED, err
+		}
 		token.WriteString(c)
-		return NO_MOD
+		return NO_MOD, nil
 	}
 }
 
 func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var result strings.Builder
 
-	var token *strings.Builder
-	var modifier Modifier
+	var token *strings.Builder = nil
+	var modifier Modifier = UNDEFINED
 	var composite bool
 	var maxCharBuffer *strings.Builder
 	var firstToken bool = true
@@ -107,7 +112,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					firstToken = false
 				}
 				token = nil
-				modifier = NO_MOD
+				modifier = UNDEFINED
 				composite = false
 				maxCharBuffer = nil
 			} else {
@@ -134,8 +139,12 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			// Intentional fall-through for commas outside the {}
 		default:
 			if token != nil {
-				if modifier == NO_MOD {
-					modifier = getModifier(character, token, i)
+				if modifier == UNDEFINED {
+					var err error
+					modifier, err = getModifier(character, token, i)
+					if err != nil {
+						return "", err
+					}
 				} else if maxCharBuffer != nil {
 					if _, err := strconv.Atoi(character); err == nil {
 						maxCharBuffer.WriteString(character)
@@ -235,32 +244,36 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 		max = len(value)
 	}
 	reservedBuffer := []string{}
+	fillReserved := false
 
 	for i := 0; i < max; i++ {
 		character := value[i : i+1]
 
 		if character == "%" && !replaceReserved {
-			reservedBuffer = []string{character}
+			reservedBuffer = []string{}
+			fillReserved = true
 		}
 
-		if len(reservedBuffer) != 0 {
+		if fillReserved {
 			reservedBuffer = append(reservedBuffer, character)
 
 			if len(reservedBuffer) == 3 {
 				encoded := true
-				_, err := url.QueryUnescape(strings.Join(reservedBuffer, ""))
+				reserved := strings.Join(reservedBuffer, "")
+				unescaped, err := url.QueryUnescape(reserved)
 				if err != nil {
-					encoded = false
+					encoded = (reserved == unescaped)
 				}
 
 				if encoded {
-					result.WriteString(strings.Join(reservedBuffer, ""))
+					result.WriteString(reserved)
 				} else {
 					result.WriteString("%25")
 					// only if !replaceReserved
 					result.WriteString(strings.Join(reservedBuffer[1:], ""))
 				}
 				reservedBuffer = []string{}
+				fillReserved = false
 			}
 		} else {
 			if character == " " {
@@ -277,7 +290,7 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 		}
 	}
 
-	if len(reservedBuffer) != 0 {
+	if fillReserved {
 		result.WriteString("%25")
 		if replaceReserved {
 			result.WriteString(url.QueryEscape(strings.Join(reservedBuffer[1:], "")))
@@ -285,16 +298,6 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 			result.WriteString(strings.Join(reservedBuffer[1:], ""))
 		}
 	}
-}
-
-func isList(value interface{}) bool {
-	_, ok := value.([]interface{})
-	return ok
-}
-
-func isMap(value interface{}) bool {
-	_, ok := value.(map[string]interface{})
-	return ok
 }
 
 func getSubstitutionType(value interface{}, col int) string {
@@ -344,7 +347,7 @@ func expandToken(
 
 	switch value.(type) {
 	case int, int64, float32, float64:
-		substitutions[token] = fmt.Sprintf("%v", value)
+		value = fmt.Sprintf("%v", value)
 	}
 
 	substType := getSubstitutionType(value, col)
@@ -364,7 +367,10 @@ func expandToken(
 	case SubstitutionTypeList:
 		addListValue(modifier, token, value.([]interface{}), result, maxChar, composite)
 	case SubstitutionTypeMap:
-		addMapValue(modifier, token, value.(map[string]interface{}), result, maxChar, composite)
+		err := addMapValue(modifier, token, value.(map[string]interface{}), result, maxChar, composite)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -372,6 +378,7 @@ func expandToken(
 
 func addStringValue(modifier Modifier, token string, value string, result *strings.Builder, maxChar int) {
 	addValue(modifier, token, value, result, maxChar)
+
 }
 
 func addListValue(modifier Modifier, token string, value []interface{}, result *strings.Builder, maxChar int, composite bool) {
@@ -397,7 +404,18 @@ func addMapValue(modifier Modifier, token string, value map[string]interface{}, 
 	if maxChar != -1 {
 		return fmt.Errorf("Value trimming is not allowed on Maps")
 	}
-	for k, v := range value {
+
+	// workaround to make Map ordering not random
+	// https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982
+	keys := make([]string, 0, len(value))
+	for k := range value {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for key := range keys {
+		k := keys[key]
+		v := value[k]
+
 		if composite {
 			if !first {
 				addSeparator(modifier, result)
