@@ -27,6 +27,16 @@ We have a set of design decisions to guide:
 - performance until they compromise readability
 - one implementation per ecosystem/runtime (e.g. 1 implementation in Java and no Kotlin/Scala/Closure, 1 in TS that will serve JS as well etc.)
 
+## API
+
+The public API is composed by a single method(in Java for simplicity):
+
+```java
+String expand(String template, Map<String, Object> substitutions)
+```
+
+all the rest, should, possibly, be marked as `private` and not directly accessible.
+
 ## Motivation
 
 [<img alt="alt_text" src="https://imgs.xkcd.com/comics/dependency.png" />](https://xkcd.com/2347/)
