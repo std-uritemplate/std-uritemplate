@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	templateFile := os.Args[2]
-	dataFile := os.Args[3]
+	templateFile := os.Args[1]
+	dataFile := os.Args[2]
 
 	data, err := readJSONFile(dataFile)
 	if err != nil {
