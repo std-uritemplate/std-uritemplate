@@ -34,6 +34,7 @@ jobs:
           java-version: "11"
           distribution: "temurin"
       - name: Java - Install jbang
+        if: matrix.language == 'java'
         run: |
           curl -Ls https://sh.jbang.dev | bash -s - app setup
           echo "$HOME/.jbang/bin" >> $GITHUB_PATH
