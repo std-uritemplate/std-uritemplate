@@ -1,6 +1,6 @@
 # Standard Uri Template
 
-This is intended to become a complete and maintained cross-language implementation of the Uri Template specification RFC 6570 Level 4.
+This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
 
 ## Available implementations
 
