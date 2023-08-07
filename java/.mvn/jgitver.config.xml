@@ -6,5 +6,5 @@
     <useDirty>false</useDirty>
     <useGitCommitId>true</useGitCommitId>
     <nonQualifierBranches>main</nonQualifierBranches>
-    <regexVersionTag>(([0-9]+)\.([0-9]+)\.([0-9]+))\.Final</regexVersionTag>
+    <regexVersionTag>(([0-9]+)\.([0-9]+)\.([0-9]+))</regexVersionTag>
 </configuration>
