@@ -1,6 +1,26 @@
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "maven"
+    directory: "/java"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+      directory: "/typescript"
+      schedule:
+        interval: "daily"
+  - package-ecosystem: "pip"
+      directory: "/python"
+      schedule:
+        interval: "daily"
+  - package-ecosystem: "gomod"
+      directory: "/python"
+      schedule:
+        interval: "daily"
