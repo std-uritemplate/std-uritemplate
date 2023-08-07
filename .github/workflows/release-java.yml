@@ -23,7 +23,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - name: Publish package
-        run: mvn --batch-mode -Prelease -Djgitver.use-version="${{ github.ref_name }}" deploy
+        run: mvn --batch-mode -Prelease deploy
         working-directory: java
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
