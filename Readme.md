@@ -103,4 +103,5 @@ This section explains the steps that are currently used to add a new language im
     - add the language to the matrix
     - add the setup with appropriate conditionals
     - run it in CI to verify that everything is passing
-9. Add the setup to publish the implementation to a package manager or support this discussion with the repo maintainers
+9. Add the corresponding dependabot configuration in `.github/dependabot.yml`
+10. Add the setup to publish the implementation to a package manager or support this discussion with the repo maintainers
