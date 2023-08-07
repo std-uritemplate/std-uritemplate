@@ -13,14 +13,14 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "npm"
-      directory: "/typescript"
-      schedule:
-        interval: "daily"
+    directory: "/typescript"
+    schedule:
+      interval: "daily"
   - package-ecosystem: "pip"
-      directory: "/python"
-      schedule:
-        interval: "daily"
+    directory: "/python"
+    schedule:
+      interval: "daily"
   - package-ecosystem: "gomod"
-      directory: "/python"
-      schedule:
-        interval: "daily"
+    directory: "/python"
+    schedule:
+      interval: "daily"
