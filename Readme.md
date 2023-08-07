@@ -74,6 +74,11 @@ We do consider this the sweet spot for this project:
 - fast enough to be competitive
 - readable and maintainable across languages
 
+### Publishing
+
+Publishing should be fully automated and it will be performed anytime the repository is tagged on the `main` branch by a corresponding GH Action.
+Please contact the repository owners to setup the required Secrets.
+
 ### Go
 
 In Go is not possible to deserialize JSON into a Map preserving the order of the elements ([reference](https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982)).
