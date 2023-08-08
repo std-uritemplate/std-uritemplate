@@ -1,7 +1,5 @@
 # std-uritemplate
 
-[<img alt="alt_text" style="height: 50px;display: block;margin-left: auto;margin-right: auto; " src="https://github.com/std-uritemplate/std-uritemplate.github.io/blob/0675490a9a084c69e112be0b87507f6ed36c2f8f/imgs/logo.png?raw=true" />](https://github.com/std-uritemplate)
-
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
 
 ## Available implementations
