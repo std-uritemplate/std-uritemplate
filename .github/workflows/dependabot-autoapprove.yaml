@@ -9,6 +9,6 @@ jobs:
       pull-requests: write
     if: github.actor == 'dependabot[bot]'
     steps:
-      - uses: hmarr/auto-approve-action@da92209ac68d76fd20af3efa5268a5e8fafb91d9
+      - uses: hmarr/auto-approve-action@05117a7ec2883d5c9a48de532442e96d57ae12f6
         with:
           github-token: ${{secrets.GH_TOKEN}}
