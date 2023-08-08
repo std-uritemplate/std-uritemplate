@@ -1,4 +1,4 @@
-package main
+package stduritemplate
 
 import (
 	"fmt"
@@ -437,6 +437,6 @@ func addMapValue(modifier Modifier, token string, value map[string]interface{}, 
 	return nil
 }
 
-func expand(template string, substitutions Substitutions) (string, error) {
+func Expand(template string, substitutions Substitutions) (string, error) {
 	return expandImpl(template, substitutions)
 }

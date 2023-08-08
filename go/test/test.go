@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	stduritemplate "github.com/std-uritemplate/std-uritemplate"
 )
 
 func main() {
@@ -23,7 +25,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	result, err := expand(template, data)
+	result, err := stduritemplate.Expand(template, data)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error occurred: '%s'.\n", err)
 		fmt.Print("false\n")
@@ -40,13 +42,13 @@ func readFile(filename string) (string, error) {
 	return strings.TrimSpace(string(content)), nil
 }
 
-func readJSONFile(filename string) (Substitutions, error) {
+func readJSONFile(filename string) (map[string]interface{}, error) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	var data Substitutions
+	var data map[string]interface{}
 	err = json.Unmarshal(content, &data)
 	if err != nil {
 		return nil, err
