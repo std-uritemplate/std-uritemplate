@@ -1,9 +1,10 @@
 name: Publish Java
 
-on:
-  push:
-    tags:
-      - '*'
+# TEMPORARY - testing TS publishing
+# on:
+#   push:
+#     tags:
+#       - '*'
 
 jobs:
   publish:
