@@ -1,0 +1,28 @@
+name: Publish Typescript
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
+      - name: Set the version
+        working-directory: typescript
+        run: cat <<< $(jq -r ".version = \"${$GITHUB_REF_NAME}\"" package.json) > package.json
+      - name: Install dependencies and build
+        working-directory: typescript
+        run: npm install && npm run clean && npm run build
+      - name: Publish package on NPM
+        working-directory: typescript
+        run: npm publish --access publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
