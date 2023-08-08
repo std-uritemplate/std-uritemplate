@@ -30,7 +30,7 @@ You can use the library as a Maven dependency:
 in Gradle:
 
 ```groovy
-implementation 'io.github.std-uritemplate:std-uritemplate:0.0.1'
+implementation 'io.github.std-uritemplate:std-uritemplate:REPLACE-ME'
 ```
 
 and use it in your project:
@@ -40,7 +40,25 @@ import io.github.stduritemplate.StdUriTemplate;
 
 ...
 
-StdUriTemplate.expand(template, sustitutions);
+StdUriTemplate.expand(template, substitutions);
+```
+
+### Typescript/Javascript
+
+Install the package using `npm`:
+
+```
+npm i @std-uritemplate/std-uritemplate
+```
+
+Use the package:
+
+```js
+const { StdUriTemplate } = require('@std-uritemplate/std-uritemplate');
+
+...
+
+StdUriTemplate.expand(template, substitutions);
 ```
 
 ## Design decisions
