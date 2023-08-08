@@ -2,7 +2,7 @@
 
 [![GitHub license](https://img.shields.io/badge/license-APACHE-blue.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
 [![Build Status](https://github.com/std-uritemplate/std-uritemplate/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/std-uritemplate/std-uritemplate/blob/main/.github/workflows/test.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.png?style=flat)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
 [![NPM version](https://img.shields.io/npm/v/%40std-uritemplate%2Fstd-uritemplate.svg?style=flat&color=green)](https://www.npmjs.com/package/@std-uritemplate/std-uritemplate)
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
