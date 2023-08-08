@@ -1,4 +1,4 @@
-package org.uritemplate;
+package io.github.stduritemplate;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;

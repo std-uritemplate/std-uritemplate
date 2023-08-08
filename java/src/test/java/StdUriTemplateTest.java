@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test;
-import org.uritemplate.StdUriTemplate;
+import io.github.stduritemplate.StdUriTemplate;
 
 import java.util.HashMap;
 
