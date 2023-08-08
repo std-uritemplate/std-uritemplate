@@ -54,6 +54,11 @@ jobs:
   #       env:
   #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+permissions:
+  contents: write
+  deployments: write
+  packages: write
+
   publish-go:
     runs-on: ubuntu-latest
     steps:
