@@ -41,7 +41,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Set the version
         working-directory: typescript
-        run: cat <<< $(jq -r ".version = \"${$GITHUB_REF_NAME}\"" package.json) > package.json
+        run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
       - name: Install dependencies and build
         working-directory: typescript
         run: npm ci && npm run clean && npm run build
