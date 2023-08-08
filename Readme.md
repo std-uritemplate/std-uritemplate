@@ -1,6 +1,11 @@
 # std-uritemplate
 
+[![GitHub license](https://img.shields.io/badge/license-APACHE-blue.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
 [![Build Status](https://github.com/std-uritemplate/std-uritemplate/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/std-uritemplate/std-uritemplate/blob/main/.github/workflows/test.yml)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=plastic)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
+[![NPM version](https://img.shields.io/npm/v/%40std-uritemplate%2Fstd-uritemplate.svg?style=plastic&color=green)](https://www.npmjs.com/package/@std-uritemplate/std-uritemplate)
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
 
