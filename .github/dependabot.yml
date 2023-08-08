@@ -21,6 +21,6 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "gomod"
-    directory: "/python"
+    directory: "/go"
     schedule:
       interval: "daily"

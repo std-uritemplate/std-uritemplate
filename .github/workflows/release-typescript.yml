@@ -20,7 +20,7 @@ jobs:
         run: cat <<< $(jq -r ".version = \"${$GITHUB_REF_NAME}\"" package.json) > package.json
       - name: Install dependencies and build
         working-directory: typescript
-        run: npm install && npm run clean && npm run build
+        run: npm ci && npm run clean && npm run build
       - name: Publish package on NPM
         working-directory: typescript
         run: npm publish --access publish
