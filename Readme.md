@@ -1,15 +1,47 @@
 # std-uritemplate
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate)
+
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
 
 ## Available implementations
 
 | Language | Complete | Reviewed | Published |
 |---|---|---|---|
-| Java | ✅ | ✅ | ❌ |
+| Java | ✅ | ✅ | ✅ |
 | Python | ✅ | ❌ | ❌ |
 | Typescript | ✅ | ❌ | ❌ |
 | Go | ✅ | ❌ | ❌ |
+
+## Usage
+
+### Java
+
+You can use the library as a Maven dependency:
+
+```xml
+<dependency>
+    <groupId>io.github.std-uritemplate</groupId>
+    <artifactId>std-uritemplate</artifactId>
+    <version>REPLACE-ME</version>
+</dependency>
+```
+
+in Gradle:
+
+```
+implementation 'io.github.std-uritemplate:std-uritemplate:0.0.1'
+```
+
+and use it in your project:
+
+```java
+import io.github.stduritemplate.StdUriTemplate;
+
+...
+
+StdUriTemplate.expand(template, sustitutions);
+```
 
 ## Design decisions
 
@@ -110,3 +142,4 @@ This section explains the steps that are currently used to add a new language im
     - run it in CI to verify that everything is passing
 9. Add the corresponding dependabot configuration in `.github/dependabot.yml`
 10. Add the setup to publish the implementation to a package manager or support this discussion with the repo maintainers
+11. Add the documentation regarding how to use the library as a dependency

@@ -1,6 +1,6 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 
-//SOURCES src/main/java/org/uritemplate/StdUriTemplate.java
+//SOURCES src/main/java/io/github/stduritemplate/StdUriTemplate.java
 //DEPS com.fasterxml.jackson.core:jackson-databind:2.15.2
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static java.lang.System.*;
 
-import org.uritemplate.StdUriTemplate;
+import io.github.stduritemplate.StdUriTemplate;
 
 public class test {
 
