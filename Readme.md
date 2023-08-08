@@ -29,7 +29,7 @@ You can use the library as a Maven dependency:
 
 in Gradle:
 
-```
+```groovy
 implementation 'io.github.std-uritemplate:std-uritemplate:0.0.1'
 ```
 
