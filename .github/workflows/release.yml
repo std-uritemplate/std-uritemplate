@@ -5,6 +5,11 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+  deployments: write
+  packages: write
+
 jobs:
 
   # publish-java:
@@ -53,11 +58,6 @@ jobs:
   #       run: npm publish --access public
   #       env:
   #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-permissions:
-  contents: write
-  deployments: write
-  packages: write
 
   publish-go:
     runs-on: ubuntu-latest
