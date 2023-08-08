@@ -9,6 +9,8 @@
   <version>999-SNAPSHOT</version>
 
   <name>Standard Uri Template</name>
+  <url>https://std-uritemplate.github.io/</url>
+  <description>Std UriTemplate, RFC 6570 implementation</description>
 
   <licenses>
     <license>
