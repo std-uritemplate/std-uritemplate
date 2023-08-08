@@ -66,8 +66,8 @@ jobs:
         working-directory: go
         run: |
           go mod tidy
-          git tag "go/v0.1.0"
-          git push origin "go/v0.1.0"
-          GOPROXY=proxy.golang.org go list -m github.com/std-uritemplate/std-uritemplate@v0.1.0
+          git tag "go/v${GITHUB_REF_NAME}"
+          git push origin "go/v${GITHUB_REF_NAME}"
+          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate@v$GITHUB_REF_NAME"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
