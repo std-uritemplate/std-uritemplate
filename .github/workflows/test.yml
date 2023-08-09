@@ -40,6 +40,12 @@ jobs:
           echo "$HOME/.jbang/bin" >> $GITHUB_PATH
 
       # Python setup
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'poetry'
       - name: Python - Install Poetry
         if: matrix.language == 'python'
         uses: snok/install-poetry@v1
