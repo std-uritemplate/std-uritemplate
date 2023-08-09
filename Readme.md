@@ -2,8 +2,10 @@
 
 [![GitHub license](https://img.shields.io/badge/license-APACHE-blue.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
 [![Build Status](https://github.com/std-uritemplate/std-uritemplate/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/std-uritemplate/std-uritemplate/blob/main/.github/workflows/test.yml)
+[![GitHub Release](https://img.shields.io/github/tag/std-uritemplate/std-uritemplate.svg?style=flat&color=green)](https://github.com/std-uritemplate/std-uritemplate/tags)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
 [![NPM version](https://img.shields.io/npm/v/%40std-uritemplate%2Fstd-uritemplate.svg?style=flat&color=green)](https://www.npmjs.com/package/@std-uritemplate/std-uritemplate)
+[![Go Reference](https://pkg.go.dev/badge/github.com/std-uritemplate/std-uritemplate/go.svg)](https://pkg.go.dev/github.com/std-uritemplate/std-uritemplate/go)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
@@ -63,6 +65,24 @@ const { StdUriTemplate } = require('@std-uritemplate/std-uritemplate');
 ...
 
 StdUriTemplate.expand(template, substitutions);
+```
+
+### Go
+
+Install the package:
+
+```bash
+go get github.com/std-uritemplate/std-uritemplate/go
+```
+
+and use it:
+
+```go
+import stduritemplate "github.com/std-uritemplate/std-uritemplate/go"
+
+...
+
+stduritemplate.Expand(template, substitutions)
 ```
 
 ## Design decisions
