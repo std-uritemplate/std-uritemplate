@@ -6,6 +6,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
 [![NPM version](https://img.shields.io/npm/v/%40std-uritemplate%2Fstd-uritemplate.svg?style=flat&color=green)](https://www.npmjs.com/package/@std-uritemplate/std-uritemplate)
 [![Go Reference](https://pkg.go.dev/badge/github.com/std-uritemplate/std-uritemplate/go.svg)](https://pkg.go.dev/github.com/std-uritemplate/std-uritemplate/go)
+[![PyPI Version](https://img.shields.io/pypi/v/std-uritemplate.svg?style=flat&color=green)](https://pypi.python.org/pypi/std-uritemplate)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
@@ -15,7 +16,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Language | Complete | Reviewed | Published |
 |---|---|---|---|
 | Java | ✅ | ✅ | ✅ |
-| Python | ✅ | ❌ | ❌ |
+| Python | ✅ | ✅ | ✅ |
 | Typescript | ✅ | ✅ | ✅ |
 | Go | ✅ | ✅ | ✅ |
 
@@ -49,11 +50,29 @@ import io.github.stduritemplate.StdUriTemplate;
 StdUriTemplate.expand(template, substitutions);
 ```
 
+### Python
+
+Install the package with `pip` (or any alternative):
+
+```bash
+pip install std-uritemplate
+```
+
+Use the library in your project:
+
+```python
+from stduritemplate import StdUriTemplate
+
+...
+
+StdUriTemplate.expand(template, substitutions)
+```
+
 ### Typescript/Javascript
 
 Install the package using `npm`:
 
-```
+```bash
 npm i @std-uritemplate/std-uritemplate
 ```
 
