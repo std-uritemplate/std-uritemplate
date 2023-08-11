@@ -1,7 +1,10 @@
-﻿namespace stduritemplate;
+﻿#nullable disable
+namespace stduritemplate;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 public class StdUriTemplate
@@ -102,7 +105,7 @@ public class StdUriTemplate
 
         StringBuilder token = null;
 
-        Modifier modifier = Modifier.NO_MOD;
+        Modifier? modifier = null;
         bool composite = false;
         StringBuilder maxCharBuffer = null;
         bool firstToken = true;
@@ -125,7 +128,7 @@ public class StdUriTemplate
                             firstToken = false;
                         }
                         token = null;
-                        modifier = Modifier.NO_MOD;
+                        modifier = null;
                         composite = false;
                         maxCharBuffer = null;
                     }
@@ -152,7 +155,7 @@ public class StdUriTemplate
                 default:
                     if (token != null)
                     {
-                        if (modifier == Modifier.NO_MOD)
+                        if (modifier == null)
                         {
                             modifier = GetModifier(character, token, i);
                         }
@@ -202,7 +205,7 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddPrefix(Modifier mod, StringBuilder result)
+    private static void AddPrefix(Modifier? mod, StringBuilder result)
     {
         switch (mod)
         {
@@ -229,7 +232,7 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddSeparator(Modifier mod, StringBuilder result)
+    private static void AddSeparator(Modifier? mod, StringBuilder result)
     {
         switch (mod)
         {
@@ -252,7 +255,7 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddValue(Modifier mod, string token, string value, StringBuilder result, int maxChar)
+    private static void AddValue(Modifier? mod, string token, string value, StringBuilder result, int maxChar)
     {
         switch (mod)
         {
@@ -281,7 +284,7 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddValueElement(Modifier mod, string token, string value, StringBuilder result, int maxChar)
+    private static void AddValueElement(Modifier? mod, string token, string value, StringBuilder result, int maxChar)
     {
         switch (mod)
         {
@@ -324,8 +327,8 @@ public class StdUriTemplate
                     bool isEncoded = false;
                     try
                     {
-                        Uri.UnescapeDataString(reservedBuffer.ToString());
-                        isEncoded = true;
+                        var original = reservedBuffer.ToString();
+                        isEncoded = !original.Equals(Uri.UnescapeDataString(original));
                     }
                     catch (Exception)
                     {
@@ -385,14 +388,12 @@ public class StdUriTemplate
 
     private static bool IsList(object value)
     {
-        return value is List<string> ||
-            value is List<object>; // checking concrete instances first as it's faster
+        return value is IList;
     }
 
     private static bool IsDictionary(object value)
     {
-        return value is Dictionary<string, string> ||
-            value is Dictionary<string, object>; // checking concrete instances first as it's faster
+        return value is IDictionary;
     }
 
     private enum SubstitutionType
@@ -433,11 +434,11 @@ public class StdUriTemplate
             switch (substType)
             {
                 case SubstitutionType.STRING:
-                    return string.IsNullOrEmpty((string)value);
+                    return value == null;
                 case SubstitutionType.LIST:
-                    return ((List<string>)value).Count == 0;
+                    return ((IList)value).Count == 0;
                 case SubstitutionType.DICTIONARY:
-                    return ((Dictionary<string, string>)value).Count == 0;
+                    return ((IDictionary)value).Count == 0;
                 default:
                     return true;
             }
@@ -446,7 +447,7 @@ public class StdUriTemplate
 
     // returns true if expansion happened
     private static bool ExpandToken(
-            Modifier modifier,
+            Modifier? modifier,
             string token,
             bool composite,
             int maxChar,
@@ -460,7 +461,8 @@ public class StdUriTemplate
             throw new ArgumentException($"Found an empty token at col:{col}");
         }
 
-        object value = substitutions[token];
+        object value;
+        substitutions.TryGetValue(token, out value);
         if (value is int ||
                 value is long ||
                 value is float ||
@@ -490,23 +492,23 @@ public class StdUriTemplate
                 AddStringValue(modifier, token, (string)value, result, maxChar);
                 break;
             case SubstitutionType.LIST:
-                AddListValue(modifier, token, (List<string>)value, result, maxChar, composite);
+                AddListValue(modifier, token, (IList)value, result, maxChar, composite);
                 break;
             case SubstitutionType.DICTIONARY:
-                AddDictionaryValue(modifier, token, (Dictionary<string, string>)value, result, maxChar, composite);
+                AddDictionaryValue(modifier, token, ((IDictionary)value), result, maxChar, composite);
                 break;
         }
 
         return true;
     }
 
-    private static bool AddStringValue(Modifier modifier, string token, string value, StringBuilder result, int maxChar)
+    private static bool AddStringValue(Modifier? modifier, string token, string value, StringBuilder result, int maxChar)
     {
         AddValue(modifier, token, value, result, maxChar);
         return true;
     }
 
-    private static bool AddListValue(Modifier modifier, string token, List<string> value, StringBuilder result, int maxChar, bool composite)
+    private static bool AddListValue(Modifier? modifier, string token, IList value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
         foreach (string v in value)
@@ -533,14 +535,14 @@ public class StdUriTemplate
         return !first;
     }
 
-    private static bool AddDictionaryValue(Modifier modifier, string token, Dictionary<string, string> value, StringBuilder result, int maxChar, bool composite)
+    private static bool AddDictionaryValue(Modifier? modifier, string token, IDictionary value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
         if (maxChar != -1)
         {
             throw new ArgumentException("Value trimming is not allowed on Dictionaries");
         }
-        foreach (KeyValuePair<string, string> v in value)
+        foreach (DictionaryEntry v in value)
         {
             if (composite)
             {
@@ -548,23 +550,23 @@ public class StdUriTemplate
                 {
                     AddSeparator(modifier, result);
                 }
-                AddValueElement(modifier, token, v.Key, result, maxChar);
+                AddValueElement(modifier, token, (string)v.Key, result, maxChar);
                 result.Append('=');
             }
             else
             {
                 if (first)
                 {
-                    AddValue(modifier, token, v.Key, result, maxChar);
+                    AddValue(modifier, token, (string)v.Key, result, maxChar);
                 }
                 else
                 {
                     result.Append(',');
-                    AddValueElement(modifier, token, v.Key, result, maxChar);
+                    AddValueElement(modifier, token, (string)v.Key, result, maxChar);
                 }
                 result.Append(',');
             }
-            AddValueElement(modifier, token, v.Value, result, maxChar);
+            AddValueElement(modifier, token, (string)v.Value, result, maxChar);
             first = false;
         }
         return !first;
