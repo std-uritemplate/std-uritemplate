@@ -76,7 +76,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         if: matrix.language == 'ruby'
         with:
-          ruby-version: '3.0'
+          ruby-version: '2.7'
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
