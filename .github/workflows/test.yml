@@ -73,9 +73,9 @@ jobs:
 
       # Ruby setup
       - name: Ruby - Setup Ruby
+        uses: ruby/setup-ruby@v1
         if: matrix.language == 'ruby'
         working-directory: ruby
-        uses: ruby/setup-ruby@v1
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
