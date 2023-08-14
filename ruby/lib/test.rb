@@ -2,7 +2,7 @@
 require 'json'
 require 'uri'
 require 'pathname'
-require_relative './lib/stduritemplate.rb'
+require_relative 'stduritemplate'
 
 template_file = ARGV[0]
 data_file = ARGV[1]
