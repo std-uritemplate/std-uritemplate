@@ -2,7 +2,7 @@
 require 'json'
 require 'uri'
 require 'pathname'
-require 'stduritemplate'
+require_relative 'lib/stduritemplate'
 
 template_file = ARGV[0]
 data_file = ARGV[1]
@@ -25,7 +25,7 @@ rescue Errno::ENOENT
 end
 
 begin
-  result = stduritemplate.expand(template, data)
+  result = StdUriTemplate.expand(template, data)
   puts result
 rescue StandardError => e
   $stderr.puts("Error expanding template: #{e.message}")

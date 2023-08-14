@@ -1,4 +1,4 @@
-module stduritemplate
+module StdUriTemplate
 
   # Public API
   public
