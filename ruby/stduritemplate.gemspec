@@ -1,11 +1,11 @@
 Gem::Specification.new do |s|
   s.name        = "stduritemplate"
   s.version     = "0.0.0"
-  s.summary     = "std-uritemplate"
+  s.summary     = "stduritemplate"
   s.description = "std-uritemplate implementation for Ruby"
   s.authors     = ["Andrea Peruffo"]
   s.email       = "andrea.peruffo1982@gmail.com"
-  s.files       = ["lib/StdUriTemplate.rb"]
+  s.files       = ["lib/stduritemplate.rb"]
   s.homepage    =
     "https://rubygems.org/gems/std-uritemplate"
   s.license       = "APACHE-2"

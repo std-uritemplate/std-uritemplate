@@ -25,7 +25,7 @@ rescue Errno::ENOENT
 end
 
 begin
-  result = StdUriTemplate.expand(template, data)
+  result = stduritemplate.expand(template, data)
   puts result
 rescue StandardError => e
   $stderr.puts("Error expanding template: #{e.message}")

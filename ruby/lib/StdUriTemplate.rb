@@ -1,8 +1,8 @@
-module StdUriTemplate
+module stduritemplate
 
   # Public API
   public
-  
+
   def self.expand(template, substitutions)
     expand_impl(template, substitutions)
   end
