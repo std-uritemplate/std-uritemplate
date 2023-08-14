@@ -54,29 +54,18 @@ public class StdUriTemplate
 
     private static int GetMaxChar(StringBuilder buffer, int col)
     {
-        if (buffer == null)
+        if (buffer == null || buffer.Length < 1)
         {
             return -1;
         }
-        else
-        {
-            string value = buffer.ToString();
 
-            if (string.IsNullOrEmpty(value))
-            {
-                return -1;
-            }
-            else
-            {
-                try
-                {
-                    return int.Parse(value);
-                }
-                catch (FormatException)
-                {
-                    throw new ArgumentException($"Cannot parse max chars at col:{col}");
-                }
-            }
+        try
+        {
+            return int.Parse(buffer.ToString());
+        }
+        catch (FormatException)
+        {
+            throw new ArgumentException($"Cannot parse max chars at col:{col}");
         }
     }
 
