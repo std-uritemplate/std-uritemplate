@@ -8,5 +8,5 @@ Gem::Specification.new do |s|
   s.files       = ["lib/stduritemplate.rb"]
   s.homepage    =
     "https://rubygems.org/gems/std-uritemplate"
-  s.license       = "MIT"
+  s.license       = "APACHE-2"
 end
