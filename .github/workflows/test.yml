@@ -73,6 +73,8 @@ jobs:
 
       # Ruby setup
       - name: Ruby - Setup Ruby
+        if: matrix.language == 'ruby'
+        working-directory: ruby
         uses: ruby/setup-ruby@v1
 
       # Common testing
