@@ -78,10 +78,6 @@ jobs:
         with:
           ruby-version: '3.0'
 
-      - name: Setup tmate session
-        if: matrix.language == 'ruby'
-        uses: mxschmitt/action-tmate@v3
-
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
         run: ./tests/test.sh ${{ matrix.language }}
