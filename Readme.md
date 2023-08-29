@@ -19,6 +19,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Python | ✅ | ✅ | ✅ |
 | Typescript | ✅ | ✅ | ✅ |
 | Go | ✅ | ✅ | ✅ |
+| C# | ✅ | ✅ | ❌ |
 
 ## Usage
 
