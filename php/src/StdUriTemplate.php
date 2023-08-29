@@ -233,9 +233,6 @@ class StdUriTemplate {
         $reservedBuffer = null;
 
         for ($i = 0; $i < $max; $i++) {
-            if (empty($value[$i])) {
-              continue;
-            }
             $character = $value[$i];
 
             if ($character === '%' && !$replaceReserved) {
