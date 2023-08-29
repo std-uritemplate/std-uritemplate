@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Std.UriTemplate.Test</PackageId>
+    <PackageId>Std.UriTemplate</PackageId>
     <Version>$(VERSION)</Version>
     <Authors>andreaTP</Authors>
     <Company>stduritemplate</Company>
