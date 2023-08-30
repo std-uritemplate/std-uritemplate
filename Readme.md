@@ -8,6 +8,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/std-uritemplate/std-uritemplate/go.svg)](https://pkg.go.dev/github.com/std-uritemplate/std-uritemplate/go)
 [![PyPI Version](https://img.shields.io/pypi/v/std-uritemplate.svg?style=flat&color=green)](https://pypi.python.org/pypi/std-uritemplate)
 [![NuGet Version](https://img.shields.io/nuget/v/Std.UriTemplate.svg?style=flat&color=green)](https://www.nuget.org/packages/Std.UriTemplate/)
+[![Gem Version](https://badge.fury.io/rb/stduritemplate.svg)](https://badge.fury.io/rb/stduritemplate)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
@@ -21,6 +22,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Typescript | ✅ | ✅ | ✅ |
 | Go | ✅ | ✅ | ✅ |
 | C# | ✅ | ✅ | ✅ |
+| Ruby | ✅ | ✅ | ✅ |
 
 ## Usage
 
@@ -122,6 +124,24 @@ using stduritemplate;
 ...
 
 StdUriTemplate.Expand(template, substitutions);
+```
+
+### Ruby
+
+Install the package:
+
+```bash
+gem install stduritemplate
+```
+
+and use it:
+
+```ruby
+require 'stduritemplate'
+
+...
+
+StdUriTemplate.expand(template, substitutions)
 ```
 
 ## Design decisions

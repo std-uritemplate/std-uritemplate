@@ -28,3 +28,7 @@ updates:
     directory: "/csharp"
     schedule:
       interval: "daily"
+  - package-ecosystem: "bundler"
+    directory: "/ruby"
+    schedule:
+      interval: "daily"

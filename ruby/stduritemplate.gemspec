@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "stduritemplate"
-  s.version     = "0.0.0"
+  s.version     = ENV['VERSION'] || "0.0.0"
   s.summary     = "stduritemplate"
   s.description = "std-uritemplate implementation for Ruby"
   s.authors     = ["Andrea Peruffo"]

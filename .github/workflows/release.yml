@@ -117,3 +117,21 @@ jobs:
           dotnet nuget push dist/Std.UriTemplate.${GITHUB_REF_NAME}.nupkg --api-key ${NUGET_TOKEN} --source https://api.nuget.org/v3/index.json
         env:
           NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+
+  publish-ruby:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Ruby - Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      - name: Release to RubyGems
+        working-directory: ruby
+        run: |
+          export VERSION="${GITHUB_REF_NAME}"
+          gem build stduritemplate.gemspec
+          export GEM_HOST_API_KEY=${RUBYGEMS_TOKEN}
+          gem push "stduritemplate-${GITHUB_REF_NAME}.gem"
+        env:
+          RUBYGEMS_TOKEN: ${{ secrets.RUBYGEMS_TOKEN }}
