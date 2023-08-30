@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "std-uritemplate"
 version = "0.0.1"
-description = ""
+description = "std-uritemplate implementation for Python"
 authors = ["Andrea Peruffo <andrea.peruffo1982@gmail.com>"]
 readme = "Readme.md"
 packages = [{include = "stduritemplate"}]

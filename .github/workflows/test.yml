@@ -21,6 +21,7 @@ jobs:
           - typescript
           - go
           - csharp
+          - ruby
     steps:
       - name: Common - Checkout
         uses: actions/checkout@v3
@@ -69,6 +70,13 @@ jobs:
         if: matrix.language == 'csharp'
         with:
           dotnet-version: 7
+
+      # Ruby setup
+      - name: Ruby - Setup Ruby
+        uses: ruby/setup-ruby@v1
+        if: matrix.language == 'ruby'
+        with:
+          ruby-version: '3.0'
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
