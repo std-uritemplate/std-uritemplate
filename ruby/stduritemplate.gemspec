@@ -7,6 +7,6 @@ Gem::Specification.new do |s|
   s.email       = "andrea.peruffo1982@gmail.com"
   s.files       = ["lib/StdUriTemplate.rb"]
   s.homepage    =
-    "https://rubygems.org/gems/std-uritemplate"
+    "https://github.com/std-uritemplate/std-uritemplate"
   s.license       = "APACHE-2"
 end
