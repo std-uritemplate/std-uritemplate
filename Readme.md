@@ -19,12 +19,13 @@ This is intended to become a complete and maintained cross-language implementati
 | Language | Complete | Reviewed | Published |
 |---|---|---|---|
 | Java | ✅ | ✅ | ✅ |
-| Python | ✅ | ✅ | ✅ |
+| Python | ✅ | ❌ | ✅ |
 | Typescript | ✅ | ✅ | ✅ |
-| Go | ✅ | ✅ | ✅ |
+| Go | ✅ | ❌ | ✅ |
 | C# | ✅ | ✅ | ✅ |
-| Ruby | ✅ | ✅ | ✅ |
-| PHP | ✅ | ✅ | ✅ |
+| Ruby | ✅ | ❌ | ✅ |
+| PHP | ✅ | ❌ | ✅ |
+| Swift | ✅ | ❌ | ✅ |
 
 ## Usage
 
@@ -158,6 +159,44 @@ and use it:
 
 ```php
 stduritemplate\StdUriTemplate::expand($template, $substitutions);
+```
+
+### Swift
+
+Install the package, adding to `Package.swift`:
+
+```swift
+let package = Package(
+    ...
+    dependencies: [
+        ...
+        .package(
+            url: "https://github.com/std-uritemplate/std-uritemplate-swift.git", 
+            from: "0.0.26"
+        )
+    ],
+    targets: [
+        .executableTarget(
+            ...
+            dependencies: [
+                ...
+                .product(name: "stduritemplate",
+                        package: "std-uritemplate-swift")
+            ]
+            ...
+            ),
+    ]
+)
+```
+
+and use it:
+
+```swift
+import stduritemplate
+
+...
+
+StdUriTemplate.expand(template, substitutions: substs)
 ```
 
 ## Design decisions
