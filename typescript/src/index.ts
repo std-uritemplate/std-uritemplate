@@ -382,7 +382,7 @@ export class StdUriTemplate {
     }
 
     let value = substitutions[token];
-    if (typeof value === 'number') {
+    if (typeof value === 'number' || typeof value === 'boolean') {
       value = value.toString();
     }
 

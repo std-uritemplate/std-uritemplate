@@ -288,7 +288,7 @@ module StdUriTemplate
     raise ArgumentError, "Found an empty token at col:#{col}" if token.empty?
 
     value = substitutions[token]
-    value = value.to_s if [Integer, Float].any? { |type| value.is_a?(type) }
+    value = value.to_s if ([Integer, Float].any? { |type| value.is_a?(type) }) || ([true, false].include? value)
 
     subst_type = get_substitution_type(value, col)
     return false if empty?(subst_type, value)

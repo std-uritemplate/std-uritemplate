@@ -51,7 +51,12 @@ git tag <version>
 git push origin <version>
 ```
 
-### Go
+### Go / Swift
 
-In Go is not possible to deserialize JSON into a Map preserving the order of the elements ([reference](https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982)).
+In Go and Swift is not possible to deserialize JSON into a Map preserving the order of the elements ([reference](https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982)).
 For the moment, we decided to sort the keys to have predictable results.
+
+### DateTime
+
+DateTime formats will be handled on a case-by-case basis.
+Currently `OffsetDateTime` is supported in Java.

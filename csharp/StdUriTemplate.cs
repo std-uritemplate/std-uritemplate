@@ -451,12 +451,13 @@ public class StdUriTemplate
 
         object value;
         substitutions.TryGetValue(token, out value);
-        if (value is int ||
+        if (value is bool ||
+                value is int ||
                 value is long ||
                 value is float ||
                 value is double)
         {
-            value = value.ToString();
+            value = value.ToString().ToLower();
         }
 
         SubstitutionType substType = GetSubstitutionType(value, col);

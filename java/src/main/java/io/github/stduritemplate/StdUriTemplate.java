@@ -3,6 +3,8 @@ package io.github.stduritemplate;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -347,6 +349,8 @@ public class StdUriTemplate {
         }
     }
 
+    private static final DateTimeFormatter RFC3339 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+
     // returns true if expansion happened
     private static boolean expandToken(
             Modifier modifier,
@@ -362,11 +366,14 @@ public class StdUriTemplate {
         }
 
         Object value = substitutions.get(token);
-        if (value instanceof Integer ||
+        if (value instanceof Boolean ||
+                value instanceof Integer ||
                 value instanceof Long ||
                 value instanceof Float ||
                 value instanceof Double) {
             value = value.toString();
+        } else if (value instanceof OffsetDateTime) {
+            value = ((OffsetDateTime) value).format(RFC3339);
         }
 
         var substType = getSubstitutionType(value, col);
