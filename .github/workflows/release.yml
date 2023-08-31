@@ -148,6 +148,10 @@ jobs:
       - name: Release to std-uritemplate-php repo
         working-directory: php
         run: |
+          # Setup git
+          git config --global user.email "bot@stduritamplate.io"
+          git config --global user.name "StdUriTemplate BOT"
+          # Clone repo
           git clone https://github.com/std-uritemplate/std-uritemplate-php
           # Fill the content of this release
           rm -rf std-uritemplate-php/*
