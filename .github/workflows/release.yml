@@ -152,7 +152,7 @@ jobs:
           git config --global user.email "bot@stduritamplate.io"
           git config --global user.name "StdUriTemplate BOT"
           # Clone repo
-          git clone https://github.com/std-uritemplate/std-uritemplate-php
+          git clone git@github.com:std-uritemplate/std-uritemplate-php.git
           # Fill the content of this release
           rm -rf std-uritemplate-php/*
           cp -f composer.json std-uritemplate-php
