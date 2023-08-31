@@ -152,7 +152,7 @@ jobs:
           git config --global user.email "bot@stduritamplate.io"
           git config --global user.name "StdUriTemplate BOT"
           # Clone repo
-          git clone git@github.com:std-uritemplate/std-uritemplate-php.git
+          git clone https://github.com/std-uritemplate/std-uritemplate-php
           # Fill the content of this release
           rm -rf std-uritemplate-php/*
           cp -f composer.json std-uritemplate-php
@@ -162,6 +162,7 @@ jobs:
           cd std-uritemplate-php
           git add .
           git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
+          git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-php.git"
           git push origin main
           git tag ${GITHUB_REF_NAME}
           git push origin ${GITHUB_REF_NAME}
