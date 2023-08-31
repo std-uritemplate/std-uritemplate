@@ -1,6 +1,6 @@
 import Foundation
 
-class StdUriTemplate {
+public class StdUriTemplate {
 
     // Public API
     public static func expand(_ template: String, substitutions: [String: Any]) throws -> String {

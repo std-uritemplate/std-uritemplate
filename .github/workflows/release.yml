@@ -174,3 +174,34 @@ jobs:
             -d'{"repository":{"url":"https://github.com/std-uritemplate/std-uritemplate-php"}}'
         env:
           PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+
+  publish-swift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: "5.8"
+      - name: Release to std-uritemplate-swift repo
+        working-directory: swift
+        run: |
+          # Setup git
+          git config --global user.email "bot@stduritamplate.io"
+          git config --global user.name "StdUriTemplate BOT"
+          # Clone repo
+          git clone https://github.com/std-uritemplate/std-uritemplate-swift
+          # Fill the content of this release
+          rm -rf std-uritemplate-swift/*
+          cp -f Package.swift std-uritemplate-swift
+          cp -rf stduritemplate/* std-uritemplate-swift
+          echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-swift/Readme.md
+          # Push everything
+          cd std-uritemplate-swift
+          git add .
+          git commit --allow-empty -m "Swift Release ${GITHUB_REF_NAME}"
+          git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-swift.git"
+          git push origin main
+          git tag ${GITHUB_REF_NAME}
+          git push origin ${GITHUB_REF_NAME}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

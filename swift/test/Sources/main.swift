@@ -1,4 +1,5 @@
 import Foundation
+import stduritemplate
 
 let arguments = CommandLine.arguments
 guard arguments.count == 3 else {
