@@ -12,165 +12,164 @@ permissions:
 
 jobs:
 
-# DEBUG Swift Release
-  # publish-java:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Set up Maven Central Repository
-  #       uses: actions/setup-java@v3
-  #       with:
-  #         java-version: '11'
-  #         distribution: 'temurin'
-  #         cache: maven
-  #         server-id: ossrh
-  #         server-username: MAVEN_USERNAME
-  #         server-password: MAVEN_PASSWORD
-  #         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-  #         gpg-passphrase: MAVEN_GPG_PASSPHRASE
-  #     - name: Publish package
-  #       run: mvn --batch-mode -Prelease -Djgitver.use-version="$GITHUB_REF_NAME" deploy
-  #       working-directory: java
-  #       env:
-  #         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-  #         MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-  #         MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+  publish-java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Publish package
+        run: mvn --batch-mode -Prelease -Djgitver.use-version="$GITHUB_REF_NAME" deploy
+        working-directory: java
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-  # publish-typescript:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18
-  #         registry-url: 'https://registry.npmjs.org'
-  #     - name: Set the version
-  #       working-directory: typescript
-  #       run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
-  #     - name: Add the readme file
-  #       working-directory: typescript
-  #       run: cp ../Readme.md .
-  #     - name: Install dependencies and build
-  #       working-directory: typescript
-  #       run: npm ci && npm run clean && npm run build
-  #     - name: Publish package on NPM
-  #       working-directory: typescript
-  #       run: npm publish --access public
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  publish-typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
+      - name: Set the version
+        working-directory: typescript
+        run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
+      - name: Add the readme file
+        working-directory: typescript
+        run: cp ../Readme.md .
+      - name: Install dependencies and build
+        working-directory: typescript
+        run: npm ci && npm run clean && npm run build
+      - name: Publish package on NPM
+        working-directory: typescript
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  # publish-go:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Setup Go
-  #       uses: actions/setup-go@v4
-  #       with:
-  #         go-version: '^1.20'
-  #     - name: Release the tag
-  #       working-directory: go
-  #       run: |
-  #         go mod tidy
-  #         git tag "v${GITHUB_REF_NAME}"
-  #         git tag "go/v${GITHUB_REF_NAME}"
-  #         git push origin "v${GITHUB_REF_NAME}"
-  #         git push origin "go/v${GITHUB_REF_NAME}"
-  #         GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate@v$GITHUB_REF_NAME"
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  publish-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.20'
+      - name: Release the tag
+        working-directory: go
+        run: |
+          go mod tidy
+          git tag "v${GITHUB_REF_NAME}"
+          git tag "go/v${GITHUB_REF_NAME}"
+          git push origin "v${GITHUB_REF_NAME}"
+          git push origin "go/v${GITHUB_REF_NAME}"
+          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate@v$GITHUB_REF_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  # publish-python:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Python - Install Poetry
-  #       uses: snok/install-poetry@v1
-  #     - name: Python - Add Poetry to PATH
-  #       run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-  #     - name: Copy Readme and set version
-  #       working-directory: python
-  #       run: |
-  #         cp ../Readme.md .
-  #         poetry version "${GITHUB_REF_NAME}"
-  #     - name: Release to PyPi
-  #       working-directory: python
-  #       run: |
-  #         poetry install
-  #         poetry build
-  #         poetry publish --username __token__ --password "${PYPI_TOKEN}"
-  #       env:
-  #         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+  publish-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Python - Install Poetry
+        uses: snok/install-poetry@v1
+      - name: Python - Add Poetry to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Copy Readme and set version
+        working-directory: python
+        run: |
+          cp ../Readme.md .
+          poetry version "${GITHUB_REF_NAME}"
+      - name: Release to PyPi
+        working-directory: python
+        run: |
+          poetry install
+          poetry build
+          poetry publish --username __token__ --password "${PYPI_TOKEN}"
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
-  # publish-csharp:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: C# - Setup .NET
-  #       uses: actions/setup-dotnet@v3
-  #       with:
-  #         dotnet-version: 7
-  #     - name: Release to NuGet
-  #       working-directory: csharp
-  #       run: |
-  #         cp ../Readme.md ./
-  #         dotnet pack -p:PackageVersion=${GITHUB_REF_NAME} -o dist
-  #         dotnet nuget push dist/Std.UriTemplate.${GITHUB_REF_NAME}.nupkg --api-key ${NUGET_TOKEN} --source https://api.nuget.org/v3/index.json
-  #       env:
-  #         NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+  publish-csharp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: C# - Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7
+      - name: Release to NuGet
+        working-directory: csharp
+        run: |
+          cp ../Readme.md ./
+          dotnet pack -p:PackageVersion=${GITHUB_REF_NAME} -o dist
+          dotnet nuget push dist/Std.UriTemplate.${GITHUB_REF_NAME}.nupkg --api-key ${NUGET_TOKEN} --source https://api.nuget.org/v3/index.json
+        env:
+          NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
 
-  # publish-ruby:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Ruby - Setup Ruby
-  #       uses: ruby/setup-ruby@v1
-  #       with:
-  #         ruby-version: '3.0'
-  #     - name: Release to RubyGems
-  #       working-directory: ruby
-  #       run: |
-  #         export VERSION="${GITHUB_REF_NAME}"
-  #         gem build stduritemplate.gemspec
-  #         export GEM_HOST_API_KEY=${RUBYGEMS_TOKEN}
-  #         gem push "stduritemplate-${GITHUB_REF_NAME}.gem"
-  #       env:
-  #         RUBYGEMS_TOKEN: ${{ secrets.RUBYGEMS_TOKEN }}
+  publish-ruby:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Ruby - Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      - name: Release to RubyGems
+        working-directory: ruby
+        run: |
+          export VERSION="${GITHUB_REF_NAME}"
+          gem build stduritemplate.gemspec
+          export GEM_HOST_API_KEY=${RUBYGEMS_TOKEN}
+          gem push "stduritemplate-${GITHUB_REF_NAME}.gem"
+        env:
+          RUBYGEMS_TOKEN: ${{ secrets.RUBYGEMS_TOKEN }}
 
-  # publish-php:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Release to std-uritemplate-php repo
-  #       working-directory: php
-  #       run: |
-  #         # Setup git
-  #         git config --global user.email "bot@stduritamplate.io"
-  #         git config --global user.name "StdUriTemplate BOT"
-  #         # Clone repo
-  #         git clone https://github.com/std-uritemplate/std-uritemplate-php
-  #         # Fill the content of this release
-  #         rm -rf std-uritemplate-php/*
-  #         cp -f composer.json std-uritemplate-php
-  #         cp -rf src std-uritemplate-php
-  #         echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-php/Readme.md
-  #         # Push everything
-  #         cd std-uritemplate-php
-  #         git add .
-  #         git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
-  #         git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-php.git"
-  #         git push origin main
-  #         git tag ${GITHUB_REF_NAME}
-  #         git push origin ${GITHUB_REF_NAME}
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-  #     - name: Sync Packagist
-  #       run: |
-  #         curl -v --fail -XPOST -H'content-type:application/json' \
-  #           "https://packagist.org/api/update-package?username=andreaTP&apiToken=${PACKAGIST_TOKEN}" \
-  #           -d'{"repository":{"url":"https://github.com/std-uritemplate/std-uritemplate-php"}}'
-  #       env:
-  #         PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+  publish-php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Release to std-uritemplate-php repo
+        working-directory: php
+        run: |
+          # Setup git
+          git config --global user.email "bot@stduritamplate.io"
+          git config --global user.name "StdUriTemplate BOT"
+          # Clone repo
+          git clone https://github.com/std-uritemplate/std-uritemplate-php
+          # Fill the content of this release
+          rm -rf std-uritemplate-php/*
+          cp -f composer.json std-uritemplate-php
+          cp -rf src std-uritemplate-php
+          echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-php/Readme.md
+          # Push everything
+          cd std-uritemplate-php
+          git add .
+          git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
+          git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-php.git"
+          git push origin main
+          git tag ${GITHUB_REF_NAME}
+          git push origin ${GITHUB_REF_NAME}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Sync Packagist
+        run: |
+          curl -v --fail -XPOST -H'content-type:application/json' \
+            "https://packagist.org/api/update-package?username=andreaTP&apiToken=${PACKAGIST_TOKEN}" \
+            -d'{"repository":{"url":"https://github.com/std-uritemplate/std-uritemplate-php"}}'
+        env:
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
 
   publish-swift:
     runs-on: ubuntu-latest
