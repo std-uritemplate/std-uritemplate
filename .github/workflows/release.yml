@@ -141,10 +141,6 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - name: Setup PHP
-  #       uses: shivammathur/setup-php@v2
-  #       with:
-  #         php-version: '8.2'
   #     - name: Release to std-uritemplate-php repo
   #       working-directory: php
   #       run: |
@@ -180,9 +176,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: "5.8"
       - name: Release to std-uritemplate-swift repo
         working-directory: swift
         run: |
@@ -193,7 +186,6 @@ jobs:
           git clone https://github.com/std-uritemplate/std-uritemplate-swift
           # Fill the content of this release
           rm -rf std-uritemplate-swift/*
-          cp -f Package.swift std-uritemplate-swift
           cp -rf stduritemplate/* std-uritemplate-swift
           echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-swift/Readme.md
           # Push everything
