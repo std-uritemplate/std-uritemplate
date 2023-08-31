@@ -155,10 +155,11 @@ jobs:
           git clone https://github.com/std-uritemplate/std-uritemplate-php
           # Fill the content of this release
           rm -rf std-uritemplate-php/*
-          cp composer.json std-uritemplate-php
+          cp -f composer.json std-uritemplate-php
+          cp -rf src std-uritemplate-php
           echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-php/Readme.md
           # Push everything
-          cp -r src std-uritemplate-php
+          cd std-uritemplate-php
           git add .
           git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
           git push origin main
