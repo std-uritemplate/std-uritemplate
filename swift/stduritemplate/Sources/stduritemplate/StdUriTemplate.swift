@@ -376,7 +376,7 @@ public class StdUriTemplate {
             throw NSError(domain: "IllegalArgumentException", code: 0, userInfo: [NSLocalizedDescriptionKey: "Value trimming is not allowed on Maps"])
         }
         // workaround to make Map ordering not random
-	    // https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982
+        // https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982
         for (k, v) in value.sorted( by: { $0.0 < $1.0 }) {
             if composite {
                 if !first {
