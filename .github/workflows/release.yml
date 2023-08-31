@@ -170,8 +170,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Sync Packagist
         run: |
-          curl -XPOST -H'content-type:application/json' \
-            'https://packagist.org/api/update-package?username=andreaTP&apiToken=PACKAGIST_TOKEN' \
+          curl -v --fail -XPOST -H'content-type:application/json' \
+            "https://packagist.org/api/update-package?username=andreaTP&apiToken=${PACKAGIST_TOKEN}" \
             -d'{"repository":{"url":"https://github.com/std-uritemplate/std-uritemplate-php"}}'
         env:
           PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
