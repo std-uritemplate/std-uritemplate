@@ -319,7 +319,9 @@ class StdUriTemplate:
         if len(token) == 0:
             raise ValueError(f"Found an empty token at col: {col}")
         value = substitutions.get(token)
-        if isinstance(value, (int, float)):
+        if isinstance(value, (bool)):
+            value = str(value).lower()
+        elif isinstance(value, (int, float)):
             value = str(value)
         subst_type = StdUriTemplate.__get_substitution_type(value, col)
         if StdUriTemplate.__is_empty(subst_type, value):

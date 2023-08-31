@@ -346,7 +346,7 @@ func expandToken(
 	}
 
 	switch value.(type) {
-	case int, int64, float32, float64:
+	case bool, int, int64, float32, float64:
 		value = fmt.Sprintf("%v", value)
 	}
 

@@ -339,7 +339,13 @@ class StdUriTemplate {
         }
 
         $value = $substitutions[$token] ?? null;
-        if (is_int($value) || is_float($value) || is_double($value)) {
+        if (is_bool($value)) {
+            if ($value) {
+                $value = "true";
+            } else {
+                $value = "false";
+            }
+        } else if (is_bool($value) || is_int($value) || is_float($value) || is_double($value)) {
             $value = (string)$value;
         }
 

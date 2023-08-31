@@ -315,7 +315,9 @@ public class StdUriTemplate {
             return false
         }
         
-        if let intValue = value as? Int {
+        if let boolValue = value as? Bool {
+            value = String(boolValue)
+        } else if let intValue = value as? Int {
             value = String(intValue)
         } else if let longValue = value as? Int64 {
             value = String(longValue)

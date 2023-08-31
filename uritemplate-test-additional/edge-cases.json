@@ -1,0 +1,13 @@
+{
+  "Handling of boolean values" :
+  {
+    "variables": {
+       "foo"   : true,
+       "bar" : false
+     },
+     "testcases" : [
+        ["{foo}", "true"],
+        ["{bar}", "false"]
+     ]
+  }
+}

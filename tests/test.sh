@@ -27,7 +27,7 @@ echo "Initialize"
 bash ${SCRIPT_DIR}/../${LANGUAGE}/init.sh
 echo "Initialization done"
 
-for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" -name "${FILE_FILTER}" -type f); do
+for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" "${SCRIPT_DIR}/../uritemplate-test-additional" -name "${FILE_FILTER}" -type f); do
 
   echo "Test file: ${SPEC_FILE}"
   jq -rc '. | keys[]' ${SPEC_FILE} | while read -r LEVEL_KEY; do
