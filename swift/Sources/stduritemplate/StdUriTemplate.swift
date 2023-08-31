@@ -1,8 +1,14 @@
 import Foundation
 
 class StdUriTemplate {
-    
-    enum Modifier {
+
+    // Public API
+    public static func expand(_ template: String, substitutions: [String: Any]) throws -> String {
+        return try expandImpl(template, substitutions)
+    }
+
+    // Private implementation
+    private enum Modifier {
         case NO_MOD
         case PLUS
         case DASH
@@ -67,12 +73,12 @@ class StdUriTemplate {
                     token = String()
                     firstToken = true
                 case "}":
-                    if let token = token {
-                        let expanded = try expandToken(modifier, token, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
+                    if let tk = token {
+                        let expanded = try expandToken(modifier, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
                         }
-                        token.removeAll()
+                        token = nil
                         modifier = nil
                         composite = false
                         maxCharBuffer = nil
@@ -80,23 +86,23 @@ class StdUriTemplate {
                         throw NSError(domain: "IllegalArgumentException", code: i, userInfo: [NSLocalizedDescriptionKey: "Failed to expand token, invalid at col: \(i)"])
                     }
                 case ",":
-                    if let token = token {
-                        let expanded = try expandToken(modifier, token, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
+                    if let tk = token {
+                        let expanded = try expandToken(modifier, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
                         }
-                        self.token = String(token.prefix(token.count * 2))
+                        token = String()
                         composite = false
                         maxCharBuffer = nil
                     }
                     // Intentional fall-through for commas outside the {}
                 default:
-                    if let token = token {
+                    if let _ = token {
                         if modifier == nil {
-                            modifier = try getModifier(character, &token, i)
-                        } else if let maxCharBuffer = maxCharBuffer {
+                            modifier = try getModifier(character, &token!, i)
+                        } else if let _ = maxCharBuffer {
                             if character.isNumber {
-                                maxCharBuffer.append(character)
+                                maxCharBuffer!.append(character)
                             } else {
                                 throw NSError(domain: "IllegalArgumentException", code: i, userInfo: [NSLocalizedDescriptionKey: "Illegal character identified in the token at col: \(i)"])
                             }
@@ -107,7 +113,7 @@ class StdUriTemplate {
                                 composite = true
                             } else {
                                 try validateLiteral(character, i)
-                                token.append(character)
+                                token!.append(character)
                             }
                         }
                     } else {
@@ -184,6 +190,16 @@ class StdUriTemplate {
                 addExpandedValue(value, &result, maxChar, replaceReserved: true)
         }
     }
+
+    // from https://github.com/kylef/URITemplate.swift/blob/a309673fdf86e4919a0250730e461ac533a03b3a/Sources/URITemplate.swift#L590C1-L607C8
+    private static let unreserved = {
+      let upperAlpha = CharacterSet(charactersIn: "A"..."Z")
+      let lowerAlpha = CharacterSet(charactersIn: "a"..."z")
+
+      let digits = CharacterSet(charactersIn: "0"..."9")
+      let unreservedSymbols = CharacterSet(charactersIn: "-._~")
+      return upperAlpha.union(lowerAlpha).union(digits).union(unreservedSymbols)
+    }()
     
     private static func addExpandedValue(_ value: String, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
         let max = (maxChar != -1) ? min(maxChar, value.count) : value.count
@@ -191,26 +207,29 @@ class StdUriTemplate {
         var reservedBuffer: String?
         
         for (i, character) in value.enumerated() {
+            if (i >= max) {
+                break
+            }
             if character == "%" && !replaceReserved {
                 reservedBuffer = String()
             }
             
-            if let reservedBuffer = reservedBuffer {
-                reservedBuffer.append(character)
+            if let _ = reservedBuffer {
+                reservedBuffer!.append(character)
                 
-                if reservedBuffer.count == 3 {
+                if reservedBuffer!.count == 3 {
                     var isEncoded = false
-                    if let decoded = reservedBuffer.removingPercentEncoding {
-                        isEncoded = true
+                    if let decoded = reservedBuffer!.removingPercentEncoding {
+                        isEncoded = (decoded != reservedBuffer!)
                     }
                     
                     if isEncoded {
-                        result.append(reservedBuffer)
+                        result.append(reservedBuffer!)
                     } else {
                         result.append("%25")
-                        result.append(reservedBuffer[reservedBuffer.index(after: reservedBuffer.startIndex)...])
+                        result.append(String(reservedBuffer![reservedBuffer!.index(after: reservedBuffer!.startIndex)...]))
                     }
-                    self.reservedBuffer = nil
+                    reservedBuffer = nil
                 }
             } else {
                 if character == " " {
@@ -219,7 +238,7 @@ class StdUriTemplate {
                     result.append("%25")
                 } else {
                     if replaceReserved {
-                        result.append(character.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(character))
+                        result.append(String(character).addingPercentEncoding(withAllowedCharacters: unreserved) ?? String(character))
                     } else {
                         result.append(character)
                     }
@@ -230,7 +249,7 @@ class StdUriTemplate {
         if let reservedBuffer = reservedBuffer {
             result.append("%25")
             if replaceReserved {
-                result.append((reservedBuffer as NSString).substring(from: 1).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")
+                result.append((reservedBuffer as NSString).substring(from: 1).addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")
             } else {
                 result.append((reservedBuffer as NSString).substring(from: 1))
             }
@@ -242,7 +261,7 @@ class StdUriTemplate {
     }
     
     private static func isMap(_ value: Any) -> Bool {
-        return value is [String: Any]
+        return value is Dictionary<AnyHashable,Any>
     }
     
     private enum SubstitutionType {
@@ -250,9 +269,19 @@ class StdUriTemplate {
         case LIST
         case MAP
     }
+
+    private static func isNil(_ value: Any?) -> Bool {
+        if value is NSNull {
+            return true
+        } else if case Optional<Any>.none = value {
+            return true
+        } else {
+            return false
+        }
+    }
     
     private static func getSubstitutionType(_ value: Any, _ col: Int) throws -> SubstitutionType {
-        if value is String || value == nil {
+        if value is String || isNil(value) {
             return .STRING
         } else if isList(value) {
             return .LIST
@@ -264,6 +293,9 @@ class StdUriTemplate {
     }
     
     private static func isEmpty(_ substType: SubstitutionType, _ value: Any?) -> Bool {
+        if isNil(value) {
+            return true
+        }
         guard let value = value else {
             return true
         }
@@ -279,11 +311,10 @@ class StdUriTemplate {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Found an empty token at col: \(col)"])
         }
         
-        guard let value = substitutions[token] else {
+        guard var value = substitutions[token] else {
             return false
         }
         
-        var value = value
         if let intValue = value as? Int {
             value = String(intValue)
         } else if let longValue = value as? Int64 {
@@ -311,7 +342,7 @@ class StdUriTemplate {
             case .LIST:
                 addListValue(modifier ?? .NO_MOD, token, value as! [String], &result, maxChar, composite)
             case .MAP:
-                addMapValue(modifier ?? .NO_MOD, token, value as! [String: String], &result, maxChar, composite)
+                try addMapValue(modifier ?? .NO_MOD, token, value as! [String: String], &result, maxChar, composite)
         }
         
         return true
@@ -339,12 +370,14 @@ class StdUriTemplate {
         }
     }
     
-    private static func addMapValue(_ modifier: Modifier, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
+    private static func addMapValue(_ modifier: Modifier, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
         var first = true
         if maxChar != -1 {
             throw NSError(domain: "IllegalArgumentException", code: 0, userInfo: [NSLocalizedDescriptionKey: "Value trimming is not allowed on Maps"])
         }
-        for (k, v) in value {
+        // workaround to make Map ordering not random
+	    // https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982
+        for (k, v) in value.sorted( by: { $0.0 < $1.0 }) {
             if composite {
                 if !first {
                     addSeparator(modifier, &result)
