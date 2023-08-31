@@ -32,3 +32,7 @@ updates:
     directory: "/ruby"
     schedule:
       interval: "daily"
+  - package-ecosystem: "composer"
+    directory: "/php"
+    schedule:
+      interval: "daily"

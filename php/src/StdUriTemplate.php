@@ -24,7 +24,7 @@ class StdUriTemplate {
             case ':':
             case '~':
             case '-':
-                throw new InvalidArgumentException("Illegal character identified in the token at col: $col");
+                throw new \InvalidArgumentException("Illegal character identified in the token at col: $col");
             default:
                 break;
         }
@@ -42,7 +42,7 @@ class StdUriTemplate {
                 try {
                     return (int)$value;
                 } catch (NumberFormatException $e) {
-                    throw new InvalidArgumentException("Cannot parse max chars at col: $col");
+                    throw new \InvalidArgumentException("Cannot parse max chars at col: $col");
                 }
             }
         }
@@ -91,7 +91,7 @@ class StdUriTemplate {
                         $composite = false;
                         $maxCharBuffer = null;
                     } else {
-                        throw new InvalidArgumentException("Failed to expand token, invalid at col: $i");
+                        throw new \InvalidArgumentException("Failed to expand token, invalid at col: $i");
                     }
                     break;
                 case ',':
@@ -114,7 +114,7 @@ class StdUriTemplate {
                             if (is_numeric($character)) {
                                 $maxCharBuffer .= $character;
                             } else {
-                                throw new InvalidArgumentException("Illegal character identified in the token at col: $i");
+                                throw new \InvalidArgumentException("Illegal character identified in the token at col: $i");
                             }
                         } else {
                             if ($character === ':') {
@@ -136,7 +136,7 @@ class StdUriTemplate {
         if ($token === null) {
             return $result;
         } else {
-            throw new InvalidArgumentException("Unterminated token");
+            throw new \InvalidArgumentException("Unterminated token");
         }
     }
 
@@ -312,7 +312,7 @@ class StdUriTemplate {
         } elseif (self::isList($value)) {
             return 'LIST';
         } else {
-            throw new InvalidArgumentException("Illegal class passed as substitution, found " . get_class($value) . " at col: $col");
+            throw new \InvalidArgumentException("Illegal class passed as substitution, found " . get_class($value) . " at col: $col");
         }
     }
 
@@ -335,7 +335,7 @@ class StdUriTemplate {
 
     private static function expandToken($modifier, $token, $composite, $maxChar, $firstToken, $substitutions, &$result, $col) {
         if (empty($token)) {
-            throw new InvalidArgumentException("Found an empty token at col: $col");
+            throw new \InvalidArgumentException("Found an empty token at col: $col");
         }
 
         $value = $substitutions[$token] ?? null;
@@ -395,7 +395,7 @@ class StdUriTemplate {
     private static function addMapValue($modifier, $token, $value, &$result, $maxChar, $composite) {
         $first = true;
         if ($maxChar !== -1) {
-            throw new InvalidArgumentException("Value trimming is not allowed on Maps");
+            throw new \InvalidArgumentException("Value trimming is not allowed on Maps");
         }
         foreach ($value as $k => $v) {
             if ($composite) {

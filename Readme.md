@@ -3,12 +3,13 @@
 [![GitHub license](https://img.shields.io/badge/license-APACHE-blue.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
 [![Build Status](https://github.com/std-uritemplate/std-uritemplate/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/std-uritemplate/std-uritemplate/blob/main/.github/workflows/test.yml)
 [![GitHub Release](https://img.shields.io/github/tag/std-uritemplate/std-uritemplate.svg?style=flat&color=green)](https://github.com/std-uritemplate/std-uritemplate/tags)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat&color=green)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
 [![NPM version](https://img.shields.io/npm/v/%40std-uritemplate%2Fstd-uritemplate.svg?style=flat&color=green)](https://www.npmjs.com/package/@std-uritemplate/std-uritemplate)
-[![Go Reference](https://pkg.go.dev/badge/github.com/std-uritemplate/std-uritemplate/go.svg)](https://pkg.go.dev/github.com/std-uritemplate/std-uritemplate/go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/std-uritemplate/std-uritemplate/go.svg?style=flat&color=green)](https://pkg.go.dev/github.com/std-uritemplate/std-uritemplate/go)
 [![PyPI Version](https://img.shields.io/pypi/v/std-uritemplate.svg?style=flat&color=green)](https://pypi.python.org/pypi/std-uritemplate)
 [![NuGet Version](https://img.shields.io/nuget/v/Std.UriTemplate.svg?style=flat&color=green)](https://www.nuget.org/packages/Std.UriTemplate/)
-[![Gem Version](https://badge.fury.io/rb/stduritemplate.svg)](https://badge.fury.io/rb/stduritemplate)
+[![Gem Version](https://badge.fury.io/rb/stduritemplate.svg?style=flat&color=green)](https://badge.fury.io/rb/stduritemplate)
+[![Packagist Version](http://poser.pugx.org/stduritemplate/stduritemplate/v?style=flat)](https://packagist.org/packages/stduritemplate/stduritemplate)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
@@ -23,6 +24,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Go | ✅ | ✅ | ✅ |
 | C# | ✅ | ✅ | ✅ |
 | Ruby | ✅ | ✅ | ✅ |
+| PHP | ✅ | ✅ | ✅ |
 
 ## Usage
 
@@ -142,6 +144,20 @@ require 'stduritemplate'
 ...
 
 StdUriTemplate.expand(template, substitutions)
+```
+
+### PHP
+<!-- Tested following this guide: https://blog.damirmiladinov.com/php/building-and-distributing-a-command-line-php-application.html -->
+Install the package:
+
+```bash
+composer require stduritemplate/stduritemplate
+```
+
+and use it:
+
+```php
+stduritemplate\StdUriTemplate::expand($template, $substitutions);
 ```
 
 ## Design decisions
