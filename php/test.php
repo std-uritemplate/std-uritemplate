@@ -28,7 +28,7 @@ try {
 
 try {
     require_once __DIR__.'/src/StdUriTemplate.php';
-    $result = StdUriTemplate::expand($template, $data);
+    $result = stduritemplate\StdUriTemplate::expand($template, $data);
     echo $result;
 } catch (Exception $e) {
     fwrite(STDERR, "Error expanding template: " . $e->getMessage() . "\n");
