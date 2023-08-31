@@ -160,7 +160,7 @@ jobs:
           # Push everything
           cp -r src std-uritemplate-php
           git add .
-          git commit -m "PHP Release ${GITHUB_REF_NAME}"
+          git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
           git push origin main
           git tag ${GITHUB_REF_NAME}
           git push origin ${GITHUB_REF_NAME}
