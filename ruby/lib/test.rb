@@ -21,6 +21,9 @@ end
 if data.key?("nativedate")
   data["nativedate"] = DateTime.strptime(data["nativedate"].to_s, '%Q')
 end
+if data.key?("nativedatetwo")
+  data["nativedatetwo"] = DateTime.strptime(data["nativedatetwo"].to_s, '%Q')
+end
 
 begin
   template = File.read(template_file).strip

@@ -26,6 +26,12 @@ func main() {
 			data["nativedate"] = time.UnixMilli(int64(f))
 		}
 	}
+	val2, ok := data["nativedatetwo"]
+	if ok {
+		if f2, ok := val2.(float64); ok {
+			data["nativedatetwo"] = time.UnixMilli(int64(f2))
+		}
+	}
 
 	template, err := readFile(templateFile)
 	if err != nil {

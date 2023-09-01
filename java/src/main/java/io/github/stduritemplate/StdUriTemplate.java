@@ -5,7 +5,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -372,6 +374,8 @@ public class StdUriTemplate {
                 value instanceof Float ||
                 value instanceof Double) {
             value = value.toString();
+        } else if (value instanceof Date) {
+            value = ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);
         } else if (value instanceof OffsetDateTime) {
             value = ((OffsetDateTime) value).format(RFC3339);
         }
