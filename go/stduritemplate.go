@@ -31,9 +31,9 @@ const (
 	SubstitutionTypeMap    = "MAP"
 )
 
-func validateLiteral(c string, col int) error {
+func validateLiteral(c rune, col int) error {
 	switch c {
-	case "+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-":
+	case '+', '#', '/', ';', '?', '&', ' ', '!', '=', '$', '|', '*', ':', '~', '-':
 		return fmt.Errorf("illegal character identified in the token at col: %d", col)
 	default:
 		return nil
@@ -51,35 +51,35 @@ func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 		} else {
 			maxChar, err := strconv.Atoi(value)
 			if err != nil {
-				return 0, fmt.Errorf("Cannot parse max chars at col: %d", col)
+				return 0, fmt.Errorf("cannot parse max chars at col: %d", col)
 			}
 			return maxChar, nil
 		}
 	}
 }
 
-func getModifier(c string, token *strings.Builder, col int) (Modifier, error) {
+func getModifier(c rune, token *strings.Builder, col int) (Modifier, error) {
 	switch c {
-	case "+":
+	case '+':
 		return ModPlus, nil
-	case "#":
+	case '#':
 		return ModDash, nil
-	case ".":
+	case '.':
 		return ModDot, nil
-	case "/":
+	case '/':
 		return ModSlash, nil
-	case ";":
+	case ';':
 		return ModSemicolon, nil
-	case "?":
+	case '?':
 		return ModQuestionMark, nil
-	case "&":
+	case '&':
 		return ModAt, nil
 	default:
 		err := validateLiteral(c, col)
 		if err != nil {
 			return ModUndefined, err
 		}
-		token.WriteString(c)
+		token.WriteRune(c)
 		return ModNoMod, nil
 	}
 }
@@ -93,13 +93,14 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var maxCharBuffer *strings.Builder
 	var firstToken bool = true
 
-	for i := 0; i < len(str); i++ {
-		character := string(str[i])
+	for i, character := range str {
+		// for i := 0; i < len(str); i++ {
+		// character := str[i]
 		switch character {
-		case "{":
+		case '{':
 			token = &strings.Builder{}
 			firstToken = true
-		case "}":
+		case '}':
 			if token != nil {
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
@@ -119,7 +120,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			} else {
 				return "", fmt.Errorf("failed to expand token, invalid at col: %d", i)
 			}
-		case ",":
+		case ',':
 			if token != nil {
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
@@ -148,25 +149,25 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 						return "", err
 					}
 				} else if maxCharBuffer != nil {
-					if _, err := strconv.Atoi(character); err == nil {
-						maxCharBuffer.WriteString(character)
+					if _, err := strconv.Atoi(string(character)); err == nil {
+						maxCharBuffer.WriteRune(character)
 					} else {
 						return "", fmt.Errorf("illegal character identified in the token at col: %d", i)
 					}
 				} else {
-					if character == ":" {
+					if character == ':' {
 						maxCharBuffer = &strings.Builder{}
-					} else if character == "*" {
+					} else if character == '*' {
 						composite = true
 					} else {
 						if err := validateLiteral(character, i); err != nil {
 							return "", err
 						}
-						token.WriteString(character)
+						token.WriteRune(character)
 					}
 				}
 			} else {
-				result.WriteString(character)
+				result.WriteRune(character)
 			}
 		}
 	}
@@ -174,24 +175,24 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	if token == nil {
 		return result.String(), nil
 	} else {
-		return "", fmt.Errorf("Unterminated token")
+		return "", fmt.Errorf("unterminated token")
 	}
 }
 
 func addPrefix(mod Modifier, result *strings.Builder) {
 	switch mod {
 	case ModDash:
-		result.WriteString("#")
+		result.WriteByte('#')
 	case ModDot:
-		result.WriteString(".")
+		result.WriteByte('.')
 	case ModSlash:
-		result.WriteString("/")
+		result.WriteByte('/')
 	case ModSemicolon:
-		result.WriteString(";")
+		result.WriteByte(';')
 	case ModQuestionMark:
-		result.WriteString("?")
+		result.WriteByte('?')
 	case ModAt:
-		result.WriteString("&")
+		result.WriteByte('&')
 	default:
 		return
 	}
@@ -200,15 +201,15 @@ func addPrefix(mod Modifier, result *strings.Builder) {
 func addSeparator(mod Modifier, result *strings.Builder) {
 	switch mod {
 	case ModDot:
-		result.WriteString(".")
+		result.WriteByte('.')
 	case ModSlash:
-		result.WriteString("/")
+		result.WriteByte('/')
 	case ModSemicolon:
-		result.WriteString(";")
+		result.WriteByte(';')
 	case ModQuestionMark, ModAt:
-		result.WriteString("&")
+		result.WriteByte('&')
 	default:
-		result.WriteString(",")
+		result.WriteByte(',')
 		return
 	}
 }
@@ -223,7 +224,7 @@ func addValue(mod Modifier, token, value string, result *strings.Builder, maxCha
 	case ModSemicolon:
 		result.WriteString(token)
 		if value != "" {
-			result.WriteString("=")
+			result.WriteByte('=')
 		}
 		addExpandedValue(value, result, maxChar, true)
 	case ModDot, ModSlash, ModNoMod:
@@ -245,23 +246,25 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 	if maxChar == -1 || maxChar > len(value) {
 		max = len(value)
 	}
-	reservedBuffer := []string{}
+	var reservedBuffer *strings.Builder
 	fillReserved := false
 
-	for i := 0; i < max; i++ {
-		character := value[i : i+1]
+	for i, character := range value {
+		if i >= max {
+			break
+		}
 
-		if character == "%" && !replaceReserved {
-			reservedBuffer = []string{}
+		if character == '%' && !replaceReserved {
+			reservedBuffer = &strings.Builder{}
 			fillReserved = true
 		}
 
 		if fillReserved {
-			reservedBuffer = append(reservedBuffer, character)
+			reservedBuffer.WriteRune(character)
 
-			if len(reservedBuffer) == 3 {
+			if reservedBuffer.Len() == 3 {
 				encoded := true
-				reserved := strings.Join(reservedBuffer, "")
+				reserved := reservedBuffer.String()
 				unescaped, err := url.QueryUnescape(reserved)
 				if err != nil {
 					encoded = (reserved == unescaped)
@@ -272,21 +275,21 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 				} else {
 					result.WriteString("%25")
 					// only if !replaceReserved
-					result.WriteString(strings.Join(reservedBuffer[1:], ""))
+					result.WriteString(reservedBuffer.String()[1:])
 				}
-				reservedBuffer = []string{}
+				reservedBuffer = &strings.Builder{}
 				fillReserved = false
 			}
 		} else {
-			if character == " " {
+			if character == ' ' {
 				result.WriteString("%20")
-			} else if character == "%" {
+			} else if character == '%' {
 				result.WriteString("%25")
 			} else {
 				if replaceReserved {
-					result.WriteString(url.QueryEscape(character))
+					result.WriteString(url.QueryEscape(string(character)))
 				} else {
-					result.WriteString(character)
+					result.WriteRune(character)
 				}
 			}
 		}
@@ -295,9 +298,9 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 	if fillReserved {
 		result.WriteString("%25")
 		if replaceReserved {
-			result.WriteString(url.QueryEscape(strings.Join(reservedBuffer[1:], "")))
+			result.WriteString(url.QueryEscape(reservedBuffer.String()[1:]))
 		} else {
-			result.WriteString(strings.Join(reservedBuffer[1:], ""))
+			result.WriteString(reservedBuffer.String()[1:])
 		}
 	}
 }
