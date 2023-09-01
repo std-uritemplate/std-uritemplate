@@ -8,6 +8,10 @@ const dataFile = process.argv[3];
 try {
   const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 
+  if (data["nativedate"] !== undefined) {
+    data["nativedate"] = new Date(data["nativedate"]);
+  }
+
   const template = fs.readFileSync(templateFile, 'utf8').trim();
 
   try {

@@ -384,6 +384,8 @@ export class StdUriTemplate {
     let value = substitutions[token];
     if (typeof value === 'number' || typeof value === 'boolean') {
       value = value.toString();
+    } else if (value instanceof Date) {
+      value = value.toISOString().split('.')[0] + "Z";
     }
 
     const substType = StdUriTemplate.getSubstitutionType(value, col);

@@ -14,9 +14,13 @@ do {
     let dataURL = URL(fileURLWithPath: dataFile)
     let data = try Data(contentsOf: dataURL)
     let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
-    guard let jsonData = jsonObject as? [String: Any] else {
+    guard var jsonData = jsonObject as? [String: Any] else {
         fputs("Error: Failed to parse JSON data.\n", stderr)
         exit(1)
+    }
+
+    if let date = jsonData["nativedate"] {
+        jsonData.updateValue(Date(timeIntervalSince1970: (date as! Double / 1000.0)) as Any, forKey: "nativedate")
     }
     
     let template = try String(contentsOfFile: templateFile)

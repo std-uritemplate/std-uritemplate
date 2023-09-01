@@ -347,6 +347,8 @@ class StdUriTemplate {
             }
         } else if (is_bool($value) || is_int($value) || is_float($value) || is_double($value)) {
             $value = (string)$value;
+        } else if ($value instanceof \DateTime) {
+            $value = $value->format('Y-m-d\TH:i:s\Z');
         }
 
         $substType = self::getSubstitutionType($value, $col);

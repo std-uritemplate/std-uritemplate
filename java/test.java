@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.Map;
 
 import static java.lang.System.*;
@@ -26,7 +28,12 @@ public class test {
 
         try (var fis = new FileInputStream(args[1])) {
             var template = new String(Files.readAllBytes(Paths.get(args[0])));
-            out.println(StdUriTemplate.expand(template, objectReader.readValue(fis)));
+
+            var substs = (Map<String, Object>) objectReader.readValue(fis);
+            substs.computeIfPresent("nativedate", (k, v) ->
+                new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
+
+            out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             // this is an error in the testing infrastructure

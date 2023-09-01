@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	stduritemplate "github.com/std-uritemplate/std-uritemplate/go"
 )
@@ -17,6 +18,13 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "File '%s' not found.\n", dataFile)
 		os.Exit(1)
+	}
+
+	val, ok := data["nativedate"]
+	if ok {
+		if f, ok := val.(float64); ok {
+			data["nativedate"] = time.UnixMilli(int64(f))
+		}
 	}
 
 	template, err := readFile(templateFile)

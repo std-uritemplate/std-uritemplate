@@ -200,6 +200,14 @@ public class StdUriTemplate {
       let unreservedSymbols = CharacterSet(charactersIn: "-._~")
       return upperAlpha.union(lowerAlpha).union(digits).union(unreservedSymbols)
     }()
+
+    private static let RFC3339DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
     
     private static func addExpandedValue(_ value: String, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
         let max = (maxChar != -1) ? min(maxChar, value.count) : value.count
@@ -325,6 +333,8 @@ public class StdUriTemplate {
             value = String(floatValue)
         } else if let doubleValue = value as? Double {
             value = String(doubleValue)
+        } else if let dateValue = value as? Date {
+            value = RFC3339DateFormatter.string(from: dateValue)
         }
         
         let substType = try getSubstitutionType(value, col)

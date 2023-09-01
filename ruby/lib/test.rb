@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'date'
 require 'json'
 require 'uri'
 require 'pathname'
@@ -15,6 +16,10 @@ rescue Errno::ENOENT
 rescue JSON::ParserError => e
   $stderr.puts("Error parsing JSON data: #{e.message}")
   exit(1)
+end
+
+if data.key?("nativedate")
+  data["nativedate"] = DateTime.strptime(data["nativedate"].to_s, '%Q')
 end
 
 begin

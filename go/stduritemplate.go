@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Substitutions map[string]interface{}
@@ -348,6 +349,8 @@ func expandToken(
 	switch value.(type) {
 	case bool, int, int64, float32, float64:
 		value = fmt.Sprintf("%v", value)
+	case time.Time:
+		value = value.(time.Time).Format(time.RFC3339)
 	}
 
 	substType := getSubstitutionType(value, col)
