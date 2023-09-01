@@ -19,8 +19,7 @@ rescue JSON::ParserError => e
 end
 
 if data.key?("nativedate")
-  $stderr.puts("Converting to DateTime")
-  data["nativedate"] = DateTime.rfc3339(data["nativedate"])
+  data["nativedate"] = DateTime.strptime(data["nativedate"].to_s, '%Q')
 end
 
 begin

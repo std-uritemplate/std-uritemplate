@@ -19,8 +19,7 @@ try {
 }
 
 if (array_key_exists("nativedate", $data)) {
-    fwrite(STDERR, "Converting to DateTime\n");
-    $data["nativedate"] = \DateTime::createFromFormat(\DateTime::RFC3339, $data["nativedate"]);
+    $data["nativedate"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedate"]/1000.0));
 }
 
 try {

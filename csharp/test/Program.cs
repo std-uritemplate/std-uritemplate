@@ -28,8 +28,7 @@ class Program
 
             if (data.ContainsKey("nativedate"))
             {
-                Console.Error.WriteLine("Double-check that is DateTime");
-                data["nativedate"] = (DateTime)data["nativedate"];
+                data["nativedate"] = new DateTime(1970, 1, 1).AddMilliseconds((long)data["nativedate"]);
             }
 
             string template = File.ReadAllText(templateFile).Trim();

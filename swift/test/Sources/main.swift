@@ -20,12 +20,7 @@ do {
     }
 
     if let date = jsonData["nativedate"] {
-        fputs("Converting to Date\n", stderr)
-        let RFC3339DateFormatter = DateFormatter()
-        RFC3339DateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        RFC3339DateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
-        RFC3339DateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        jsonData.updateValue(RFC3339DateFormatter.date(from: String(describing: date))! as Any, forKey: "nativedate")
+        jsonData.updateValue(Date(timeIntervalSince1970: (date as! Double / 1000.0)) as Any, forKey: "nativedate")
     }
     
     let template = try String(contentsOfFile: templateFile)

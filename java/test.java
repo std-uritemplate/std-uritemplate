@@ -8,8 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.Map;
 
 import static java.lang.System.*;
@@ -32,7 +32,7 @@ public class test {
             var substs = (Map<String, Object>) objectReader.readValue(fis);
             substs.computeIfPresent("nativedate", (k, v) -> {
                 err.println("Converting to OffsetDateTime");
-                return OffsetDateTime.parse(v.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[XXX][VV]"));
+                return new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC);
             });
 
             out.println(StdUriTemplate.expand(template, substs));

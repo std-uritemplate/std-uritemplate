@@ -22,10 +22,8 @@ func main() {
 
 	val, ok := data["nativedate"]
 	if ok {
-		t, err := time.Parse(time.RFC3339, val.(string))
-		if err == nil {
-			fmt.Fprintf(os.Stderr, "Converting to Date.\n")
-			data["nativedate"] = t
+		if f, ok := val.(float64); ok {
+			data["nativedate"] = time.UnixMilli(int64(f))
 		}
 	}
 
