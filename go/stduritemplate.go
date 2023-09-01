@@ -94,8 +94,6 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var firstToken bool = true
 
 	for i, character := range str {
-		// for i := 0; i < len(str); i++ {
-		// character := str[i]
 		switch character {
 		case '{':
 			token = &strings.Builder{}
