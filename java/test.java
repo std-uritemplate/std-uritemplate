@@ -30,10 +30,8 @@ public class test {
             var template = new String(Files.readAllBytes(Paths.get(args[0])));
 
             var substs = (Map<String, Object>) objectReader.readValue(fis);
-            substs.computeIfPresent("nativedate", (k, v) -> {
-                err.println("Converting to OffsetDateTime");
-                return new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC);
-            });
+            substs.computeIfPresent("nativedate", (k, v) ->
+                new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
 
             out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {

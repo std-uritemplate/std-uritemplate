@@ -3,7 +3,6 @@ namespace test;
 
 using System;
 using System.IO;
-using System.Xml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using stduritemplate;
