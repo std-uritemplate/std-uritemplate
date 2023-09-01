@@ -349,7 +349,7 @@ public class StdUriTemplate {
         }
     }
 
-    private static final DateTimeFormatter RFC3339 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+    private static final DateTimeFormatter RFC3339 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[XXX][VV]");
 
     // returns true if expansion happened
     private static boolean expandToken(

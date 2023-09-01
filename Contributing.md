@@ -16,15 +16,17 @@ This section explains the steps that are currently used to add a new language im
     - `./tests/test.sh <lang> spec-examples-by-section.json`
     - `./tests/test.sh <lang> extended-tests.json`
     - `./tests/test.sh <lang> negative-tests.json`
-6. If a test doesn't pass you can easily re-run just the latest invocation by running: `./tests/re-test.sh <lang>`
-7. Verify one last time that everything works by running `./tests/test.sh <lang>`
-8. Add the language to the GH Action Matrix CI:
+6. There are extended tests to cover edge cases and the correct handling of dates, in case the substitutions map contains a key "nativedate" convert it to the language native date format and run the extended tests:
+    - `./tests/test.sh <lang> edge-cases.json`
+7. If a test doesn't pass you can easily re-run just the latest invocation by running: `./tests/re-test.sh <lang>`
+8. Verify one last time that everything works by running `./tests/test.sh <lang>`
+9. Add the language to the GH Action Matrix CI:
     - add the language to the matrix
     - add the setup with appropriate conditionals
     - run it in CI to verify that everything is passing
-9. Add the corresponding dependabot configuration in `.github/dependabot.yml`
-10. Add the setup to publish the implementation to a package manager or support this discussion with the repo maintainers
-11. Add the documentation regarding how to use the library as a dependency
+10. Add the corresponding dependabot configuration in `.github/dependabot.yml`
+11. Add the setup to publish the implementation to a package manager or support this discussion with the repo maintainers
+12. Add the documentation regarding how to use the library as a dependency
 
 ## Advanced details
 
@@ -55,8 +57,3 @@ git push origin <version>
 
 In Go and Swift is not possible to deserialize JSON into a Map preserving the order of the elements ([reference](https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982)).
 For the moment, we decided to sort the keys to have predictable results.
-
-### DateTime
-
-DateTime formats will be handled on a case-by-case basis.
-Currently `OffsetDateTime` is supported in Java.

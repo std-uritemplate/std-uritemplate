@@ -18,6 +18,11 @@ try {
     exit(1);
 }
 
+if (array_key_exists("nativedate", $data)) {
+    fwrite(STDERR, "Converting to DateTime\n");
+    $data["nativedate"] = \DateTime::createFromFormat(\DateTime::RFC3339, $data["nativedate"]);
+}
+
 try {
     $template = file_get_contents($template_file);
     $template = trim($template);

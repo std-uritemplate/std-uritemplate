@@ -3,7 +3,7 @@ namespace test;
 
 using System;
 using System.IO;
-using System.Text;
+using System.Xml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using stduritemplate;
@@ -25,6 +25,12 @@ class Program
         {
             string jsonData = File.ReadAllText(dataFile);
             var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonData, new DictionaryConverter());
+
+            if (data.ContainsKey("nativedate"))
+            {
+                Console.Error.WriteLine("Double-check that is DateTime");
+                data["nativedate"] = (DateTime)data["nativedate"];
+            }
 
             string template = File.ReadAllText(templateFile).Trim();
 

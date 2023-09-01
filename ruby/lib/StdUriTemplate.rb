@@ -289,6 +289,7 @@ module StdUriTemplate
 
     value = substitutions[token]
     value = value.to_s if ([Integer, Float].any? { |type| value.is_a?(type) }) || ([true, false].include? value)
+    value = value.strftime("%Y-%m-%dT%H:%M:%SZ") if ([DateTime].any? { |type| value.is_a?(type) })
 
     subst_type = get_substitution_type(value, col)
     return false if empty?(subst_type, value)

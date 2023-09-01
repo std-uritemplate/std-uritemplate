@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import static java.lang.System.*;
@@ -26,7 +28,14 @@ public class test {
 
         try (var fis = new FileInputStream(args[1])) {
             var template = new String(Files.readAllBytes(Paths.get(args[0])));
-            out.println(StdUriTemplate.expand(template, objectReader.readValue(fis)));
+
+            var substs = (Map<String, Object>) objectReader.readValue(fis);
+            substs.computeIfPresent("nativedate", (k, v) -> {
+                err.println("Converting to OffsetDateTime");
+                return OffsetDateTime.parse(v.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[XXX][VV]"));
+            });
+
+            out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             // this is an error in the testing infrastructure

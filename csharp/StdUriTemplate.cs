@@ -458,6 +458,9 @@ public class StdUriTemplate
                 value is double)
         {
             value = value.ToString().ToLower();
+        } else if (value is DateTime dt)
+        {
+            value = dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssK");
         }
 
         SubstitutionType substType = GetSubstitutionType(value, col);

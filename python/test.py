@@ -2,6 +2,7 @@
 import sys
 import json
 import traceback
+from datetime import datetime
 
 from stduritemplate import StdUriTemplate
 
@@ -17,6 +18,10 @@ except FileNotFoundError:
 except json.JSONDecodeError as e:
     sys.stderr.write(f"Error parsing JSON data: {str(e)}\n")
     sys.exit(1)
+    
+if "nativedate" in data:
+    sys.stderr.write(f"Converting to datetime\n")
+    data["nativedate"] = datetime.strptime(data["nativedate"], "%Y-%m-%dT%H:%M:%SZ")
 
 try:
     with open(template_file, "r") as file:
