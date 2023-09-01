@@ -9,20 +9,26 @@ import (
 	"time"
 )
 
-type Substitutions map[string]interface{}
+type Substitutions map[string]any
 
-type Modifier int
+// Public API
+func Expand(template string, substitutions Substitutions) (string, error) {
+	return expandImpl(template, substitutions)
+}
+
+// Private implementation
+type Mod rune
 
 const (
-	UNDEFINED Modifier = iota
-	NO_MOD
-	PLUS
-	DASH
-	DOT
-	SLASH
-	SEMICOLON
-	QUESTION_MARK
-	AT
+	ModUndefined    Mod = 0
+	ModNone         Mod = -1
+	ModPlus         Mod = '+'
+	ModDash         Mod = '#'
+	ModDot          Mod = '.'
+	ModSlash        Mod = '/'
+	ModSemicolon    Mod = ';'
+	ModQuestionMark Mod = '?'
+	ModAt           Mod = '&'
 )
 
 const (
@@ -31,10 +37,10 @@ const (
 	SubstitutionTypeMap    = "MAP"
 )
 
-func validateLiteral(c string, col int) error {
+func validateLiteral(c rune, col int) error {
 	switch c {
-	case "+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-":
-		return fmt.Errorf("Illegal character identified in the token at col: %d", col)
+	case '+', '#', '/', ';', '?', '&', ' ', '!', '=', '$', '|', '*', ':', '~', '-':
+		return fmt.Errorf("illegal character identified in the token at col: %d", col)
 	default:
 		return nil
 	}
@@ -43,63 +49,61 @@ func validateLiteral(c string, col int) error {
 func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 	if buffer == nil {
 		return -1, nil
-	} else {
-		value := buffer.String()
-
-		if value == "" {
-			return -1, nil
-		} else {
-			maxChar, err := strconv.Atoi(value)
-			if err != nil {
-				return 0, fmt.Errorf("Cannot parse max chars at col: %d", col)
-			}
-			return maxChar, nil
-		}
 	}
+	value := buffer.String()
+
+	if value == "" {
+		return -1, nil
+	}
+
+	maxChar, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse max chars at col: %d", col)
+	}
+	return maxChar, nil
 }
 
-func getModifier(c string, token *strings.Builder, col int) (Modifier, error) {
+func getModifier(c rune, token *strings.Builder, col int) (Mod, error) {
 	switch c {
-	case "+":
-		return PLUS, nil
-	case "#":
-		return DASH, nil
-	case ".":
-		return DOT, nil
-	case "/":
-		return SLASH, nil
-	case ";":
-		return SEMICOLON, nil
-	case "?":
-		return QUESTION_MARK, nil
-	case "&":
-		return AT, nil
+	case '+':
+		return ModPlus, nil
+	case '#':
+		return ModDash, nil
+	case '.':
+		return ModDot, nil
+	case '/':
+		return ModSlash, nil
+	case ';':
+		return ModSemicolon, nil
+	case '?':
+		return ModQuestionMark, nil
+	case '&':
+		return ModAt, nil
 	default:
 		err := validateLiteral(c, col)
 		if err != nil {
-			return UNDEFINED, err
+			return ModUndefined, err
 		}
-		token.WriteString(c)
-		return NO_MOD, nil
+		token.WriteRune(c)
+		return ModNone, nil
 	}
 }
 
 func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var result strings.Builder
 
-	var token *strings.Builder = nil
-	var modifier Modifier = UNDEFINED
+	var token *strings.Builder
+	var modifier = ModUndefined
 	var composite bool
 	var maxCharBuffer *strings.Builder
-	var firstToken bool = true
+	var firstToken = true
 
-	for i := 0; i < len(str); i++ {
-		character := string(str[i])
+	for i, character := range str {
 		switch character {
-		case "{":
+		case '{':
 			token = &strings.Builder{}
 			firstToken = true
-		case "}":
+		case '}':
 			if token != nil {
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
@@ -113,13 +117,13 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					firstToken = false
 				}
 				token = nil
-				modifier = UNDEFINED
+				modifier = ModUndefined
 				composite = false
 				maxCharBuffer = nil
 			} else {
-				return "", fmt.Errorf("Failed to expand token, invalid at col: %d", i)
+				return "", fmt.Errorf("failed to expand token, invalid at col: %d", i)
 			}
-		case ",":
+		case ',':
 			if token != nil {
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
@@ -138,103 +142,92 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				break
 			}
 			// Intentional fall-through for commas outside the {}
+			fallthrough
 		default:
 			if token != nil {
-				if modifier == UNDEFINED {
+				switch {
+				case modifier == ModUndefined:
 					var err error
 					modifier, err = getModifier(character, token, i)
 					if err != nil {
 						return "", err
 					}
-				} else if maxCharBuffer != nil {
-					if _, err := strconv.Atoi(character); err == nil {
-						maxCharBuffer.WriteString(character)
+				case maxCharBuffer != nil:
+					if _, err := strconv.Atoi(string(character)); err == nil {
+						maxCharBuffer.WriteRune(character)
 					} else {
-						return "", fmt.Errorf("Illegal character identified in the token at col: %d", i)
+						return "", fmt.Errorf("illegal character identified in the token at col: %d", i)
 					}
-				} else {
-					if character == ":" {
+				default:
+					switch character {
+					case ':':
 						maxCharBuffer = &strings.Builder{}
-					} else if character == "*" {
+					case '*':
 						composite = true
-					} else {
+					default:
 						if err := validateLiteral(character, i); err != nil {
 							return "", err
 						}
-						token.WriteString(character)
+						token.WriteRune(character)
 					}
 				}
 			} else {
-				result.WriteString(character)
+				result.WriteRune(character)
 			}
 		}
 	}
 
 	if token == nil {
 		return result.String(), nil
-	} else {
-		return "", fmt.Errorf("Unterminated token")
 	}
+
+	return "", fmt.Errorf("unterminated token")
 }
 
-func addPrefix(mod Modifier, result *strings.Builder) {
+func addPrefix(mod Mod, result *strings.Builder) {
 	switch mod {
-	case DASH:
-		result.WriteString("#")
-	case DOT:
-		result.WriteString(".")
-	case SLASH:
-		result.WriteString("/")
-	case SEMICOLON:
-		result.WriteString(";")
-	case QUESTION_MARK:
-		result.WriteString("?")
-	case AT:
-		result.WriteString("&")
+	case ModDash, ModDot, ModSlash, ModSemicolon, ModQuestionMark, ModAt:
+		result.WriteRune(rune(mod))
 	default:
 		return
 	}
 }
 
-func addSeparator(mod Modifier, result *strings.Builder) {
+func addSeparator(mod Mod, result *strings.Builder) {
 	switch mod {
-	case DOT:
-		result.WriteString(".")
-	case SLASH:
-		result.WriteString("/")
-	case SEMICOLON:
-		result.WriteString(";")
-	case QUESTION_MARK, AT:
-		result.WriteString("&")
+	case ModDot, ModSlash, ModSemicolon:
+		result.WriteRune(rune(mod))
+	case ModQuestionMark, ModAt:
+		result.WriteByte('&')
 	default:
-		result.WriteString(",")
+		result.WriteByte(',')
 		return
 	}
 }
 
-func addValue(mod Modifier, token, value string, result *strings.Builder, maxChar int) {
+func addValue(mod Mod, token, value string, result *strings.Builder, maxChar int) {
 	switch mod {
-	case PLUS, DASH:
+	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
-	case QUESTION_MARK, AT:
+	case ModQuestionMark, ModAt:
 		result.WriteString(token + "=")
 		addExpandedValue(value, result, maxChar, true)
-	case SEMICOLON:
+	case ModSemicolon:
 		result.WriteString(token)
 		if value != "" {
-			result.WriteString("=")
+			result.WriteByte('=')
 		}
 		addExpandedValue(value, result, maxChar, true)
-	case DOT, SLASH, NO_MOD:
+	case ModDot, ModSlash, ModNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
 
-func addValueElement(mod Modifier, token, value string, result *strings.Builder, maxChar int) {
+func addValueElement(mod Mod, _, value string, result *strings.Builder, maxChar int) {
 	switch mod {
-	case PLUS, DASH:
+	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
-	case QUESTION_MARK, AT, SEMICOLON, DOT, SLASH, NO_MOD:
+	case ModQuestionMark, ModAt, ModSemicolon, ModDot, ModSlash, ModNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
@@ -244,23 +237,25 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 	if maxChar == -1 || maxChar > len(value) {
 		max = len(value)
 	}
-	reservedBuffer := []string{}
+	reservedBuffer := &strings.Builder{}
 	fillReserved := false
 
-	for i := 0; i < max; i++ {
-		character := value[i : i+1]
+	for i, character := range value {
+		if i >= max {
+			break
+		}
 
-		if character == "%" && !replaceReserved {
-			reservedBuffer = []string{}
+		if character == '%' && !replaceReserved {
+			reservedBuffer.Reset()
 			fillReserved = true
 		}
 
 		if fillReserved {
-			reservedBuffer = append(reservedBuffer, character)
+			reservedBuffer.WriteRune(character)
 
-			if len(reservedBuffer) == 3 {
+			if reservedBuffer.Len() == 3 {
 				encoded := true
-				reserved := strings.Join(reservedBuffer, "")
+				reserved := reservedBuffer.String()
 				unescaped, err := url.QueryUnescape(reserved)
 				if err != nil {
 					encoded = (reserved == unescaped)
@@ -271,21 +266,22 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 				} else {
 					result.WriteString("%25")
 					// only if !replaceReserved
-					result.WriteString(strings.Join(reservedBuffer[1:], ""))
+					result.WriteString(reservedBuffer.String()[1:])
 				}
-				reservedBuffer = []string{}
+				reservedBuffer.Reset()
 				fillReserved = false
 			}
 		} else {
-			if character == " " {
+			switch character {
+			case ' ':
 				result.WriteString("%20")
-			} else if character == "%" {
+			case '%':
 				result.WriteString("%25")
-			} else {
+			default:
 				if replaceReserved {
-					result.WriteString(url.QueryEscape(character))
+					result.WriteString(url.QueryEscape(string(character)))
 				} else {
-					result.WriteString(character)
+					result.WriteRune(character)
 				}
 			}
 		}
@@ -294,41 +290,41 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 	if fillReserved {
 		result.WriteString("%25")
 		if replaceReserved {
-			result.WriteString(url.QueryEscape(strings.Join(reservedBuffer[1:], "")))
+			result.WriteString(url.QueryEscape(reservedBuffer.String()[1:]))
 		} else {
-			result.WriteString(strings.Join(reservedBuffer[1:], ""))
+			result.WriteString(reservedBuffer.String()[1:])
 		}
 	}
 }
 
-func getSubstitutionType(value interface{}, col int) string {
+func getSubstitutionType(value any, col int) string {
 	switch value.(type) {
 	case string, nil:
 		return SubstitutionTypeString
-	case []interface{}:
+	case []any:
 		return SubstitutionTypeList
-	case map[string]interface{}:
+	case map[string]any:
 		return SubstitutionTypeMap
 	default:
-		return fmt.Sprintf("Illegal class passed as substitution, found %T at col: %d", value, col)
+		return fmt.Sprintf("illegal class passed as substitution, found %T at col: %d", value, col)
 	}
 }
 
-func isEmpty(substType string, value interface{}) bool {
+func isEmpty(substType string, value any) bool {
 	switch substType {
 	case SubstitutionTypeString:
 		return value == nil
 	case SubstitutionTypeList:
-		return len(value.([]interface{})) == 0
+		return len(value.([]any)) == 0
 	case SubstitutionTypeMap:
-		return len(value.(map[string]interface{})) == 0
+		return len(value.(map[string]any)) == 0
 	default:
 		return true
 	}
 }
 
 func expandToken(
-	modifier Modifier,
+	modifier Mod,
 	token string,
 	composite bool,
 	maxChar int,
@@ -338,7 +334,7 @@ func expandToken(
 	col int,
 ) (bool, error) {
 	if len(token) == 0 {
-		return false, fmt.Errorf("Found an empty token at col: %d", col)
+		return false, fmt.Errorf("found an empty token at col: %d", col)
 	}
 
 	value, ok := substitutions[token]
@@ -368,9 +364,9 @@ func expandToken(
 	case SubstitutionTypeString:
 		addStringValue(modifier, token, value.(string), result, maxChar)
 	case SubstitutionTypeList:
-		addListValue(modifier, token, value.([]interface{}), result, maxChar, composite)
+		addListValue(modifier, token, value.([]any), result, maxChar, composite)
 	case SubstitutionTypeMap:
-		err := addMapValue(modifier, token, value.(map[string]interface{}), result, maxChar, composite)
+		err := addMapValue(modifier, token, value.(map[string]any), result, maxChar, composite)
 		if err != nil {
 			return false, err
 		}
@@ -379,12 +375,12 @@ func expandToken(
 	return true, nil
 }
 
-func addStringValue(modifier Modifier, token string, value string, result *strings.Builder, maxChar int) {
+func addStringValue(modifier Mod, token string, value string, result *strings.Builder, maxChar int) {
 	addValue(modifier, token, value, result, maxChar)
 
 }
 
-func addListValue(modifier Modifier, token string, value []interface{}, result *strings.Builder, maxChar int, composite bool) {
+func addListValue(modifier Mod, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
 		if first {
@@ -402,10 +398,10 @@ func addListValue(modifier Modifier, token string, value []interface{}, result *
 	}
 }
 
-func addMapValue(modifier Modifier, token string, value map[string]interface{}, result *strings.Builder, maxChar int, composite bool) error {
+func addMapValue(modifier Mod, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
 	first := true
 	if maxChar != -1 {
-		return fmt.Errorf("Value trimming is not allowed on Maps")
+		return fmt.Errorf("value trimming is not allowed on Maps")
 	}
 
 	// workaround to make Map ordering not random
@@ -438,8 +434,4 @@ func addMapValue(modifier Modifier, token string, value map[string]interface{}, 
 		first = false
 	}
 	return nil
-}
-
-func Expand(template string, substitutions Substitutions) (string, error) {
-	return expandImpl(template, substitutions)
 }
