@@ -21,7 +21,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Java | ✅ | ✅ | ✅ |
 | Python | ✅ | ❌ | ✅ |
 | Typescript | ✅ | ✅ | ✅ |
-| Go | ✅ | ❌ | ✅ |
+| Go | ✅ | ✅ | ✅ |
 | C# | ✅ | ✅ | ✅ |
 | Ruby | ✅ | ❌ | ✅ |
 | PHP | ✅ | ❌ | ✅ |
