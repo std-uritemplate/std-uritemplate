@@ -460,7 +460,9 @@ public class StdUriTemplate
             value = value.ToString().ToLower();
         } else if (value is DateTime dt)
         {
-            value = dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssK");
+            value = dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
+        } else if (value is DateTimeOffset dto) {
+            value = dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
         }
 
         SubstitutionType substType = GetSubstitutionType(value, col);

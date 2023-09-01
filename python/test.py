@@ -20,8 +20,9 @@ except json.JSONDecodeError as e:
     sys.exit(1)
     
 if "nativedate" in data:
-    sys.stderr.write(f"Converting to datetime\n")
     data["nativedate"] = datetime.fromtimestamp(data["nativedate"]/1000)
+if "nativedatetwo" in data:
+    data["nativedatetwo"] = datetime.fromtimestamp(data["nativedatetwo"]/1000)
 
 try:
     with open(template_file, "r") as file:

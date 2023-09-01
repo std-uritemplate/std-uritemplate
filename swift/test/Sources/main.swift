@@ -22,6 +22,9 @@ do {
     if let date = jsonData["nativedate"] {
         jsonData.updateValue(Date(timeIntervalSince1970: (date as! Double / 1000.0)) as Any, forKey: "nativedate")
     }
+    if let date = jsonData["nativedatetwo"] {
+        jsonData.updateValue(Date(timeIntervalSince1970: (date as! Double / 1000.0)) as Any, forKey: "nativedatetwo")
+    }
     
     let template = try String(contentsOfFile: templateFile)
     

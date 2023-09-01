@@ -31,6 +31,8 @@ public class test {
 
             var substs = (Map<String, Object>) objectReader.readValue(fis);
             substs.computeIfPresent("nativedate", (k, v) ->
+                new Date(Long.valueOf(v.toString())));
+            substs.computeIfPresent("nativedatetwo", (k, v) ->
                 new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
 
             out.println(StdUriTemplate.expand(template, substs));
