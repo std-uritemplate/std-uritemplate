@@ -9,20 +9,20 @@ import (
 	"time"
 )
 
-type Substitutions map[string]interface{}
+type Substitutions map[string]any
 
 type Modifier int
 
 const (
-	UNDEFINED Modifier = iota
-	NO_MOD
-	PLUS
-	DASH
-	DOT
-	SLASH
-	SEMICOLON
-	QUESTION_MARK
-	AT
+	ModUndefined Modifier = iota
+	ModNoMod
+	ModPlus
+	ModDash
+	ModDot
+	ModSlash
+	ModSemicolon
+	ModQuestionMark
+	ModAt
 )
 
 const (
@@ -34,7 +34,7 @@ const (
 func validateLiteral(c string, col int) error {
 	switch c {
 	case "+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-":
-		return fmt.Errorf("Illegal character identified in the token at col: %d", col)
+		return fmt.Errorf("illegal character identified in the token at col: %d", col)
 	default:
 		return nil
 	}
@@ -61,26 +61,26 @@ func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 func getModifier(c string, token *strings.Builder, col int) (Modifier, error) {
 	switch c {
 	case "+":
-		return PLUS, nil
+		return ModPlus, nil
 	case "#":
-		return DASH, nil
+		return ModDash, nil
 	case ".":
-		return DOT, nil
+		return ModDot, nil
 	case "/":
-		return SLASH, nil
+		return ModSlash, nil
 	case ";":
-		return SEMICOLON, nil
+		return ModSemicolon, nil
 	case "?":
-		return QUESTION_MARK, nil
+		return ModQuestionMark, nil
 	case "&":
-		return AT, nil
+		return ModAt, nil
 	default:
 		err := validateLiteral(c, col)
 		if err != nil {
-			return UNDEFINED, err
+			return ModUndefined, err
 		}
 		token.WriteString(c)
-		return NO_MOD, nil
+		return ModNoMod, nil
 	}
 }
 
@@ -88,7 +88,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var result strings.Builder
 
 	var token *strings.Builder = nil
-	var modifier Modifier = UNDEFINED
+	var modifier Modifier = ModUndefined
 	var composite bool
 	var maxCharBuffer *strings.Builder
 	var firstToken bool = true
@@ -113,11 +113,11 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					firstToken = false
 				}
 				token = nil
-				modifier = UNDEFINED
+				modifier = ModUndefined
 				composite = false
 				maxCharBuffer = nil
 			} else {
-				return "", fmt.Errorf("Failed to expand token, invalid at col: %d", i)
+				return "", fmt.Errorf("failed to expand token, invalid at col: %d", i)
 			}
 		case ",":
 			if token != nil {
@@ -138,9 +138,10 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				break
 			}
 			// Intentional fall-through for commas outside the {}
+			fallthrough
 		default:
 			if token != nil {
-				if modifier == UNDEFINED {
+				if modifier == ModUndefined {
 					var err error
 					modifier, err = getModifier(character, token, i)
 					if err != nil {
@@ -150,7 +151,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					if _, err := strconv.Atoi(character); err == nil {
 						maxCharBuffer.WriteString(character)
 					} else {
-						return "", fmt.Errorf("Illegal character identified in the token at col: %d", i)
+						return "", fmt.Errorf("illegal character identified in the token at col: %d", i)
 					}
 				} else {
 					if character == ":" {
@@ -179,17 +180,17 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 
 func addPrefix(mod Modifier, result *strings.Builder) {
 	switch mod {
-	case DASH:
+	case ModDash:
 		result.WriteString("#")
-	case DOT:
+	case ModDot:
 		result.WriteString(".")
-	case SLASH:
+	case ModSlash:
 		result.WriteString("/")
-	case SEMICOLON:
+	case ModSemicolon:
 		result.WriteString(";")
-	case QUESTION_MARK:
+	case ModQuestionMark:
 		result.WriteString("?")
-	case AT:
+	case ModAt:
 		result.WriteString("&")
 	default:
 		return
@@ -198,13 +199,13 @@ func addPrefix(mod Modifier, result *strings.Builder) {
 
 func addSeparator(mod Modifier, result *strings.Builder) {
 	switch mod {
-	case DOT:
+	case ModDot:
 		result.WriteString(".")
-	case SLASH:
+	case ModSlash:
 		result.WriteString("/")
-	case SEMICOLON:
+	case ModSemicolon:
 		result.WriteString(";")
-	case QUESTION_MARK, AT:
+	case ModQuestionMark, ModAt:
 		result.WriteString("&")
 	default:
 		result.WriteString(",")
@@ -214,27 +215,27 @@ func addSeparator(mod Modifier, result *strings.Builder) {
 
 func addValue(mod Modifier, token, value string, result *strings.Builder, maxChar int) {
 	switch mod {
-	case PLUS, DASH:
+	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
-	case QUESTION_MARK, AT:
+	case ModQuestionMark, ModAt:
 		result.WriteString(token + "=")
 		addExpandedValue(value, result, maxChar, true)
-	case SEMICOLON:
+	case ModSemicolon:
 		result.WriteString(token)
 		if value != "" {
 			result.WriteString("=")
 		}
 		addExpandedValue(value, result, maxChar, true)
-	case DOT, SLASH, NO_MOD:
+	case ModDot, ModSlash, ModNoMod:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
 
 func addValueElement(mod Modifier, token, value string, result *strings.Builder, maxChar int) {
 	switch mod {
-	case PLUS, DASH:
+	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
-	case QUESTION_MARK, AT, SEMICOLON, DOT, SLASH, NO_MOD:
+	case ModQuestionMark, ModAt, ModSemicolon, ModDot, ModSlash, ModNoMod:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
@@ -301,27 +302,27 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 	}
 }
 
-func getSubstitutionType(value interface{}, col int) string {
+func getSubstitutionType(value any, col int) string {
 	switch value.(type) {
 	case string, nil:
 		return SubstitutionTypeString
-	case []interface{}:
+	case []any:
 		return SubstitutionTypeList
-	case map[string]interface{}:
+	case map[string]any:
 		return SubstitutionTypeMap
 	default:
-		return fmt.Sprintf("Illegal class passed as substitution, found %T at col: %d", value, col)
+		return fmt.Sprintf("illegal class passed as substitution, found %T at col: %d", value, col)
 	}
 }
 
-func isEmpty(substType string, value interface{}) bool {
+func isEmpty(substType string, value any) bool {
 	switch substType {
 	case SubstitutionTypeString:
 		return value == nil
 	case SubstitutionTypeList:
-		return len(value.([]interface{})) == 0
+		return len(value.([]any)) == 0
 	case SubstitutionTypeMap:
-		return len(value.(map[string]interface{})) == 0
+		return len(value.(map[string]any)) == 0
 	default:
 		return true
 	}
@@ -338,7 +339,7 @@ func expandToken(
 	col int,
 ) (bool, error) {
 	if len(token) == 0 {
-		return false, fmt.Errorf("Found an empty token at col: %d", col)
+		return false, fmt.Errorf("found an empty token at col: %d", col)
 	}
 
 	value, ok := substitutions[token]
@@ -368,9 +369,9 @@ func expandToken(
 	case SubstitutionTypeString:
 		addStringValue(modifier, token, value.(string), result, maxChar)
 	case SubstitutionTypeList:
-		addListValue(modifier, token, value.([]interface{}), result, maxChar, composite)
+		addListValue(modifier, token, value.([]any), result, maxChar, composite)
 	case SubstitutionTypeMap:
-		err := addMapValue(modifier, token, value.(map[string]interface{}), result, maxChar, composite)
+		err := addMapValue(modifier, token, value.(map[string]any), result, maxChar, composite)
 		if err != nil {
 			return false, err
 		}
@@ -384,7 +385,7 @@ func addStringValue(modifier Modifier, token string, value string, result *strin
 
 }
 
-func addListValue(modifier Modifier, token string, value []interface{}, result *strings.Builder, maxChar int, composite bool) {
+func addListValue(modifier Modifier, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
 		if first {
@@ -402,10 +403,10 @@ func addListValue(modifier Modifier, token string, value []interface{}, result *
 	}
 }
 
-func addMapValue(modifier Modifier, token string, value map[string]interface{}, result *strings.Builder, maxChar int, composite bool) error {
+func addMapValue(modifier Modifier, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
 	first := true
 	if maxChar != -1 {
-		return fmt.Errorf("Value trimming is not allowed on Maps")
+		return fmt.Errorf("value trimming is not allowed on Maps")
 	}
 
 	// workaround to make Map ordering not random
