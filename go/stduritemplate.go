@@ -15,7 +15,7 @@ type Modifier int
 
 const (
 	ModUndefined Modifier = iota
-	ModNoMod
+	ModNone
 	ModPlus
 	ModDash
 	ModDot
@@ -79,7 +79,7 @@ func getModifier(c rune, token *strings.Builder, col int) (Modifier, error) {
 			return ModUndefined, err
 		}
 		token.WriteRune(c)
-		return ModNoMod, nil
+		return ModNone, nil
 	}
 }
 
@@ -226,7 +226,7 @@ func addValue(mod Modifier, token, value string, result *strings.Builder, maxCha
 			result.WriteByte('=')
 		}
 		addExpandedValue(value, result, maxChar, true)
-	case ModDot, ModSlash, ModNoMod:
+	case ModDot, ModSlash, ModNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
@@ -235,7 +235,7 @@ func addValueElement(mod Modifier, _, value string, result *strings.Builder, max
 	switch mod {
 	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
-	case ModQuestionMark, ModAt, ModSemicolon, ModDot, ModSlash, ModNoMod:
+	case ModQuestionMark, ModAt, ModSemicolon, ModDot, ModSlash, ModNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
@@ -245,7 +245,7 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 	if maxChar == -1 || maxChar > len(value) {
 		max = len(value)
 	}
-	var reservedBuffer *strings.Builder
+	reservedBuffer := &strings.Builder{}
 	fillReserved := false
 
 	for i, character := range value {
@@ -254,7 +254,7 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 		}
 
 		if character == '%' && !replaceReserved {
-			reservedBuffer = &strings.Builder{}
+			reservedBuffer.Reset()
 			fillReserved = true
 		}
 
@@ -276,7 +276,7 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 					// only if !replaceReserved
 					result.WriteString(reservedBuffer.String()[1:])
 				}
-				reservedBuffer = &strings.Builder{}
+				reservedBuffer.Reset()
 				fillReserved = false
 			}
 		} else {
