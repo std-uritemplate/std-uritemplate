@@ -43,19 +43,18 @@ func validateLiteral(c rune, col int) error {
 func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 	if buffer == nil {
 		return -1, nil
-	} else {
-		value := buffer.String()
-
-		if value == "" {
-			return -1, nil
-		} else {
-			maxChar, err := strconv.Atoi(value)
-			if err != nil {
-				return 0, fmt.Errorf("cannot parse max chars at col: %d", col)
-			}
-			return maxChar, nil
-		}
 	}
+	value := buffer.String()
+
+	if value == "" {
+		return -1, nil
+	}
+
+	maxChar, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse max chars at col: %d", col)
+	}
+	return maxChar, nil
 }
 
 func getModifier(c rune, token *strings.Builder, col int) (Modifier, error) {
@@ -87,11 +86,11 @@ func getModifier(c rune, token *strings.Builder, col int) (Modifier, error) {
 func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var result strings.Builder
 
-	var token *strings.Builder = nil
-	var modifier Modifier = ModUndefined
+	var token *strings.Builder
+	var modifier = ModUndefined
 	var composite bool
 	var maxCharBuffer *strings.Builder
-	var firstToken bool = true
+	var firstToken = true
 
 	for i, character := range str {
 		switch character {
@@ -140,24 +139,26 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			fallthrough
 		default:
 			if token != nil {
-				if modifier == ModUndefined {
+				switch {
+				case modifier == ModUndefined:
 					var err error
 					modifier, err = getModifier(character, token, i)
 					if err != nil {
 						return "", err
 					}
-				} else if maxCharBuffer != nil {
+				case maxCharBuffer != nil:
 					if _, err := strconv.Atoi(string(character)); err == nil {
 						maxCharBuffer.WriteRune(character)
 					} else {
 						return "", fmt.Errorf("illegal character identified in the token at col: %d", i)
 					}
-				} else {
-					if character == ':' {
+				default:
+					switch character {
+					case ':':
 						maxCharBuffer = &strings.Builder{}
-					} else if character == '*' {
+					case '*':
 						composite = true
-					} else {
+					default:
 						if err := validateLiteral(character, i); err != nil {
 							return "", err
 						}
@@ -172,9 +173,9 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 
 	if token == nil {
 		return result.String(), nil
-	} else {
-		return "", fmt.Errorf("unterminated token")
 	}
+
+	return "", fmt.Errorf("unterminated token")
 }
 
 func addPrefix(mod Modifier, result *strings.Builder) {
@@ -230,7 +231,7 @@ func addValue(mod Modifier, token, value string, result *strings.Builder, maxCha
 	}
 }
 
-func addValueElement(mod Modifier, token, value string, result *strings.Builder, maxChar int) {
+func addValueElement(mod Modifier, _, value string, result *strings.Builder, maxChar int) {
 	switch mod {
 	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
@@ -279,11 +280,12 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 				fillReserved = false
 			}
 		} else {
-			if character == ' ' {
+			switch character {
+			case ' ':
 				result.WriteString("%20")
-			} else if character == '%' {
+			case '%':
 				result.WriteString("%25")
-			} else {
+			default:
 				if replaceReserved {
 					result.WriteString(url.QueryEscape(string(character)))
 				} else {
