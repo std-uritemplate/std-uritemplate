@@ -11,18 +11,22 @@ import (
 
 type Substitutions map[string]any
 
-type Modifier int
+// Public API
+func Expand(template string, substitutions Substitutions) (string, error) {
+	return expandImpl(template, substitutions)
+}
 
+// Private implementation
 const (
-	ModUndefined Modifier = iota
-	ModNone
-	ModPlus
-	ModDash
-	ModDot
-	ModSlash
-	ModSemicolon
-	ModQuestionMark
-	ModAt
+	ModUndefined    rune = iota
+	ModNone         rune = -1
+	ModPlus         rune = '+'
+	ModDash         rune = '#'
+	ModDot          rune = '.'
+	ModSlash        rune = '/'
+	ModSemicolon    rune = ';'
+	ModQuestionMark rune = '?'
+	ModAt           rune = '&'
 )
 
 const (
@@ -57,22 +61,10 @@ func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 	return maxChar, nil
 }
 
-func getModifier(c rune, token *strings.Builder, col int) (Modifier, error) {
+func getModifier(c rune, token *strings.Builder, col int) (rune, error) {
 	switch c {
-	case '+':
-		return ModPlus, nil
-	case '#':
-		return ModDash, nil
-	case '.':
-		return ModDot, nil
-	case '/':
-		return ModSlash, nil
-	case ';':
-		return ModSemicolon, nil
-	case '?':
-		return ModQuestionMark, nil
-	case '&':
-		return ModAt, nil
+	case '+', '#', '.', '/', ';', '?', '&':
+		return c, nil
 	default:
 		err := validateLiteral(c, col)
 		if err != nil {
@@ -178,33 +170,19 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	return "", fmt.Errorf("unterminated token")
 }
 
-func addPrefix(mod Modifier, result *strings.Builder) {
+func addPrefix(mod rune, result *strings.Builder) {
 	switch mod {
-	case ModDash:
-		result.WriteByte('#')
-	case ModDot:
-		result.WriteByte('.')
-	case ModSlash:
-		result.WriteByte('/')
-	case ModSemicolon:
-		result.WriteByte(';')
-	case ModQuestionMark:
-		result.WriteByte('?')
-	case ModAt:
-		result.WriteByte('&')
+	case ModDash, ModDot, ModSlash, ModSemicolon, ModQuestionMark, ModAt:
+		result.WriteRune(mod)
 	default:
 		return
 	}
 }
 
-func addSeparator(mod Modifier, result *strings.Builder) {
+func addSeparator(mod rune, result *strings.Builder) {
 	switch mod {
-	case ModDot:
-		result.WriteByte('.')
-	case ModSlash:
-		result.WriteByte('/')
-	case ModSemicolon:
-		result.WriteByte(';')
+	case ModDot, ModSlash, ModSemicolon:
+		result.WriteRune(mod)
 	case ModQuestionMark, ModAt:
 		result.WriteByte('&')
 	default:
@@ -213,7 +191,7 @@ func addSeparator(mod Modifier, result *strings.Builder) {
 	}
 }
 
-func addValue(mod Modifier, token, value string, result *strings.Builder, maxChar int) {
+func addValue(mod rune, token, value string, result *strings.Builder, maxChar int) {
 	switch mod {
 	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
@@ -231,7 +209,7 @@ func addValue(mod Modifier, token, value string, result *strings.Builder, maxCha
 	}
 }
 
-func addValueElement(mod Modifier, _, value string, result *strings.Builder, maxChar int) {
+func addValueElement(mod rune, _, value string, result *strings.Builder, maxChar int) {
 	switch mod {
 	case ModPlus, ModDash:
 		addExpandedValue(value, result, maxChar, false)
@@ -332,7 +310,7 @@ func isEmpty(substType string, value any) bool {
 }
 
 func expandToken(
-	modifier Modifier,
+	modifier rune,
 	token string,
 	composite bool,
 	maxChar int,
@@ -383,12 +361,12 @@ func expandToken(
 	return true, nil
 }
 
-func addStringValue(modifier Modifier, token string, value string, result *strings.Builder, maxChar int) {
+func addStringValue(modifier rune, token string, value string, result *strings.Builder, maxChar int) {
 	addValue(modifier, token, value, result, maxChar)
 
 }
 
-func addListValue(modifier Modifier, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
+func addListValue(modifier rune, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
 		if first {
@@ -406,7 +384,7 @@ func addListValue(modifier Modifier, token string, value []any, result *strings.
 	}
 }
 
-func addMapValue(modifier Modifier, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
+func addMapValue(modifier rune, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
 	first := true
 	if maxChar != -1 {
 		return fmt.Errorf("value trimming is not allowed on Maps")
@@ -442,8 +420,4 @@ func addMapValue(modifier Modifier, token string, value map[string]any, result *
 		first = false
 	}
 	return nil
-}
-
-func Expand(template string, substitutions Substitutions) (string, error) {
-	return expandImpl(template, substitutions)
 }
