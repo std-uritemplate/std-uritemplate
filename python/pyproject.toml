@@ -14,7 +14,7 @@ repository = "https://github.com/andreaTP/std-uritemplate"
 keywords = ["std-uritemplate", "uritemplate", "uritemplates", "stduritemplate"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 
 [build-system]
 requires = ["poetry-core"]
