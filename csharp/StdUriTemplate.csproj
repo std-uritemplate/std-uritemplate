@@ -12,7 +12,7 @@
 
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>keypair.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>StdUriTemplate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
