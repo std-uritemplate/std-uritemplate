@@ -2,12 +2,20 @@
 
   <PropertyGroup>
     <PackageId>Std.UriTemplate</PackageId>
+    <Description>Std Uritemplate implementation for .NET.</Description>
     <Version>$(VERSION)</Version>
     <Authors>andreaTP</Authors>
     <Company>stduritemplate</Company>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <IsTrimmable>true</IsTrimmable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RepositoryUrl>https://github.com/std-uritemplate/std-uritemplate</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,4 +30,14 @@
     <None Remove="test\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\Readme.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 </Project>
