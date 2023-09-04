@@ -112,7 +112,6 @@ jobs:
       - name: Release to NuGet
         working-directory: csharp
         run: |
-          cp ../Readme.md ./
           dotnet pack -p:PackageVersion=${GITHUB_REF_NAME} -o dist
           dotnet nuget push dist/Std.UriTemplate.${GITHUB_REF_NAME}.nupkg --api-key ${NUGET_TOKEN} --source https://api.nuget.org/v3/index.json
         env:
