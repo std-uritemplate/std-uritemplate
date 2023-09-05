@@ -23,12 +23,12 @@ public class StdUriTemplate {
     private enum Modifier {
         NO_MOD,
         PLUS,
-        DASH,
+        HASH,
         DOT,
         SLASH,
         SEMICOLON,
         QUESTION_MARK,
-        AT;
+        AMP;
     }
 
     private static void validateLiteral(Character c, int col) {
@@ -75,12 +75,12 @@ public class StdUriTemplate {
     private static Modifier getModifier(Character c, StringBuilder token, int col) {
         switch (c) {
             case '+': return Modifier.PLUS;
-            case '#': return Modifier.DASH;
+            case '#': return Modifier.HASH;
             case '.': return Modifier.DOT;
             case '/': return Modifier.SLASH;
             case ';': return Modifier.SEMICOLON;
             case '?': return Modifier.QUESTION_MARK;
-            case '&': return Modifier.AT;
+            case '&': return Modifier.AMP;
             default:
                 validateLiteral(c, col);
                 token.append(c);
@@ -167,7 +167,7 @@ public class StdUriTemplate {
 
     private static void addPrefix(Modifier mod, StringBuilder result) {
         switch (mod) {
-            case DASH:
+            case HASH:
                 result.append('#');
                 break;
             case DOT:
@@ -182,7 +182,7 @@ public class StdUriTemplate {
             case QUESTION_MARK:
                 result.append('?');
                 break;
-            case AT:
+            case AMP:
                 result.append('&');
                 break;
             default:
@@ -202,7 +202,7 @@ public class StdUriTemplate {
                 result.append(';');
                 break;
             case QUESTION_MARK:
-            case AT:
+            case AMP:
                 result.append('&');
                 break;
             default:
@@ -214,11 +214,11 @@ public class StdUriTemplate {
     private static void addValue(Modifier mod, String token, String value, StringBuilder result, int maxChar) {
         switch (mod) {
             case PLUS:
-            case DASH:
+            case HASH:
                 addExpandedValue(value, result, maxChar, false);
                 break;
             case QUESTION_MARK:
-            case AT:
+            case AMP:
                 result.append(token + '=');
                 addExpandedValue(value, result, maxChar, true);
                 break;
@@ -239,11 +239,11 @@ public class StdUriTemplate {
     private static void addValueElement(Modifier mod, String token, String value, StringBuilder result, int maxChar) {
         switch (mod) {
             case PLUS:
-            case DASH:
+            case HASH:
                 addExpandedValue(value, result, maxChar, false);
                 break;
             case QUESTION_MARK:
-            case AT:
+            case AMP:
             case SEMICOLON:
             case DOT:
             case SLASH:

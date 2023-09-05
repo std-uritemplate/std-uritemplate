@@ -11,12 +11,12 @@ public class StdUriTemplate {
     private enum Modifier {
         case NO_MOD
         case PLUS
-        case DASH
+        case HASH
         case DOT
         case SLASH
         case SEMICOLON
         case QUESTION_MARK
-        case AT
+        case AMP
     }
     
     private static func validateLiteral(_ c: Character, _ col: Int) throws {
@@ -45,12 +45,12 @@ public class StdUriTemplate {
     private static func getModifier(_ c: Character, _ token: inout String, _ col: Int) throws -> Modifier {
         switch c {
             case "+": return .PLUS
-            case "#": return .DASH
+            case "#": return .HASH
             case ".": return .DOT
             case "/": return .SLASH
             case ";": return .SEMICOLON
             case "?": return .QUESTION_MARK
-            case "&": return .AT
+            case "&": return .AMP
             default:
                 try validateLiteral(c, col)
                 token.append(c)
@@ -131,7 +131,7 @@ public class StdUriTemplate {
     
     private static func addPrefix(_ mod: Modifier, _ result: inout String) {
         switch mod {
-            case .DASH:
+            case .HASH:
                 result.append("#")
             case .DOT:
                 result.append(".")
@@ -141,7 +141,7 @@ public class StdUriTemplate {
                 result.append(";")
             case .QUESTION_MARK:
                 result.append("?")
-            case .AT:
+            case .AMP:
                 result.append("&")
             default:
                 return
@@ -156,7 +156,7 @@ public class StdUriTemplate {
                 result.append("/")
             case .SEMICOLON:
                 result.append(";")
-            case .QUESTION_MARK, .AT:
+            case .QUESTION_MARK, .AMP:
                 result.append("&")
             default:
                 result.append(",")
@@ -166,9 +166,9 @@ public class StdUriTemplate {
     
     private static func addValue(_ mod: Modifier, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
         switch mod {
-            case .PLUS, .DASH:
+            case .PLUS, .HASH:
                 addExpandedValue(value, &result, maxChar, replaceReserved: false)
-            case .QUESTION_MARK, .AT:
+            case .QUESTION_MARK, .AMP:
                 result.append(token + "=")
                 addExpandedValue(value, &result, maxChar, replaceReserved: true)
             case .SEMICOLON:
@@ -184,9 +184,9 @@ public class StdUriTemplate {
     
     private static func addValueElement(_ mod: Modifier, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
         switch mod {
-            case .PLUS, .DASH:
+            case .PLUS, .HASH:
                 addExpandedValue(value, &result, maxChar, replaceReserved: false)
-            case .QUESTION_MARK, .AT, .SEMICOLON, .DOT, .SLASH, .NO_MOD:
+            case .QUESTION_MARK, .AMP, .SEMICOLON, .DOT, .SLASH, .NO_MOD:
                 addExpandedValue(value, &result, maxChar, replaceReserved: true)
         }
     }

@@ -3,12 +3,12 @@ type Substitutions = { [key: string]: any };
 enum Modifier {
   NO_MOD,
   PLUS,
-  DASH,
+  HASH,
   DOT,
   SLASH,
   SEMICOLON,
   QUESTION_MARK,
-  AT,
+  AMP,
 }
 
 enum SubstitutionType {
@@ -68,7 +68,7 @@ export class StdUriTemplate {
       case '+':
         return Modifier.PLUS;
       case '#':
-        return Modifier.DASH;
+        return Modifier.HASH;
       case '.':
         return Modifier.DOT;
       case '/':
@@ -78,7 +78,7 @@ export class StdUriTemplate {
       case '?':
         return Modifier.QUESTION_MARK;
       case '&':
-        return Modifier.AT;
+        return Modifier.AMP;
       default:
         StdUriTemplate.validateLiteral(c, col);
         token.push(c);
@@ -181,7 +181,7 @@ export class StdUriTemplate {
 
   private static addPrefix(mod: Modifier | null, result: string[]): void {
     switch (mod) {
-      case Modifier.DASH:
+      case Modifier.HASH:
         result.push('#');
         break;
       case Modifier.DOT:
@@ -196,7 +196,7 @@ export class StdUriTemplate {
       case Modifier.QUESTION_MARK:
         result.push('?');
         break;
-      case Modifier.AT:
+      case Modifier.AMP:
         result.push('&');
         break;
       default:
@@ -216,7 +216,7 @@ export class StdUriTemplate {
         result.push(';');
         break;
       case Modifier.QUESTION_MARK:
-      case Modifier.AT:
+      case Modifier.AMP:
         result.push('&');
         break;
       default:
@@ -228,11 +228,11 @@ export class StdUriTemplate {
   private static addValue(mod: Modifier | null, token: string, value: string, result: string[], maxChar: number): void {
     switch (mod) {
       case Modifier.PLUS:
-      case Modifier.DASH:
+      case Modifier.HASH:
         StdUriTemplate.addExpandedValue(value, result, maxChar, false);
         break;
       case Modifier.QUESTION_MARK:
-      case Modifier.AT:
+      case Modifier.AMP:
         result.push(`${token}=`);
         StdUriTemplate.addExpandedValue(value, result, maxChar, true);
         break;
@@ -254,11 +254,11 @@ export class StdUriTemplate {
   private static addValueElement(mod: Modifier | null, token: string, value: string, result: string[], maxChar: number): void {
     switch (mod) {
       case Modifier.PLUS:
-      case Modifier.DASH:
+      case Modifier.HASH:
         StdUriTemplate.addExpandedValue(value, result, maxChar, false);
         break;
       case Modifier.QUESTION_MARK:
-      case Modifier.AT:
+      case Modifier.AMP:
       case Modifier.SEMICOLON:
       case Modifier.DOT:
       case Modifier.SLASH:
