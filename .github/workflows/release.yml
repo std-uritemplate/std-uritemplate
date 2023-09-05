@@ -15,7 +15,7 @@ jobs:
   publish-java:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Maven Central Repository
         uses: actions/setup-java@v3
         with:
@@ -38,7 +38,7 @@ jobs:
   publish-typescript:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -62,7 +62,7 @@ jobs:
   publish-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -82,7 +82,7 @@ jobs:
   publish-python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Python - Install Poetry
         uses: snok/install-poetry@v1
       - name: Python - Add Poetry to PATH
@@ -104,7 +104,7 @@ jobs:
   publish-csharp:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: C# - Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -120,7 +120,7 @@ jobs:
   publish-ruby:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Ruby - Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -138,7 +138,7 @@ jobs:
   publish-php:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Release to std-uritemplate-php repo
         working-directory: php
         run: |
@@ -173,7 +173,7 @@ jobs:
   publish-swift:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Release to std-uritemplate-swift repo
         working-directory: swift
         run: |
