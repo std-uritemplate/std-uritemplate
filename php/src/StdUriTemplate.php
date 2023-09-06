@@ -48,7 +48,7 @@ class StdUriTemplate {
         }
     }
 
-    private static function getModifier($c, &$token, $col) {
+    private static function getOperator($c, &$token, $col) {
         switch ($c) {
             case '+': return 'PLUS';
             case '#': return 'HASH';
@@ -60,7 +60,7 @@ class StdUriTemplate {
             default:
                 self::validateLiteral($c, $col);
                 $token .= $c;
-                return 'NO_MOD';
+                return 'NO_OP';
         }
     }
 
@@ -68,7 +68,7 @@ class StdUriTemplate {
         $result = '';
         $token = null;
 
-        $modifier = null;
+        $operator = null;
         $composite = false;
         $maxCharBuffer = null;
         $firstToken = true;
@@ -82,12 +82,12 @@ class StdUriTemplate {
                     break;
                 case '}':
                     if ($token !== null) {
-                        $expanded = self::expandToken($modifier, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
+                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
                         $token = null;
-                        $modifier = null;
+                        $operator = null;
                         $composite = false;
                         $maxCharBuffer = null;
                     } else {
@@ -96,7 +96,7 @@ class StdUriTemplate {
                     break;
                 case ',':
                     if ($token !== null) {
-                        $expanded = self::expandToken($modifier, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
+                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
@@ -108,8 +108,8 @@ class StdUriTemplate {
                     // Intentional fall-through for commas outside the {}
                 default:
                     if ($token !== null) {
-                        if ($modifier === null) {
-                            $modifier = self::getModifier($character, $token, $i);
+                        if ($operator === null) {
+                            $operator = self::getOperator($character, $token, $i);
                         } elseif ($maxCharBuffer !== null) {
                             if (is_numeric($character)) {
                                 $maxCharBuffer .= $character;
@@ -140,8 +140,8 @@ class StdUriTemplate {
         }
     }
 
-    private static function addPrefix($mod, &$result) {
-        switch ($mod) {
+    private static function addPrefix($op, &$result) {
+        switch ($op) {
             case 'HASH':
                 $result .= '#';
                 break;
@@ -165,8 +165,8 @@ class StdUriTemplate {
         }
     }
 
-    private static function addSeparator($mod, &$result) {
-        switch ($mod) {
+    private static function addSeparator($op, &$result) {
+        switch ($op) {
             case 'DOT':
                 $result .= '.';
                 break;
@@ -186,8 +186,8 @@ class StdUriTemplate {
         }
     }
 
-    private static function addValue($mod, $token, $value, &$result, $maxChar) {
-        switch ($mod) {
+    private static function addValue($op, $token, $value, &$result, $maxChar) {
+        switch ($op) {
             case 'PLUS':
             case 'HASH':
                 self::addExpandedValue($value, $result, $maxChar, false);
@@ -207,13 +207,13 @@ class StdUriTemplate {
                 break;
             case 'DOT':
             case 'SLASH':
-            case 'NO_MOD':
+            case 'NO_OP':
                 self::addExpandedValue($value, $result, $maxChar, true);
         }
     }
 
-    private static function addValueElement($mod, $token, $value, &$result, $maxChar) {
-        switch ($mod) {
+    private static function addValueElement($op, $token, $value, &$result, $maxChar) {
+        switch ($op) {
             case 'PLUS':
             case 'HASH':
                 self::addExpandedValue($value, $result, $maxChar, false);
@@ -223,7 +223,7 @@ class StdUriTemplate {
             case 'SEMICOLON':
             case 'DOT':
             case 'SLASH':
-            case 'NO_MOD':
+            case 'NO_OP':
                 self::addExpandedValue($value, $result, $maxChar, true);
         }
     }
@@ -333,7 +333,7 @@ class StdUriTemplate {
         }
     }
 
-    private static function expandToken($modifier, $token, $composite, $maxChar, $firstToken, $substitutions, &$result, $col) {
+    private static function expandToken($operator, $token, $composite, $maxChar, $firstToken, $substitutions, &$result, $col) {
         if (empty($token)) {
             throw new \InvalidArgumentException("Found an empty token at col: $col");
         }
@@ -357,50 +357,50 @@ class StdUriTemplate {
         }
 
         if ($firstToken) {
-            self::addPrefix($modifier, $result);
+            self::addPrefix($operator, $result);
         } else {
-            self::addSeparator($modifier, $result);
+            self::addSeparator($operator, $result);
         }
 
         switch ($substType) {
             case 'STRING':
-                self::addStringValue($modifier, $token, $value, $result, $maxChar);
+                self::addStringValue($operator, $token, $value, $result, $maxChar);
                 break;
             case 'LIST':
-                self::addListValue($modifier, $token, $value, $result, $maxChar, $composite);
+                self::addListValue($operator, $token, $value, $result, $maxChar, $composite);
                 break;
             case 'MAP':
-                self::addMapValue($modifier, $token, $value, $result, $maxChar, $composite);
+                self::addMapValue($operator, $token, $value, $result, $maxChar, $composite);
                 break;
         }
 
         return true;
     }
 
-    private static function addStringValue($modifier, $token, $value, &$result, $maxChar) {
-        self::addValue($modifier, $token, $value, $result, $maxChar);
+    private static function addStringValue($operator, $token, $value, &$result, $maxChar) {
+        self::addValue($operator, $token, $value, $result, $maxChar);
     }
 
-    private static function addListValue($modifier, $token, $value, &$result, $maxChar, $composite) {
+    private static function addListValue($operator, $token, $value, &$result, $maxChar, $composite) {
         $first = true;
         foreach ($value as $v) {
             if ($first) {
-                self::addValue($modifier, $token, $v, $result, $maxChar);
+                self::addValue($operator, $token, $v, $result, $maxChar);
                 $first = false;
             } else {
                 if ($composite) {
-                    self::addSeparator($modifier, $result);
-                    self::addValue($modifier, $token, $v, $result, $maxChar);
+                    self::addSeparator($operator, $result);
+                    self::addValue($operator, $token, $v, $result, $maxChar);
                 } else {
                     $result .= ',';
-                    self::addValueElement($modifier, $token, $v, $result, $maxChar);
+                    self::addValueElement($operator, $token, $v, $result, $maxChar);
                 }
             }
         }
         return !$first;
     }
 
-    private static function addMapValue($modifier, $token, $value, &$result, $maxChar, $composite) {
+    private static function addMapValue($operator, $token, $value, &$result, $maxChar, $composite) {
         $first = true;
         if ($maxChar !== -1) {
             throw new \InvalidArgumentException("Value trimming is not allowed on Maps");
@@ -408,20 +408,20 @@ class StdUriTemplate {
         foreach ($value as $k => $v) {
             if ($composite) {
                 if (!$first) {
-                    self::addSeparator($modifier, $result);
+                    self::addSeparator($operator, $result);
                 }
-                self::addValueElement($modifier, $token, (string)$k, $result, $maxChar);
+                self::addValueElement($operator, $token, (string)$k, $result, $maxChar);
                 $result .= '=';
             } else {
                 if ($first) {
-                    self::addValue($modifier, $token, (string)$k, $result, $maxChar);
+                    self::addValue($operator, $token, (string)$k, $result, $maxChar);
                 } else {
                     $result .= ',';
-                    self::addValueElement($modifier, $token, (string)$k, $result, $maxChar);
+                    self::addValueElement($operator, $token, (string)$k, $result, $maxChar);
                 }
                 $result .= ',';
             }
-            self::addValueElement($modifier, $token, $v, $result, $maxChar);
+            self::addValueElement($operator, $token, $v, $result, $maxChar);
             $first = false;
         }
         return !$first;

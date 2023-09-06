@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 from enum import Enum
 
 
-class _Modifier(Enum):
+class _Operator(Enum):
     PLUS = "+"
     HASH = "#"
     DOT = "."
@@ -12,7 +12,7 @@ class _Modifier(Enum):
     SEMICOLON = ";"
     QUESTION_MARK = "?"
     AMP = "&"
-    NO_MOD = ""
+    NO_OP = ""
 
 
 class _SubstitutionType(Enum):
@@ -60,31 +60,31 @@ class StdUriTemplate:
                 raise ValueError(f"Cannot parse max chars at col: {col}")
 
     @staticmethod
-    def __get_modifier(character: str, token: List[str], col: int) -> str:
+    def __get_operator(character: str, token: List[str], col: int) -> str:
         if character == "+":
-            return _Modifier.PLUS
+            return _Operator.PLUS
         elif character == "#":
-            return _Modifier.HASH
+            return _Operator.HASH
         elif character == ".":
-            return _Modifier.DOT
+            return _Operator.DOT
         elif character == "/":
-            return _Modifier.SLASH
+            return _Operator.SLASH
         elif character == ";":
-            return _Modifier.SEMICOLON
+            return _Operator.SEMICOLON
         elif character == "?":
-            return _Modifier.QUESTION_MARK
+            return _Operator.QUESTION_MARK
         elif character == "&":
-            return _Modifier.AMP
+            return _Operator.AMP
         else:
             StdUriTemplate.__validate_literal(character, col)
             token.append(character)
-            return _Modifier.NO_MOD
+            return _Operator.NO_OP
 
     @staticmethod
     def __expand_impl(string: str, substitutions: Dict[str, Any]) -> str:
         result = []
         token = None
-        modifier = None
+        operator = None
         composite = False
         max_char_buffer = None
         first_token = True
@@ -97,7 +97,7 @@ class StdUriTemplate:
             elif character == "}":
                 if token is not None:
                     expanded = StdUriTemplate.__expand_token(
-                        modifier,
+                        operator,
                         "".join(token),
                         composite,
                         StdUriTemplate.__get_max_char(max_char_buffer, i),
@@ -109,7 +109,7 @@ class StdUriTemplate:
                     if expanded and first_token:
                         first_token = False
                     token = None
-                    modifier = None
+                    operator = None
                     composite = False
                     max_char_buffer = None
                 else:
@@ -117,7 +117,7 @@ class StdUriTemplate:
             elif character == ",":
                 if token is not None:
                     expanded = StdUriTemplate.__expand_token(
-                        modifier,
+                        operator,
                         "".join(token),
                         composite,
                         StdUriTemplate.__get_max_char(max_char_buffer, i),
@@ -134,8 +134,8 @@ class StdUriTemplate:
                     continue
             else:
                 if token is not None:
-                    if modifier is None:
-                        modifier = StdUriTemplate.__get_modifier(character, token, i)
+                    if operator is None:
+                        operator = StdUriTemplate.__get_operator(character, token, i)
                     elif max_char_buffer is not None:
                         if character.isdigit():
                             max_char_buffer.append(character)
@@ -160,63 +160,63 @@ class StdUriTemplate:
             raise ValueError("Unterminated token")
 
     @staticmethod
-    def __add_prefix(mod: str, result: List[str]) -> None:
-        if mod == _Modifier.HASH:
+    def __add_prefix(op: str, result: List[str]) -> None:
+        if op == _Operator.HASH:
             result.append("#")
-        elif mod == _Modifier.DOT:
+        elif op == _Operator.DOT:
             result.append(".")
-        elif mod == _Modifier.SLASH:
+        elif op == _Operator.SLASH:
             result.append("/")
-        elif mod == _Modifier.SEMICOLON:
+        elif op == _Operator.SEMICOLON:
             result.append(";")
-        elif mod == _Modifier.QUESTION_MARK:
+        elif op == _Operator.QUESTION_MARK:
             result.append("?")
-        elif mod == _Modifier.AMP:
+        elif op == _Operator.AMP:
             result.append("&")
 
     @staticmethod
-    def __add_separator(mod: str, result: List[str]) -> None:
-        if mod == _Modifier.DOT:
+    def __add_separator(op: str, result: List[str]) -> None:
+        if op == _Operator.DOT:
             result.append(".")
-        elif mod == _Modifier.SLASH:
+        elif op == _Operator.SLASH:
             result.append("/")
-        elif mod == _Modifier.SEMICOLON:
+        elif op == _Operator.SEMICOLON:
             result.append(";")
-        elif mod == _Modifier.QUESTION_MARK or mod == _Modifier.AMP:
+        elif op == _Operator.QUESTION_MARK or op == _Operator.AMP:
             result.append("&")
         else:
             result.append(",")
 
     @staticmethod
     def __add_value(
-        mod: str, token: str, value: str, result: List[str], max_char: int
+        op: str, token: str, value: str, result: List[str], max_char: int
     ) -> None:
-        if mod == _Modifier.PLUS or mod == _Modifier.HASH:
+        if op == _Operator.PLUS or op == _Operator.HASH:
             StdUriTemplate.__add_expanded_value(value, result, max_char, False)
-        elif mod == _Modifier.QUESTION_MARK or mod == _Modifier.AMP:
+        elif op == _Operator.QUESTION_MARK or op == _Operator.AMP:
             result.append(token + "=")
             StdUriTemplate.__add_expanded_value(value, result, max_char, True)
-        elif mod == _Modifier.SEMICOLON:
+        elif op == _Operator.SEMICOLON:
             result.append(token)
             if len(value) > 0:
                 result.append("=")
             StdUriTemplate.__add_expanded_value(value, result, max_char, True)
-        elif mod == _Modifier.DOT or mod == _Modifier.SLASH or mod == _Modifier.NO_MOD:
+        elif op == _Operator.DOT or op == _Operator.SLASH or op == _Operator.NO_OP:
             StdUriTemplate.__add_expanded_value(value, result, max_char, True)
 
     @staticmethod
     def __add_value_element(
-        mod: str, token: str, value: str, result: List[str], max_char: int
+        op: str, token: str, value: str, result: List[str], max_char: int
     ) -> None:
-        if mod == _Modifier.PLUS or mod == _Modifier.HASH:
+        if op == _Operator.PLUS or op == _Operator.HASH:
             StdUriTemplate.__add_expanded_value(value, result, max_char, False)
         elif (
-            mod == _Modifier.QUESTION_MARK
-            or mod == _Modifier.AMP
-            or mod == _Modifier.SEMICOLON
-            or mod == _Modifier.DOT
-            or mod == _Modifier.SLASH
-            or mod == _Modifier.NO_MOD
+            op == _Operator.QUESTION_MARK
+            or op == _Operator.AMP
+            or op == _Operator.SEMICOLON
+            or op == _Operator.DOT
+            or op == _Operator.SLASH
+            or op == _Operator.NO_OP
         ):
             StdUriTemplate.__add_expanded_value(value, result, max_char, True)
 
@@ -308,7 +308,7 @@ class StdUriTemplate:
 
     @staticmethod
     def __expand_token(
-        modifier: str,
+        operator: str,
         token: str,
         composite: bool,
         max_char: int,
@@ -330,30 +330,30 @@ class StdUriTemplate:
         if StdUriTemplate.__is_empty(subst_type, value):
             return False
         if first_token:
-            StdUriTemplate.__add_prefix(modifier, result)
+            StdUriTemplate.__add_prefix(operator, result)
         else:
-            StdUriTemplate.__add_separator(modifier, result)
+            StdUriTemplate.__add_separator(operator, result)
         if subst_type == _SubstitutionType.STRING:
-            StdUriTemplate.__add_string_value(modifier, token, value, result, max_char)
+            StdUriTemplate.__add_string_value(operator, token, value, result, max_char)
         elif subst_type == _SubstitutionType.LIST:
             StdUriTemplate.__add_list_value(
-                modifier, token, value, result, max_char, composite
+                operator, token, value, result, max_char, composite
             )
         elif subst_type == _SubstitutionType.MAP:
             StdUriTemplate.__add_map_value(
-                modifier, token, value, result, max_char, composite
+                operator, token, value, result, max_char, composite
             )
         return True
 
     @staticmethod
     def __add_string_value(
-        modifier: str, token: str, value: str, result: List[str], max_char: int
+        operator: str, token: str, value: str, result: List[str], max_char: int
     ) -> None:
-        StdUriTemplate.__add_value(modifier, token, value, result, max_char)
+        StdUriTemplate.__add_value(operator, token, value, result, max_char)
 
     @staticmethod
     def __add_list_value(
-        modifier: str,
+        operator: str,
         token: str,
         value: List[str],
         result: List[str],
@@ -363,21 +363,21 @@ class StdUriTemplate:
         first = True
         for v in value:
             if first:
-                StdUriTemplate.__add_value(modifier, token, v, result, max_char)
+                StdUriTemplate.__add_value(operator, token, v, result, max_char)
                 first = False
             else:
                 if composite:
-                    StdUriTemplate.__add_separator(modifier, result)
-                    StdUriTemplate.__add_value(modifier, token, v, result, max_char)
+                    StdUriTemplate.__add_separator(operator, result)
+                    StdUriTemplate.__add_value(operator, token, v, result, max_char)
                 else:
                     result.append(",")
                     StdUriTemplate.__add_value_element(
-                        modifier, token, v, result, max_char
+                        operator, token, v, result, max_char
                     )
 
     @staticmethod
     def __add_map_value(
-        modifier: str,
+        operator: str,
         token: str,
         value: Dict[str, str],
         result: List[str],
@@ -390,17 +390,17 @@ class StdUriTemplate:
         for k, v in value.items():
             if composite:
                 if not first:
-                    StdUriTemplate.__add_separator(modifier, result)
-                StdUriTemplate.__add_value_element(modifier, token, k, result, max_char)
+                    StdUriTemplate.__add_separator(operator, result)
+                StdUriTemplate.__add_value_element(operator, token, k, result, max_char)
                 result.append("=")
             else:
                 if first:
-                    StdUriTemplate.__add_value(modifier, token, k, result, max_char)
+                    StdUriTemplate.__add_value(operator, token, k, result, max_char)
                 else:
                     result.append(",")
                     StdUriTemplate.__add_value_element(
-                        modifier, token, k, result, max_char
+                        operator, token, k, result, max_char
                     )
                 result.append(",")
-            StdUriTemplate.__add_value_element(modifier, token, v, result, max_char)
+            StdUriTemplate.__add_value_element(operator, token, v, result, max_char)
             first = False

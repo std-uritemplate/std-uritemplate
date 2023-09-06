@@ -1,7 +1,7 @@
 type Substitutions = { [key: string]: any };
 
-enum Modifier {
-  NO_MOD,
+enum Operator {
+  NO_OP,
   PLUS,
   HASH,
   DOT,
@@ -63,33 +63,33 @@ export class StdUriTemplate {
     }
   }
 
-  private static getModifier(c: string, token: string[], col: number): Modifier {
+  private static getOperator(c: string, token: string[], col: number): Operator {
     switch (c) {
       case '+':
-        return Modifier.PLUS;
+        return Operator.PLUS;
       case '#':
-        return Modifier.HASH;
+        return Operator.HASH;
       case '.':
-        return Modifier.DOT;
+        return Operator.DOT;
       case '/':
-        return Modifier.SLASH;
+        return Operator.SLASH;
       case ';':
-        return Modifier.SEMICOLON;
+        return Operator.SEMICOLON;
       case '?':
-        return Modifier.QUESTION_MARK;
+        return Operator.QUESTION_MARK;
       case '&':
-        return Modifier.AMP;
+        return Operator.AMP;
       default:
         StdUriTemplate.validateLiteral(c, col);
         token.push(c);
-        return Modifier.NO_MOD;
+        return Operator.NO_OP;
     }
   }
 
   private static expandImpl(str: string, substitutions: Substitutions): string {
     const result: string[] = [];
     let token: string[] | null = null;
-    let modifier: Modifier | null = null;
+    let operator: Operator | null = null;
     let composite = false;
     let maxCharBuffer: string[] | null = null;
     let firstToken = true;
@@ -104,7 +104,7 @@ export class StdUriTemplate {
         case '}':
           if (token !== null) {
             const expanded = StdUriTemplate.expandToken(
-              modifier,
+              operator,
               token.join(''),
               composite,
               StdUriTemplate.getMaxChar(maxCharBuffer, i),
@@ -117,7 +117,7 @@ export class StdUriTemplate {
               firstToken = false;
             }
             token = null;
-            modifier = null;
+            operator = null;
             composite = false;
             maxCharBuffer = null;
           } else {
@@ -127,7 +127,7 @@ export class StdUriTemplate {
         case ',':
           if (token !== null) {
             const expanded = StdUriTemplate.expandToken(
-              modifier,
+              operator,
               token.join(''),
               composite,
               StdUriTemplate.getMaxChar(maxCharBuffer, i),
@@ -147,8 +147,8 @@ export class StdUriTemplate {
           // Intentional fall-through for commas outside the {}
         default:
           if (token !== null) {
-            if (modifier === null) {
-              modifier = StdUriTemplate.getModifier(character, token, i);
+            if (operator === null) {
+              operator = StdUriTemplate.getOperator(character, token, i);
             } else if (maxCharBuffer !== null) {
               if (character.match(/^\d$/)) {
                 maxCharBuffer.push(character);
@@ -179,24 +179,24 @@ export class StdUriTemplate {
     }
   }
 
-  private static addPrefix(mod: Modifier | null, result: string[]): void {
-    switch (mod) {
-      case Modifier.HASH:
+  private static addPrefix(op: Operator | null, result: string[]): void {
+    switch (op) {
+      case Operator.HASH:
         result.push('#');
         break;
-      case Modifier.DOT:
+      case Operator.DOT:
         result.push('.');
         break;
-      case Modifier.SLASH:
+      case Operator.SLASH:
         result.push('/');
         break;
-      case Modifier.SEMICOLON:
+      case Operator.SEMICOLON:
         result.push(';');
         break;
-      case Modifier.QUESTION_MARK:
+      case Operator.QUESTION_MARK:
         result.push('?');
         break;
-      case Modifier.AMP:
+      case Operator.AMP:
         result.push('&');
         break;
       default:
@@ -204,19 +204,19 @@ export class StdUriTemplate {
     }
   }
 
-  private static addSeparator(mod: Modifier | null, result: string[]): void {
-    switch (mod) {
-      case Modifier.DOT:
+  private static addSeparator(op: Operator | null, result: string[]): void {
+    switch (op) {
+      case Operator.DOT:
         result.push('.');
         break;
-      case Modifier.SLASH:
+      case Operator.SLASH:
         result.push('/');
         break;
-      case Modifier.SEMICOLON:
+      case Operator.SEMICOLON:
         result.push(';');
         break;
-      case Modifier.QUESTION_MARK:
-      case Modifier.AMP:
+      case Operator.QUESTION_MARK:
+      case Operator.AMP:
         result.push('&');
         break;
       default:
@@ -225,44 +225,44 @@ export class StdUriTemplate {
     }
   }
 
-  private static addValue(mod: Modifier | null, token: string, value: string, result: string[], maxChar: number): void {
-    switch (mod) {
-      case Modifier.PLUS:
-      case Modifier.HASH:
+  private static addValue(op: Operator | null, token: string, value: string, result: string[], maxChar: number): void {
+    switch (op) {
+      case Operator.PLUS:
+      case Operator.HASH:
         StdUriTemplate.addExpandedValue(value, result, maxChar, false);
         break;
-      case Modifier.QUESTION_MARK:
-      case Modifier.AMP:
+      case Operator.QUESTION_MARK:
+      case Operator.AMP:
         result.push(`${token}=`);
         StdUriTemplate.addExpandedValue(value, result, maxChar, true);
         break;
-      case Modifier.SEMICOLON:
+      case Operator.SEMICOLON:
         result.push(token);
         if (value.length > 0) {
           result.push('=');
         }
         StdUriTemplate.addExpandedValue(value, result, maxChar, true);
         break;
-      case Modifier.DOT:
-      case Modifier.SLASH:
-      case Modifier.NO_MOD:
+      case Operator.DOT:
+      case Operator.SLASH:
+      case Operator.NO_OP:
         StdUriTemplate.addExpandedValue(value, result, maxChar, true);
         break;
     }
   }
 
-  private static addValueElement(mod: Modifier | null, token: string, value: string, result: string[], maxChar: number): void {
-    switch (mod) {
-      case Modifier.PLUS:
-      case Modifier.HASH:
+  private static addValueElement(op: Operator | null, token: string, value: string, result: string[], maxChar: number): void {
+    switch (op) {
+      case Operator.PLUS:
+      case Operator.HASH:
         StdUriTemplate.addExpandedValue(value, result, maxChar, false);
         break;
-      case Modifier.QUESTION_MARK:
-      case Modifier.AMP:
-      case Modifier.SEMICOLON:
-      case Modifier.DOT:
-      case Modifier.SLASH:
-      case Modifier.NO_MOD:
+      case Operator.QUESTION_MARK:
+      case Operator.AMP:
+      case Operator.SEMICOLON:
+      case Operator.DOT:
+      case Operator.SLASH:
+      case Operator.NO_OP:
         StdUriTemplate.addExpandedValue(value, result, maxChar, true);
         break;
     }
@@ -368,7 +368,7 @@ export class StdUriTemplate {
   }
 
   private static expandToken(
-    modifier: Modifier | null,
+    operator: Operator | null,
     token: string,
     composite: boolean,
     maxChar: number,
@@ -394,32 +394,32 @@ export class StdUriTemplate {
     }
 
     if (firstToken) {
-      StdUriTemplate.addPrefix(modifier, result);
+      StdUriTemplate.addPrefix(operator, result);
     } else {
-      StdUriTemplate.addSeparator(modifier, result);
+      StdUriTemplate.addSeparator(operator, result);
     }
 
     switch (substType) {
       case SubstitutionType.STRING:
-        StdUriTemplate.addStringValue(modifier, token, value, result, maxChar);
+        StdUriTemplate.addStringValue(operator, token, value, result, maxChar);
         break;
       case SubstitutionType.LIST:
-        StdUriTemplate.addListValue(modifier, token, value, result, maxChar, composite);
+        StdUriTemplate.addListValue(operator, token, value, result, maxChar, composite);
         break;
       case SubstitutionType.MAP:
-        StdUriTemplate.addMapValue(modifier, token, value, result, maxChar, composite);
+        StdUriTemplate.addMapValue(operator, token, value, result, maxChar, composite);
         break;
     }
 
     return true;
   }
 
-  private static addStringValue(modifier: Modifier | null, token: string, value: string, result: string[], maxChar: number): void {
-    StdUriTemplate.addValue(modifier, token, value, result, maxChar);
+  private static addStringValue(operator: Operator | null, token: string, value: string, result: string[], maxChar: number): void {
+    StdUriTemplate.addValue(operator, token, value, result, maxChar);
   }
 
   private static addListValue(
-    modifier: Modifier | null,
+    operator: Operator | null,
     token: string,
     value: string[],
     result: string[],
@@ -429,22 +429,22 @@ export class StdUriTemplate {
     let first = true;
     for (const v of value) {
       if (first) {
-        StdUriTemplate.addValue(modifier, token, v, result, maxChar);
+        StdUriTemplate.addValue(operator, token, v, result, maxChar);
         first = false;
       } else {
         if (composite) {
-          StdUriTemplate.addSeparator(modifier, result);
-          StdUriTemplate.addValue(modifier, token, v, result, maxChar);
+          StdUriTemplate.addSeparator(operator, result);
+          StdUriTemplate.addValue(operator, token, v, result, maxChar);
         } else {
           result.push(',');
-          StdUriTemplate.addValueElement(modifier, token, v, result, maxChar);
+          StdUriTemplate.addValueElement(operator, token, v, result, maxChar);
         }
       }
     }
   }
 
   private static addMapValue(
-    modifier: Modifier | null,
+    operator: Operator | null,
     token: string,
     value: { [key: string]: string },
     result: string[],
@@ -459,20 +459,20 @@ export class StdUriTemplate {
       const v = value[key];
       if (composite) {
         if (!first) {
-          StdUriTemplate.addSeparator(modifier, result);
+          StdUriTemplate.addSeparator(operator, result);
         }
-        StdUriTemplate.addValueElement(modifier, token, key, result, maxChar);
+        StdUriTemplate.addValueElement(operator, token, key, result, maxChar);
         result.push('=');
       } else {
         if (first) {
-          StdUriTemplate.addValue(modifier, token, key, result, maxChar);
+          StdUriTemplate.addValue(operator, token, key, result, maxChar);
         } else {
           result.push(',');
-          StdUriTemplate.addValueElement(modifier, token, key, result, maxChar);
+          StdUriTemplate.addValueElement(operator, token, key, result, maxChar);
         }
         result.push(',');
       }
-      StdUriTemplate.addValueElement(modifier, token, v, result, maxChar);
+      StdUriTemplate.addValueElement(operator, token, v, result, maxChar);
       first = false;
     }
   }

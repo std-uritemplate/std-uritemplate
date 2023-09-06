@@ -17,18 +17,18 @@ func Expand(template string, substitutions Substitutions) (string, error) {
 }
 
 // Private implementation
-type Mod rune
+type Op rune
 
 const (
-	ModUndefined    Mod = 0
-	ModNone         Mod = -1
-	ModPlus         Mod = '+'
-	ModHash         Mod = '#'
-	ModDot          Mod = '.'
-	ModSlash        Mod = '/'
-	ModSemicolon    Mod = ';'
-	ModQuestionMark Mod = '?'
-	ModAmp          Mod = '&'
+	OpUndefined    Op = 0
+	OpNone         Op = -1
+	OpPlus         Op = '+'
+	OpHash         Op = '#'
+	OpDot          Op = '.'
+	OpSlash        Op = '/'
+	OpSemicolon    Op = ';'
+	OpQuestionMark Op = '?'
+	OpAmp          Op = '&'
 )
 
 const (
@@ -63,29 +63,29 @@ func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 	return maxChar, nil
 }
 
-func getModifier(c rune, token *strings.Builder, col int) (Mod, error) {
+func getOperator(c rune, token *strings.Builder, col int) (Op, error) {
 	switch c {
 	case '+':
-		return ModPlus, nil
+		return OpPlus, nil
 	case '#':
-		return ModHash, nil
+		return OpHash, nil
 	case '.':
-		return ModDot, nil
+		return OpDot, nil
 	case '/':
-		return ModSlash, nil
+		return OpSlash, nil
 	case ';':
-		return ModSemicolon, nil
+		return OpSemicolon, nil
 	case '?':
-		return ModQuestionMark, nil
+		return OpQuestionMark, nil
 	case '&':
-		return ModAmp, nil
+		return OpAmp, nil
 	default:
 		err := validateLiteral(c, col)
 		if err != nil {
-			return ModUndefined, err
+			return OpUndefined, err
 		}
 		token.WriteRune(c)
-		return ModNone, nil
+		return OpNone, nil
 	}
 }
 
@@ -93,7 +93,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var result strings.Builder
 
 	var token *strings.Builder
-	var modifier = ModUndefined
+	var operator = OpUndefined
 	var composite bool
 	var maxCharBuffer *strings.Builder
 	var firstToken = true
@@ -109,7 +109,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				if err != nil {
 					return "", err
 				}
-				expanded, err := expandToken(modifier, token.String(), composite, maxChar, firstToken, substitutions, &result, i)
+				expanded, err := expandToken(operator, token.String(), composite, maxChar, firstToken, substitutions, &result, i)
 				if err != nil {
 					return "", err
 				}
@@ -117,7 +117,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					firstToken = false
 				}
 				token = nil
-				modifier = ModUndefined
+				operator = OpUndefined
 				composite = false
 				maxCharBuffer = nil
 			} else {
@@ -129,7 +129,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				if err != nil {
 					return "", err
 				}
-				expanded, err := expandToken(modifier, token.String(), composite, maxChar, firstToken, substitutions, &result, i)
+				expanded, err := expandToken(operator, token.String(), composite, maxChar, firstToken, substitutions, &result, i)
 				if err != nil {
 					return "", err
 				}
@@ -146,9 +146,9 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 		default:
 			if token != nil {
 				switch {
-				case modifier == ModUndefined:
+				case operator == OpUndefined:
 					var err error
-					modifier, err = getModifier(character, token, i)
+					operator, err = getOperator(character, token, i)
 					if err != nil {
 						return "", err
 					}
@@ -184,20 +184,20 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 	return "", fmt.Errorf("unterminated token")
 }
 
-func addPrefix(mod Mod, result *strings.Builder) {
-	switch mod {
-	case ModHash, ModDot, ModSlash, ModSemicolon, ModQuestionMark, ModAmp:
-		result.WriteRune(rune(mod))
+func addPrefix(op Op, result *strings.Builder) {
+	switch op {
+	case OpHash, OpDot, OpSlash, OpSemicolon, OpQuestionMark, OpAmp:
+		result.WriteRune(rune(op))
 	default:
 		return
 	}
 }
 
-func addSeparator(mod Mod, result *strings.Builder) {
-	switch mod {
-	case ModDot, ModSlash, ModSemicolon:
-		result.WriteRune(rune(mod))
-	case ModQuestionMark, ModAmp:
+func addSeparator(op Op, result *strings.Builder) {
+	switch op {
+	case OpDot, OpSlash, OpSemicolon:
+		result.WriteRune(rune(op))
+	case OpQuestionMark, OpAmp:
 		result.WriteByte('&')
 	default:
 		result.WriteByte(',')
@@ -205,29 +205,29 @@ func addSeparator(mod Mod, result *strings.Builder) {
 	}
 }
 
-func addValue(mod Mod, token, value string, result *strings.Builder, maxChar int) {
-	switch mod {
-	case ModPlus, ModHash:
+func addValue(op Op, token, value string, result *strings.Builder, maxChar int) {
+	switch op {
+	case OpPlus, OpHash:
 		addExpandedValue(value, result, maxChar, false)
-	case ModQuestionMark, ModAmp:
+	case OpQuestionMark, OpAmp:
 		result.WriteString(token + "=")
 		addExpandedValue(value, result, maxChar, true)
-	case ModSemicolon:
+	case OpSemicolon:
 		result.WriteString(token)
 		if value != "" {
 			result.WriteByte('=')
 		}
 		addExpandedValue(value, result, maxChar, true)
-	case ModDot, ModSlash, ModNone:
+	case OpDot, OpSlash, OpNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
 
-func addValueElement(mod Mod, _, value string, result *strings.Builder, maxChar int) {
-	switch mod {
-	case ModPlus, ModHash:
+func addValueElement(op Op, _, value string, result *strings.Builder, maxChar int) {
+	switch op {
+	case OpPlus, OpHash:
 		addExpandedValue(value, result, maxChar, false)
-	case ModQuestionMark, ModAmp, ModSemicolon, ModDot, ModSlash, ModNone:
+	case OpQuestionMark, OpAmp, OpSemicolon, OpDot, OpSlash, OpNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }
@@ -324,7 +324,7 @@ func isEmpty(substType string, value any) bool {
 }
 
 func expandToken(
-	modifier Mod,
+	operator Op,
 	token string,
 	composite bool,
 	maxChar int,
@@ -355,18 +355,18 @@ func expandToken(
 	}
 
 	if firstToken {
-		addPrefix(modifier, result)
+		addPrefix(operator, result)
 	} else {
-		addSeparator(modifier, result)
+		addSeparator(operator, result)
 	}
 
 	switch substType {
 	case SubstitutionTypeString:
-		addStringValue(modifier, token, value.(string), result, maxChar)
+		addStringValue(operator, token, value.(string), result, maxChar)
 	case SubstitutionTypeList:
-		addListValue(modifier, token, value.([]any), result, maxChar, composite)
+		addListValue(operator, token, value.([]any), result, maxChar, composite)
 	case SubstitutionTypeMap:
-		err := addMapValue(modifier, token, value.(map[string]any), result, maxChar, composite)
+		err := addMapValue(operator, token, value.(map[string]any), result, maxChar, composite)
 		if err != nil {
 			return false, err
 		}
@@ -375,30 +375,30 @@ func expandToken(
 	return true, nil
 }
 
-func addStringValue(modifier Mod, token string, value string, result *strings.Builder, maxChar int) {
-	addValue(modifier, token, value, result, maxChar)
+func addStringValue(operator Op, token string, value string, result *strings.Builder, maxChar int) {
+	addValue(operator, token, value, result, maxChar)
 
 }
 
-func addListValue(modifier Mod, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
+func addListValue(operator Op, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
 		if first {
-			addValue(modifier, token, v.(string), result, maxChar)
+			addValue(operator, token, v.(string), result, maxChar)
 			first = false
 		} else {
 			if composite {
-				addSeparator(modifier, result)
-				addValue(modifier, token, v.(string), result, maxChar)
+				addSeparator(operator, result)
+				addValue(operator, token, v.(string), result, maxChar)
 			} else {
 				result.WriteString(",")
-				addValueElement(modifier, token, v.(string), result, maxChar)
+				addValueElement(operator, token, v.(string), result, maxChar)
 			}
 		}
 	}
 }
 
-func addMapValue(modifier Mod, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
+func addMapValue(operator Op, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
 	first := true
 	if maxChar != -1 {
 		return fmt.Errorf("value trimming is not allowed on Maps")
@@ -417,20 +417,20 @@ func addMapValue(modifier Mod, token string, value map[string]any, result *strin
 
 		if composite {
 			if !first {
-				addSeparator(modifier, result)
+				addSeparator(operator, result)
 			}
-			addValueElement(modifier, token, k, result, maxChar)
+			addValueElement(operator, token, k, result, maxChar)
 			result.WriteString("=")
 		} else {
 			if first {
-				addValue(modifier, token, k, result, maxChar)
+				addValue(operator, token, k, result, maxChar)
 			} else {
 				result.WriteString(",")
-				addValueElement(modifier, token, k, result, maxChar)
+				addValueElement(operator, token, k, result, maxChar)
 			}
 			result.WriteString(",")
 		}
-		addValueElement(modifier, token, v.(string), result, maxChar)
+		addValueElement(operator, token, v.(string), result, maxChar)
 		first = false
 	}
 	return nil

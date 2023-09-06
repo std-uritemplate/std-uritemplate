@@ -8,8 +8,8 @@ public class StdUriTemplate {
     }
 
     // Private implementation
-    private enum Modifier {
-        case NO_MOD
+    private enum Operator {
+        case NO_OP
         case PLUS
         case HASH
         case DOT
@@ -42,7 +42,7 @@ public class StdUriTemplate {
         }
     }
     
-    private static func getModifier(_ c: Character, _ token: inout String, _ col: Int) throws -> Modifier {
+    private static func getOperator(_ c: Character, _ token: inout String, _ col: Int) throws -> Operator {
         switch c {
             case "+": return .PLUS
             case "#": return .HASH
@@ -54,7 +54,7 @@ public class StdUriTemplate {
             default:
                 try validateLiteral(c, col)
                 token.append(c)
-                return .NO_MOD
+                return .NO_OP
         }
     }
     
@@ -62,7 +62,7 @@ public class StdUriTemplate {
         var result = String()
         var token: String?
         
-        var modifier: Modifier?
+        var operator: Operator?
         var composite = false
         var maxCharBuffer: String?
         var firstToken = true
@@ -74,12 +74,12 @@ public class StdUriTemplate {
                     firstToken = true
                 case "}":
                     if let tk = token {
-                        let expanded = try expandToken(modifier, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
+                        let expanded = try expandToken(operator, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
                         }
                         token = nil
-                        modifier = nil
+                        operator = nil
                         composite = false
                         maxCharBuffer = nil
                     } else {
@@ -87,7 +87,7 @@ public class StdUriTemplate {
                     }
                 case ",":
                     if let tk = token {
-                        let expanded = try expandToken(modifier, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
+                        let expanded = try expandToken(operator, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
                         }
@@ -98,8 +98,8 @@ public class StdUriTemplate {
                     // Intentional fall-through for commas outside the {}
                 default:
                     if let _ = token {
-                        if modifier == nil {
-                            modifier = try getModifier(character, &token!, i)
+                        if operator == nil {
+                            operator = try getOperator(character, &token!, i)
                         } else if let _ = maxCharBuffer {
                             if character.isNumber {
                                 maxCharBuffer!.append(character)
@@ -129,8 +129,8 @@ public class StdUriTemplate {
         }
     }
     
-    private static func addPrefix(_ mod: Modifier, _ result: inout String) {
-        switch mod {
+    private static func addPrefix(_ op: Operator, _ result: inout String) {
+        switch op {
             case .HASH:
                 result.append("#")
             case .DOT:
@@ -148,8 +148,8 @@ public class StdUriTemplate {
         }
     }
     
-    private static func addSeparator(_ mod: Modifier, _ result: inout String) {
-        switch mod {
+    private static func addSeparator(_ op: Operator, _ result: inout String) {
+        switch op {
             case .DOT:
                 result.append(".")
             case .SLASH:
@@ -164,8 +164,8 @@ public class StdUriTemplate {
         }
     }
     
-    private static func addValue(_ mod: Modifier, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
-        switch mod {
+    private static func addValue(_ op: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+        switch op {
             case .PLUS, .HASH:
                 addExpandedValue(value, &result, maxChar, replaceReserved: false)
             case .QUESTION_MARK, .AMP:
@@ -177,16 +177,16 @@ public class StdUriTemplate {
                     result.append("=")
                 }
                 addExpandedValue(value, &result, maxChar, replaceReserved: true)
-            case .DOT, .SLASH, .NO_MOD:
+            case .DOT, .SLASH, .NO_OP:
                 addExpandedValue(value, &result, maxChar, replaceReserved: true)
         }
     }
     
-    private static func addValueElement(_ mod: Modifier, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
-        switch mod {
+    private static func addValueElement(_ op: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+        switch op {
             case .PLUS, .HASH:
                 addExpandedValue(value, &result, maxChar, replaceReserved: false)
-            case .QUESTION_MARK, .AMP, .SEMICOLON, .DOT, .SLASH, .NO_MOD:
+            case .QUESTION_MARK, .AMP, .SEMICOLON, .DOT, .SLASH, .NO_OP:
                 addExpandedValue(value, &result, maxChar, replaceReserved: true)
         }
     }
@@ -314,7 +314,7 @@ public class StdUriTemplate {
         }
     }
     
-    private static func expandToken(_ modifier: Modifier?, _ token: String, _ composite: Bool, _ maxChar: Int, _ firstToken: Bool, _ substitutions: [String: Any], _ result: inout String, _ col: Int) throws -> Bool {
+    private static func expandToken(_ operator: Operator?, _ token: String, _ composite: Bool, _ maxChar: Int, _ firstToken: Bool, _ substitutions: [String: Any], _ result: inout String, _ col: Int) throws -> Bool {
         guard !token.isEmpty else {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Found an empty token at col: \(col)"])
         }
@@ -343,46 +343,46 @@ public class StdUriTemplate {
         }
         
         if firstToken {
-            addPrefix(modifier ?? .NO_MOD, &result)
+            addPrefix(operator ?? .NO_OP, &result)
         } else {
-            addSeparator(modifier ?? .NO_MOD, &result)
+            addSeparator(operator ?? .NO_OP, &result)
         }
         
         switch substType {
             case .STRING:
-                addStringValue(modifier ?? .NO_MOD, token, value as! String, &result, maxChar)
+                addStringValue(operator ?? .NO_OP, token, value as! String, &result, maxChar)
             case .LIST:
-                addListValue(modifier ?? .NO_MOD, token, value as! [String], &result, maxChar, composite)
+                addListValue(operator ?? .NO_OP, token, value as! [String], &result, maxChar, composite)
             case .MAP:
-                try addMapValue(modifier ?? .NO_MOD, token, value as! [String: String], &result, maxChar, composite)
+                try addMapValue(operator ?? .NO_OP, token, value as! [String: String], &result, maxChar, composite)
         }
         
         return true
     }
     
-    private static func addStringValue(_ modifier: Modifier, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
-        addValue(modifier, token, value, &result, maxChar)
+    private static func addStringValue(_ operator: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+        addValue(operator, token, value, &result, maxChar)
     }
     
-    private static func addListValue(_ modifier: Modifier, _ token: String, _ value: [String], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
+    private static func addListValue(_ operator: Operator, _ token: String, _ value: [String], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
         var first = true
         for v in value {
             if first {
-                addValue(modifier, token, v, &result, maxChar)
+                addValue(operator, token, v, &result, maxChar)
                 first = false
             } else {
                 if composite {
-                    addSeparator(modifier, &result)
-                    addValue(modifier, token, v, &result, maxChar)
+                    addSeparator(operator, &result)
+                    addValue(operator, token, v, &result, maxChar)
                 } else {
                     result.append(",")
-                    addValueElement(modifier, token, v, &result, maxChar)
+                    addValueElement(operator, token, v, &result, maxChar)
                 }
             }
         }
     }
     
-    private static func addMapValue(_ modifier: Modifier, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
+    private static func addMapValue(_ operator: Operator, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
         var first = true
         if maxChar != -1 {
             throw NSError(domain: "IllegalArgumentException", code: 0, userInfo: [NSLocalizedDescriptionKey: "Value trimming is not allowed on Maps"])
@@ -392,20 +392,20 @@ public class StdUriTemplate {
         for (k, v) in value.sorted( by: { $0.0 < $1.0 }) {
             if composite {
                 if !first {
-                    addSeparator(modifier, &result)
+                    addSeparator(operator, &result)
                 }
-                addValueElement(modifier, token, k, &result, maxChar)
+                addValueElement(operator, token, k, &result, maxChar)
                 result.append("=")
             } else {
                 if first {
-                    addValue(modifier, token, k, &result, maxChar)
+                    addValue(operator, token, k, &result, maxChar)
                 } else {
                     result.append(",")
-                    addValueElement(modifier, token, k, &result, maxChar)
+                    addValueElement(operator, token, k, &result, maxChar)
                 }
                 result.append(",")
             }
-            addValueElement(modifier, token, v, &result, maxChar)
+            addValueElement(operator, token, v, &result, maxChar)
             first = false
         }
     }
