@@ -10,8 +10,8 @@ module StdUriTemplate
   # Private implementation
   private
 
-  module Modifier
-    NO_MOD = :no_mod
+  module Operator
+    NO_OP = :no_op
     PLUS = :plus
     HASH = :hash
     DOT = :dot
@@ -44,33 +44,33 @@ module StdUriTemplate
     end
   end
 
-  def self.get_modifier(c, token, col)
+  def self.get_operator(c, token, col)
     case c
     when '+'
-      Modifier::PLUS
+      Operator::PLUS
     when '#'
-      Modifier::HASH
+      Operator::HASH
     when '.'
-      Modifier::DOT
+      Operator::DOT
     when '/'
-      Modifier::SLASH
+      Operator::SLASH
     when ';'
-      Modifier::SEMICOLON
+      Operator::SEMICOLON
     when '?'
-      Modifier::QUESTION_MARK
+      Operator::QUESTION_MARK
     when '&'
-      Modifier::AMP
+      Operator::AMP
     else
       validate_literal(c, col)
       token << c
-      Modifier::NO_MOD
+      Operator::NO_OP
     end
   end
 
   def self.expand_impl(str, substitutions)
     result = ''
     token = nil
-    modifier = nil
+    operator = nil
     composite = false
     max_char_buffer = nil
     first_token = true
@@ -82,10 +82,10 @@ module StdUriTemplate
         first_token = true
       when '}'
         if token
-          expanded = expand_token(modifier, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
+          expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
           first_token = false if expanded && first_token
           token = nil
-          modifier = nil
+          operator = nil
           composite = false
           max_char_buffer = nil
         else
@@ -93,7 +93,7 @@ module StdUriTemplate
         end
       when ','
         if token
-          expanded = expand_token(modifier, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
+          expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
           first_token = false if expanded && first_token
           token = ''
           composite = false
@@ -101,8 +101,8 @@ module StdUriTemplate
         end
       else
         if token
-          if modifier.nil?
-            modifier = get_modifier(character, token, i)
+          if operator.nil?
+            operator = get_operator(character, token, i)
           elsif max_char_buffer
             if character =~ /\d/
               max_char_buffer << character
@@ -132,59 +132,59 @@ module StdUriTemplate
     end
   end
 
-  def self.add_prefix(mod, result)
-    case mod
-    when Modifier::HASH
+  def self.add_prefix(op, result)
+    case op
+    when Operator::HASH
       result << '#'
-    when Modifier::DOT
+    when Operator::DOT
       result << '.'
-    when Modifier::SLASH
+    when Operator::SLASH
       result << '/'
-    when Modifier::SEMICOLON
+    when Operator::SEMICOLON
       result << ';'
-    when Modifier::QUESTION_MARK
+    when Operator::QUESTION_MARK
       result << '?'
-    when Modifier::AMP
+    when Operator::AMP
       result << '&'
     end
   end
 
-  def self.add_separator(mod, result)
-    case mod
-    when Modifier::DOT
+  def self.add_separator(op, result)
+    case op
+    when Operator::DOT
       result << '.'
-    when Modifier::SLASH
+    when Operator::SLASH
       result << '/'
-    when Modifier::SEMICOLON
+    when Operator::SEMICOLON
       result << ';'
-    when Modifier::QUESTION_MARK, Modifier::AMP
+    when Operator::QUESTION_MARK, Operator::AMP
       result << '&'
     else
       result << ','
     end
   end
 
-  def self.add_value(mod, token, value, result, max_char)
-    case mod
-    when Modifier::PLUS, Modifier::HASH
+  def self.add_value(op, token, value, result, max_char)
+    case op
+    when Operator::PLUS, Operator::HASH
       add_expanded_value(value, result, max_char, false)
-    when Modifier::QUESTION_MARK, Modifier::AMP
+    when Operator::QUESTION_MARK, Operator::AMP
       result << token + '='
       add_expanded_value(value, result, max_char, true)
-    when Modifier::SEMICOLON
+    when Operator::SEMICOLON
       result << token
       result << '=' unless value.empty?
       add_expanded_value(value, result, max_char, true)
-    when Modifier::DOT, Modifier::SLASH, Modifier::NO_MOD
+    when Operator::DOT, Operator::SLASH, Operator::NO_OP
       add_expanded_value(value, result, max_char, true)
     end
   end
 
-  def self.add_value_element(mod, token, value, result, max_char)
-    case mod
-    when Modifier::PLUS, Modifier::HASH
+  def self.add_value_element(op, token, value, result, max_char)
+    case op
+    when Operator::PLUS, Operator::HASH
       add_expanded_value(value, result, max_char, false)
-    when Modifier::QUESTION_MARK, Modifier::AMP, Modifier::SEMICOLON, Modifier::DOT, Modifier::SLASH, Modifier::NO_MOD
+    when Operator::QUESTION_MARK, Operator::AMP, Operator::SEMICOLON, Operator::DOT, Operator::SLASH, Operator::NO_OP
       add_expanded_value(value, result, max_char, true)
     end
   end
@@ -284,7 +284,7 @@ module StdUriTemplate
     end
   end
 
-  def self.expand_token(modifier, token, composite, max_char, first_token, substitutions, result, col)
+  def self.expand_token(operator, token, composite, max_char, first_token, substitutions, result, col)
     raise ArgumentError, "Found an empty token at col:#{col}" if token.empty?
 
     value = substitutions[token]
@@ -295,65 +295,65 @@ module StdUriTemplate
     return false if empty?(subst_type, value)
 
     if first_token
-      add_prefix(modifier, result)
+      add_prefix(operator, result)
     else
-      add_separator(modifier, result)
+      add_separator(operator, result)
     end
 
     case subst_type
     when SubstitutionType::STRING
-      add_string_value(modifier, token, value.to_s, result, max_char)
+      add_string_value(operator, token, value.to_s, result, max_char)
     when SubstitutionType::LIST
-      add_list_value(modifier, token, value, result, max_char, composite)
+      add_list_value(operator, token, value, result, max_char, composite)
     when SubstitutionType::MAP
-      add_map_value(modifier, token, value, result, max_char, composite)
+      add_map_value(operator, token, value, result, max_char, composite)
     end
 
     true
   end
 
-  def self.add_string_value(modifier, token, value, result, max_char)
-    add_value(modifier, token, value, result, max_char)
+  def self.add_string_value(operator, token, value, result, max_char)
+    add_value(operator, token, value, result, max_char)
   end
 
-  def self.add_list_value(modifier, token, value, result, max_char, composite)
+  def self.add_list_value(operator, token, value, result, max_char, composite)
     first = true
     value.each do |v|
       if first
-        add_value(modifier, token, v.to_s, result, max_char)
+        add_value(operator, token, v.to_s, result, max_char)
         first = false
       else
         if composite
-          add_separator(modifier, result)
-          add_value(modifier, token, v.to_s, result, max_char)
+          add_separator(operator, result)
+          add_value(operator, token, v.to_s, result, max_char)
         else
           result << ','
-          add_value_element(modifier, token, v.to_s, result, max_char)
+          add_value_element(operator, token, v.to_s, result, max_char)
         end
       end
     end
     !first
   end
 
-  def self.add_map_value(modifier, token, value, result, max_char, composite)
+  def self.add_map_value(operator, token, value, result, max_char, composite)
     first = true
     raise ArgumentError, 'Value trimming is not allowed on Maps' if max_char != -1
 
     value.each do |key, val|
       if composite
-        add_separator(modifier, result) unless first
-        add_value_element(modifier, token, key.to_s, result, max_char)
+        add_separator(operator, result) unless first
+        add_value_element(operator, token, key.to_s, result, max_char)
         result << '='
       else
         if first
-          add_value(modifier, token, key.to_s, result, max_char)
+          add_value(operator, token, key.to_s, result, max_char)
         else
           result << ','
-          add_value_element(modifier, token, key.to_s, result, max_char)
+          add_value_element(operator, token, key.to_s, result, max_char)
         end
         result << ','
       end
-      add_value_element(modifier, token, val.to_s, result, max_char)
+      add_value_element(operator, token, val.to_s, result, max_char)
       first = false
     end
     !first

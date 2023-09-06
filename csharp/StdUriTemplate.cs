@@ -15,9 +15,9 @@ public class StdUriTemplate
     }
 
     // Private implementation
-    private enum Modifier
+    private enum Operator
     {
-        NO_MOD,
+        NO_OP,
         PLUS,
         HASH,
         DOT,
@@ -69,21 +69,21 @@ public class StdUriTemplate
         }
     }
 
-    private static Modifier GetModifier(char c, StringBuilder token, int col)
+    private static Operator GetOperator(char c, StringBuilder token, int col)
     {
         switch (c)
         {
-            case '+': return Modifier.PLUS;
-            case '#': return Modifier.HASH;
-            case '.': return Modifier.DOT;
-            case '/': return Modifier.SLASH;
-            case ';': return Modifier.SEMICOLON;
-            case '?': return Modifier.QUESTION_MARK;
-            case '&': return Modifier.AMP;
+            case '+': return Operator.PLUS;
+            case '#': return Operator.HASH;
+            case '.': return Operator.DOT;
+            case '/': return Operator.SLASH;
+            case ';': return Operator.SEMICOLON;
+            case '?': return Operator.QUESTION_MARK;
+            case '&': return Operator.AMP;
             default:
                 ValidateLiteral(c, col);
                 token.Append(c);
-                return Modifier.NO_MOD;
+                return Operator.NO_OP;
         }
     }
 
@@ -93,7 +93,7 @@ public class StdUriTemplate
 
         StringBuilder token = null;
 
-        Modifier? modifier = null;
+        Operator? op = null;
         bool composite = false;
         StringBuilder maxCharBuffer = null;
         bool firstToken = true;
@@ -110,13 +110,13 @@ public class StdUriTemplate
                 case '}':
                     if (token != null)
                     {
-                        bool expanded = ExpandToken(modifier, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        bool expanded = ExpandToken(op, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken)
                         {
                             firstToken = false;
                         }
                         token = null;
-                        modifier = null;
+                        op = null;
                         composite = false;
                         maxCharBuffer = null;
                     }
@@ -128,7 +128,7 @@ public class StdUriTemplate
                 case ',':
                     if (token != null)
                     {
-                        bool expanded = ExpandToken(modifier, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        bool expanded = ExpandToken(op, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken)
                         {
                             firstToken = false;
@@ -143,9 +143,9 @@ public class StdUriTemplate
                 default:
                     if (token != null)
                     {
-                        if (modifier == null)
+                        if (op == null)
                         {
-                            modifier = GetModifier(character, token, i);
+                            op = GetOperator(character, token, i);
                         }
                         else if (maxCharBuffer != null)
                         {
@@ -193,26 +193,26 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddPrefix(Modifier? mod, StringBuilder result)
+    private static void AddPrefix(Operator? op, StringBuilder result)
     {
-        switch (mod)
+        switch (op)
         {
-            case Modifier.HASH:
+            case Operator.HASH:
                 result.Append('#');
                 break;
-            case Modifier.DOT:
+            case Operator.DOT:
                 result.Append('.');
                 break;
-            case Modifier.SLASH:
+            case Operator.SLASH:
                 result.Append('/');
                 break;
-            case Modifier.SEMICOLON:
+            case Operator.SEMICOLON:
                 result.Append(';');
                 break;
-            case Modifier.QUESTION_MARK:
+            case Operator.QUESTION_MARK:
                 result.Append('?');
                 break;
-            case Modifier.AMP:
+            case Operator.AMP:
                 result.Append('&');
                 break;
             default:
@@ -220,21 +220,21 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddSeparator(Modifier? mod, StringBuilder result)
+    private static void AddSeparator(Operator? op, StringBuilder result)
     {
-        switch (mod)
+        switch (op)
         {
-            case Modifier.DOT:
+            case Operator.DOT:
                 result.Append('.');
                 break;
-            case Modifier.SLASH:
+            case Operator.SLASH:
                 result.Append('/');
                 break;
-            case Modifier.SEMICOLON:
+            case Operator.SEMICOLON:
                 result.Append(';');
                 break;
-            case Modifier.QUESTION_MARK:
-            case Modifier.AMP:
+            case Operator.QUESTION_MARK:
+            case Operator.AMP:
                 result.Append('&');
                 break;
             default:
@@ -243,20 +243,20 @@ public class StdUriTemplate
         }
     }
 
-    private static void AddValue(Modifier? mod, string token, string value, StringBuilder result, int maxChar)
+    private static void AddValue(Operator? op, string token, string value, StringBuilder result, int maxChar)
     {
-        switch (mod)
+        switch (op)
         {
-            case Modifier.PLUS:
-            case Modifier.HASH:
+            case Operator.PLUS:
+            case Operator.HASH:
                 AddExpandedValue(value, result, maxChar, false);
                 break;
-            case Modifier.QUESTION_MARK:
-            case Modifier.AMP:
+            case Operator.QUESTION_MARK:
+            case Operator.AMP:
                 result.Append(token + '=');
                 AddExpandedValue(value, result, maxChar, true);
                 break;
-            case Modifier.SEMICOLON:
+            case Operator.SEMICOLON:
                 result.Append(token);
                 if (!string.IsNullOrEmpty(value))
                 {
@@ -264,28 +264,28 @@ public class StdUriTemplate
                 }
                 AddExpandedValue(value, result, maxChar, true);
                 break;
-            case Modifier.DOT:
-            case Modifier.SLASH:
-            case Modifier.NO_MOD:
+            case Operator.DOT:
+            case Operator.SLASH:
+            case Operator.NO_OP:
                 AddExpandedValue(value, result, maxChar, true);
                 break;
         }
     }
 
-    private static void AddValueElement(Modifier? mod, string token, string value, StringBuilder result, int maxChar)
+    private static void AddValueElement(Operator? op, string token, string value, StringBuilder result, int maxChar)
     {
-        switch (mod)
+        switch (op)
         {
-            case Modifier.PLUS:
-            case Modifier.HASH:
+            case Operator.PLUS:
+            case Operator.HASH:
                 AddExpandedValue(value, result, maxChar, false);
                 break;
-            case Modifier.QUESTION_MARK:
-            case Modifier.AMP:
-            case Modifier.SEMICOLON:
-            case Modifier.DOT:
-            case Modifier.SLASH:
-            case Modifier.NO_MOD:
+            case Operator.QUESTION_MARK:
+            case Operator.AMP:
+            case Operator.SEMICOLON:
+            case Operator.DOT:
+            case Operator.SLASH:
+            case Operator.NO_OP:
                 AddExpandedValue(value, result, maxChar, true);
                 break;
         }
@@ -435,7 +435,7 @@ public class StdUriTemplate
 
     // returns true if expansion happened
     private static bool ExpandToken(
-            Modifier? modifier,
+            Operator? op,
             string token,
             bool composite,
             int maxChar,
@@ -473,63 +473,63 @@ public class StdUriTemplate
 
         if (firstToken)
         {
-            AddPrefix(modifier, result);
+            AddPrefix(op, result);
         }
         else
         {
-            AddSeparator(modifier, result);
+            AddSeparator(op, result);
         }
 
         switch (substType)
         {
             case SubstitutionType.STRING:
-                AddStringValue(modifier, token, (string)value, result, maxChar);
+                AddStringValue(op, token, (string)value, result, maxChar);
                 break;
             case SubstitutionType.LIST:
-                AddListValue(modifier, token, (IList)value, result, maxChar, composite);
+                AddListValue(op, token, (IList)value, result, maxChar, composite);
                 break;
             case SubstitutionType.DICTIONARY:
-                AddDictionaryValue(modifier, token, ((IDictionary)value), result, maxChar, composite);
+                AddDictionaryValue(op, token, ((IDictionary)value), result, maxChar, composite);
                 break;
         }
 
         return true;
     }
 
-    private static bool AddStringValue(Modifier? modifier, string token, string value, StringBuilder result, int maxChar)
+    private static bool AddStringValue(Operator? op, string token, string value, StringBuilder result, int maxChar)
     {
-        AddValue(modifier, token, value, result, maxChar);
+        AddValue(op, token, value, result, maxChar);
         return true;
     }
 
-    private static bool AddListValue(Modifier? modifier, string token, IList value, StringBuilder result, int maxChar, bool composite)
+    private static bool AddListValue(Operator? op, string token, IList value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
         foreach (string v in value)
         {
             if (first)
             {
-                AddValue(modifier, token, v, result, maxChar);
+                AddValue(op, token, v, result, maxChar);
                 first = false;
             }
             else
             {
                 if (composite)
                 {
-                    AddSeparator(modifier, result);
-                    AddValue(modifier, token, v, result, maxChar);
+                    AddSeparator(op, result);
+                    AddValue(op, token, v, result, maxChar);
                 }
                 else
                 {
                     result.Append(',');
-                    AddValueElement(modifier, token, v, result, maxChar);
+                    AddValueElement(op, token, v, result, maxChar);
                 }
             }
         }
         return !first;
     }
 
-    private static bool AddDictionaryValue(Modifier? modifier, string token, IDictionary value, StringBuilder result, int maxChar, bool composite)
+    private static bool AddDictionaryValue(Operator? op, string token, IDictionary value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
         if (maxChar != -1)
@@ -542,25 +542,25 @@ public class StdUriTemplate
             {
                 if (!first)
                 {
-                    AddSeparator(modifier, result);
+                    AddSeparator(op, result);
                 }
-                AddValueElement(modifier, token, (string)v.Key, result, maxChar);
+                AddValueElement(op, token, (string)v.Key, result, maxChar);
                 result.Append('=');
             }
             else
             {
                 if (first)
                 {
-                    AddValue(modifier, token, (string)v.Key, result, maxChar);
+                    AddValue(op, token, (string)v.Key, result, maxChar);
                 }
                 else
                 {
                     result.Append(',');
-                    AddValueElement(modifier, token, (string)v.Key, result, maxChar);
+                    AddValueElement(op, token, (string)v.Key, result, maxChar);
                 }
                 result.Append(',');
             }
-            AddValueElement(modifier, token, (string)v.Value, result, maxChar);
+            AddValueElement(op, token, (string)v.Value, result, maxChar);
             first = false;
         }
         return !first;

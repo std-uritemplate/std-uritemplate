@@ -20,8 +20,8 @@ public class StdUriTemplate {
     }
 
     // Private implementation
-    private enum Modifier {
-        NO_MOD,
+    private enum Operator {
+        NO_OP,
         PLUS,
         HASH,
         DOT,
@@ -72,19 +72,19 @@ public class StdUriTemplate {
         }
     }
 
-    private static Modifier getModifier(Character c, StringBuilder token, int col) {
+    private static Operator getOperator(Character c, StringBuilder token, int col) {
         switch (c) {
-            case '+': return Modifier.PLUS;
-            case '#': return Modifier.HASH;
-            case '.': return Modifier.DOT;
-            case '/': return Modifier.SLASH;
-            case ';': return Modifier.SEMICOLON;
-            case '?': return Modifier.QUESTION_MARK;
-            case '&': return Modifier.AMP;
+            case '+': return Operator.PLUS;
+            case '#': return Operator.HASH;
+            case '.': return Operator.DOT;
+            case '/': return Operator.SLASH;
+            case ';': return Operator.SEMICOLON;
+            case '?': return Operator.QUESTION_MARK;
+            case '&': return Operator.AMP;
             default:
                 validateLiteral(c, col);
                 token.append(c);
-                return Modifier.NO_MOD;
+                return Operator.NO_OP;
         }
     }
 
@@ -93,7 +93,7 @@ public class StdUriTemplate {
 
         StringBuilder token = null;
 
-        Modifier modifier = null;
+        Operator operator = null;
         boolean composite = false;
         StringBuilder maxCharBuffer = null;
         boolean firstToken = true;
@@ -107,12 +107,12 @@ public class StdUriTemplate {
                     break;
                 case '}':
                     if (token != null) {
-                        var expanded = expandToken(modifier, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        var expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
                         token = null;
-                        modifier = null;
+                        operator = null;
                         composite = false;
                         maxCharBuffer = null;
                     } else {
@@ -121,7 +121,7 @@ public class StdUriTemplate {
                     break;
                 case ',':
                     if (token != null) {
-                        var expanded = expandToken(modifier, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        var expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
@@ -133,13 +133,13 @@ public class StdUriTemplate {
                     // Intentional fall-through for commas outside the {}
                 default:
                     if (token != null) {
-                        if (modifier == null) {
-                            modifier = getModifier(character, token, i);
+                        if (operator == null) {
+                            operator = getOperator(character, token, i);
                         } else if (maxCharBuffer != null) {
                             if (Character.isDigit(character)) {
                                 maxCharBuffer.append(character);
                             } else {
-                                throw new IllegalArgumentException("Illegal character idetified in the token at col:" + i);
+                                throw new IllegalArgumentException("Illegal character identified in the token at col:" + i);
                             }
                         } else {
                             if (character == ':') {
@@ -165,8 +165,8 @@ public class StdUriTemplate {
         }
     }
 
-    private static void addPrefix(Modifier mod, StringBuilder result) {
-        switch (mod) {
+    private static void addPrefix(Operator op, StringBuilder result) {
+        switch (op) {
             case HASH:
                 result.append('#');
                 break;
@@ -190,8 +190,8 @@ public class StdUriTemplate {
         }
     }
 
-    private static void addSeparator(Modifier mod, StringBuilder result) {
-        switch (mod) {
+    private static void addSeparator(Operator op, StringBuilder result) {
+        switch (op) {
             case DOT:
                 result.append('.');
                 break;
@@ -211,8 +211,8 @@ public class StdUriTemplate {
         }
     }
 
-    private static void addValue(Modifier mod, String token, String value, StringBuilder result, int maxChar) {
-        switch (mod) {
+    private static void addValue(Operator op, String token, String value, StringBuilder result, int maxChar) {
+        switch (op) {
             case PLUS:
             case HASH:
                 addExpandedValue(value, result, maxChar, false);
@@ -231,13 +231,13 @@ public class StdUriTemplate {
                 break;
             case DOT:
             case SLASH:
-            case NO_MOD:
+            case NO_OP:
                 addExpandedValue(value, result, maxChar, true);
         }
     }
 
-    private static void addValueElement(Modifier mod, String token, String value, StringBuilder result, int maxChar) {
-        switch (mod) {
+    private static void addValueElement(Operator op, String token, String value, StringBuilder result, int maxChar) {
+        switch (op) {
             case PLUS:
             case HASH:
                 addExpandedValue(value, result, maxChar, false);
@@ -247,7 +247,7 @@ public class StdUriTemplate {
             case SEMICOLON:
             case DOT:
             case SLASH:
-            case NO_MOD:
+            case NO_OP:
                 addExpandedValue(value, result, maxChar, true);
         }
     }
@@ -355,7 +355,7 @@ public class StdUriTemplate {
 
     // returns true if expansion happened
     private static boolean expandToken(
-            Modifier modifier,
+            Operator operator,
             String token,
             boolean composite,
             int maxChar,
@@ -386,51 +386,51 @@ public class StdUriTemplate {
         }
 
         if (firstToken) {
-            addPrefix(modifier, result);
+            addPrefix(operator, result);
         } else {
-            addSeparator(modifier, result);
+            addSeparator(operator, result);
         }
 
         switch (substType) {
             case STRING:
-                addStringValue(modifier, token, (String)value, result, maxChar);
+                addStringValue(operator, token, (String)value, result, maxChar);
                 break;
             case LIST:
-                addListValue(modifier, token, (List<String>)value, result, maxChar, composite);
+                addListValue(operator, token, (List<String>)value, result, maxChar, composite);
                 break;
             case MAP:
-                addMapValue(modifier, token, (Map<String, String>)value, result, maxChar, composite);
+                addMapValue(operator, token, (Map<String, String>)value, result, maxChar, composite);
                 break;
         }
 
         return true;
     }
 
-    private static boolean addStringValue(Modifier modifier, String token, String value, StringBuilder result, int maxChar) {
-        addValue(modifier, token, value, result, maxChar);
+    private static boolean addStringValue(Operator operator, String token, String value, StringBuilder result, int maxChar) {
+        addValue(operator, token, value, result, maxChar);
         return true;
     }
 
-    private static boolean addListValue(Modifier modifier, String token, List<String> value, StringBuilder result, int maxChar, boolean composite) {
+    private static boolean addListValue(Operator operator, String token, List<String> value, StringBuilder result, int maxChar, boolean composite) {
         boolean first = true;
         for (var v: value) {
             if (first) {
-                addValue(modifier, token, v, result, maxChar);
+                addValue(operator, token, v, result, maxChar);
                 first = false;
             } else {
                 if (composite) {
-                    addSeparator(modifier, result);
-                    addValue(modifier, token, v, result, maxChar);
+                    addSeparator(operator, result);
+                    addValue(operator, token, v, result, maxChar);
                 } else {
                     result.append(',');
-                    addValueElement(modifier, token, v, result, maxChar);
+                    addValueElement(operator, token, v, result, maxChar);
                 }
             }
         }
         return !first;
     }
 
-    private static boolean addMapValue(Modifier modifier, String token, Map<String, String> value, StringBuilder result, int maxChar, boolean composite) {
+    private static boolean addMapValue(Operator operator, String token, Map<String, String> value, StringBuilder result, int maxChar, boolean composite) {
         boolean first = true;
         if (maxChar != -1) {
             throw new IllegalArgumentException("Value trimming is not allowed on Maps");
@@ -438,20 +438,20 @@ public class StdUriTemplate {
         for (var v : value.entrySet()) {
             if (composite) {
                 if (!first) {
-                    addSeparator(modifier, result);
+                    addSeparator(operator, result);
                 }
-                addValueElement(modifier, token, v.getKey(), result, maxChar);
+                addValueElement(operator, token, v.getKey(), result, maxChar);
                 result.append('=');
             } else {
                 if (first) {
-                    addValue(modifier, token, v.getKey(), result, maxChar);
+                    addValue(operator, token, v.getKey(), result, maxChar);
                 } else {
                     result.append(',');
-                    addValueElement(modifier, token, v.getKey(), result, maxChar);
+                    addValueElement(operator, token, v.getKey(), result, maxChar);
                 }
                 result.append(',');
             }
-            addValueElement(modifier, token, v.getValue(), result, maxChar);
+            addValueElement(operator, token, v.getValue(), result, maxChar);
             first = false;
         }
         return !first;
