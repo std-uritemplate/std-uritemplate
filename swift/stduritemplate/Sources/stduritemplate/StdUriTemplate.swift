@@ -62,7 +62,7 @@ public class StdUriTemplate {
         var result = String()
         var token: String?
         
-        var operator: Operator?
+        var op: Operator?
         var composite = false
         var maxCharBuffer: String?
         var firstToken = true
@@ -74,12 +74,12 @@ public class StdUriTemplate {
                     firstToken = true
                 case "}":
                     if let tk = token {
-                        let expanded = try expandToken(operator, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
+                        let expanded = try expandToken(op, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
                         }
                         token = nil
-                        operator = nil
+                        op = nil
                         composite = false
                         maxCharBuffer = nil
                     } else {
@@ -87,7 +87,7 @@ public class StdUriTemplate {
                     }
                 case ",":
                     if let tk = token {
-                        let expanded = try expandToken(operator, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
+                        let expanded = try expandToken(op, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
                         }
@@ -98,8 +98,8 @@ public class StdUriTemplate {
                     // Intentional fall-through for commas outside the {}
                 default:
                     if let _ = token {
-                        if operator == nil {
-                            operator = try getOperator(character, &token!, i)
+                        if op == nil {
+                            op = try getOperator(character, &token!, i)
                         } else if let _ = maxCharBuffer {
                             if character.isNumber {
                                 maxCharBuffer!.append(character)
@@ -314,7 +314,7 @@ public class StdUriTemplate {
         }
     }
     
-    private static func expandToken(_ operator: Operator?, _ token: String, _ composite: Bool, _ maxChar: Int, _ firstToken: Bool, _ substitutions: [String: Any], _ result: inout String, _ col: Int) throws -> Bool {
+    private static func expandToken(_ op: Operator?, _ token: String, _ composite: Bool, _ maxChar: Int, _ firstToken: Bool, _ substitutions: [String: Any], _ result: inout String, _ col: Int) throws -> Bool {
         guard !token.isEmpty else {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Found an empty token at col: \(col)"])
         }
@@ -343,46 +343,46 @@ public class StdUriTemplate {
         }
         
         if firstToken {
-            addPrefix(operator ?? .NO_OP, &result)
+            addPrefix(op ?? .NO_OP, &result)
         } else {
-            addSeparator(operator ?? .NO_OP, &result)
+            addSeparator(op ?? .NO_OP, &result)
         }
         
         switch substType {
             case .STRING:
-                addStringValue(operator ?? .NO_OP, token, value as! String, &result, maxChar)
+                addStringValue(op ?? .NO_OP, token, value as! String, &result, maxChar)
             case .LIST:
-                addListValue(operator ?? .NO_OP, token, value as! [String], &result, maxChar, composite)
+                addListValue(op ?? .NO_OP, token, value as! [String], &result, maxChar, composite)
             case .MAP:
-                try addMapValue(operator ?? .NO_OP, token, value as! [String: String], &result, maxChar, composite)
+                try addMapValue(op ?? .NO_OP, token, value as! [String: String], &result, maxChar, composite)
         }
         
         return true
     }
     
-    private static func addStringValue(_ operator: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
-        addValue(operator, token, value, &result, maxChar)
+    private static func addStringValue(_ op: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+        addValue(op, token, value, &result, maxChar)
     }
     
-    private static func addListValue(_ operator: Operator, _ token: String, _ value: [String], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
+    private static func addListValue(_ op: Operator, _ token: String, _ value: [String], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
         var first = true
         for v in value {
             if first {
-                addValue(operator, token, v, &result, maxChar)
+                addValue(op, token, v, &result, maxChar)
                 first = false
             } else {
                 if composite {
-                    addSeparator(operator, &result)
-                    addValue(operator, token, v, &result, maxChar)
+                    addSeparator(op, &result)
+                    addValue(op, token, v, &result, maxChar)
                 } else {
                     result.append(",")
-                    addValueElement(operator, token, v, &result, maxChar)
+                    addValueElement(op, token, v, &result, maxChar)
                 }
             }
         }
     }
     
-    private static func addMapValue(_ operator: Operator, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
+    private static func addMapValue(_ op: Operator, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
         var first = true
         if maxChar != -1 {
             throw NSError(domain: "IllegalArgumentException", code: 0, userInfo: [NSLocalizedDescriptionKey: "Value trimming is not allowed on Maps"])
@@ -392,20 +392,20 @@ public class StdUriTemplate {
         for (k, v) in value.sorted( by: { $0.0 < $1.0 }) {
             if composite {
                 if !first {
-                    addSeparator(operator, &result)
+                    addSeparator(op, &result)
                 }
-                addValueElement(operator, token, k, &result, maxChar)
+                addValueElement(op, token, k, &result, maxChar)
                 result.append("=")
             } else {
                 if first {
-                    addValue(operator, token, k, &result, maxChar)
+                    addValue(op, token, k, &result, maxChar)
                 } else {
                     result.append(",")
-                    addValueElement(operator, token, k, &result, maxChar)
+                    addValueElement(op, token, k, &result, maxChar)
                 }
                 result.append(",")
             }
-            addValueElement(operator, token, v, &result, maxChar)
+            addValueElement(op, token, v, &result, maxChar)
             first = false
         }
     }
