@@ -93,7 +93,7 @@ public class StdUriTemplate
 
         StringBuilder token = null;
 
-        Operator? operator = null;
+        Operator? op = null;
         bool composite = false;
         StringBuilder maxCharBuffer = null;
         bool firstToken = true;
@@ -110,13 +110,13 @@ public class StdUriTemplate
                 case '}':
                     if (token != null)
                     {
-                        bool expanded = ExpandToken(operator, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        bool expanded = ExpandToken(op, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken)
                         {
                             firstToken = false;
                         }
                         token = null;
-                        operator = null;
+                        op = null;
                         composite = false;
                         maxCharBuffer = null;
                     }
@@ -128,7 +128,7 @@ public class StdUriTemplate
                 case ',':
                     if (token != null)
                     {
-                        bool expanded = ExpandToken(operator, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        bool expanded = ExpandToken(op, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken)
                         {
                             firstToken = false;
@@ -143,9 +143,9 @@ public class StdUriTemplate
                 default:
                     if (token != null)
                     {
-                        if (operator == null)
+                        if (op == null)
                         {
-                            operator = GetOperator(character, token, i);
+                            op = GetOperator(character, token, i);
                         }
                         else if (maxCharBuffer != null)
                         {
@@ -435,7 +435,7 @@ public class StdUriTemplate
 
     // returns true if expansion happened
     private static bool ExpandToken(
-            Operator? operator,
+            Operator? op,
             string token,
             bool composite,
             int maxChar,
@@ -473,63 +473,63 @@ public class StdUriTemplate
 
         if (firstToken)
         {
-            AddPrefix(operator, result);
+            AddPrefix(op, result);
         }
         else
         {
-            AddSeparator(operator, result);
+            AddSeparator(op, result);
         }
 
         switch (substType)
         {
             case SubstitutionType.STRING:
-                AddStringValue(operator, token, (string)value, result, maxChar);
+                AddStringValue(op, token, (string)value, result, maxChar);
                 break;
             case SubstitutionType.LIST:
-                AddListValue(operator, token, (IList)value, result, maxChar, composite);
+                AddListValue(op, token, (IList)value, result, maxChar, composite);
                 break;
             case SubstitutionType.DICTIONARY:
-                AddDictionaryValue(operator, token, ((IDictionary)value), result, maxChar, composite);
+                AddDictionaryValue(op, token, ((IDictionary)value), result, maxChar, composite);
                 break;
         }
 
         return true;
     }
 
-    private static bool AddStringValue(Operator? operator, string token, string value, StringBuilder result, int maxChar)
+    private static bool AddStringValue(Operator? op, string token, string value, StringBuilder result, int maxChar)
     {
-        AddValue(operator, token, value, result, maxChar);
+        AddValue(op, token, value, result, maxChar);
         return true;
     }
 
-    private static bool AddListValue(Operator? operator, string token, IList value, StringBuilder result, int maxChar, bool composite)
+    private static bool AddListValue(Operator? op, string token, IList value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
         foreach (string v in value)
         {
             if (first)
             {
-                AddValue(operator, token, v, result, maxChar);
+                AddValue(op, token, v, result, maxChar);
                 first = false;
             }
             else
             {
                 if (composite)
                 {
-                    AddSeparator(operator, result);
-                    AddValue(operator, token, v, result, maxChar);
+                    AddSeparator(op, result);
+                    AddValue(op, token, v, result, maxChar);
                 }
                 else
                 {
                     result.Append(',');
-                    AddValueElement(operator, token, v, result, maxChar);
+                    AddValueElement(op, token, v, result, maxChar);
                 }
             }
         }
         return !first;
     }
 
-    private static bool AddDictionaryValue(Operator? operator, string token, IDictionary value, StringBuilder result, int maxChar, bool composite)
+    private static bool AddDictionaryValue(Operator? op, string token, IDictionary value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
         if (maxChar != -1)
@@ -542,25 +542,25 @@ public class StdUriTemplate
             {
                 if (!first)
                 {
-                    AddSeparator(operator, result);
+                    AddSeparator(op, result);
                 }
-                AddValueElement(operator, token, (string)v.Key, result, maxChar);
+                AddValueElement(op, token, (string)v.Key, result, maxChar);
                 result.Append('=');
             }
             else
             {
                 if (first)
                 {
-                    AddValue(operator, token, (string)v.Key, result, maxChar);
+                    AddValue(op, token, (string)v.Key, result, maxChar);
                 }
                 else
                 {
                     result.Append(',');
-                    AddValueElement(operator, token, (string)v.Key, result, maxChar);
+                    AddValueElement(op, token, (string)v.Key, result, maxChar);
                 }
                 result.Append(',');
             }
-            AddValueElement(operator, token, (string)v.Value, result, maxChar);
+            AddValueElement(op, token, (string)v.Value, result, maxChar);
             first = false;
         }
         return !first;
