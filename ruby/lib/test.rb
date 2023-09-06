@@ -3,7 +3,7 @@ require 'date'
 require 'json'
 require 'uri'
 require 'pathname'
-require_relative 'StdUriTemplate'
+require_relative 'stduritemplate'
 
 template_file = ARGV[0]
 data_file = ARGV[1]
