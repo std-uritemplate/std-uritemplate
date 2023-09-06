@@ -23,12 +23,12 @@ const (
 	ModUndefined    Mod = 0
 	ModNone         Mod = -1
 	ModPlus         Mod = '+'
-	ModDash         Mod = '#'
+	ModHash         Mod = '#'
 	ModDot          Mod = '.'
 	ModSlash        Mod = '/'
 	ModSemicolon    Mod = ';'
 	ModQuestionMark Mod = '?'
-	ModAt           Mod = '&'
+	ModAmp          Mod = '&'
 )
 
 const (
@@ -68,7 +68,7 @@ func getModifier(c rune, token *strings.Builder, col int) (Mod, error) {
 	case '+':
 		return ModPlus, nil
 	case '#':
-		return ModDash, nil
+		return ModHash, nil
 	case '.':
 		return ModDot, nil
 	case '/':
@@ -78,7 +78,7 @@ func getModifier(c rune, token *strings.Builder, col int) (Mod, error) {
 	case '?':
 		return ModQuestionMark, nil
 	case '&':
-		return ModAt, nil
+		return ModAmp, nil
 	default:
 		err := validateLiteral(c, col)
 		if err != nil {
@@ -186,7 +186,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 
 func addPrefix(mod Mod, result *strings.Builder) {
 	switch mod {
-	case ModDash, ModDot, ModSlash, ModSemicolon, ModQuestionMark, ModAt:
+	case ModHash, ModDot, ModSlash, ModSemicolon, ModQuestionMark, ModAmp:
 		result.WriteRune(rune(mod))
 	default:
 		return
@@ -197,7 +197,7 @@ func addSeparator(mod Mod, result *strings.Builder) {
 	switch mod {
 	case ModDot, ModSlash, ModSemicolon:
 		result.WriteRune(rune(mod))
-	case ModQuestionMark, ModAt:
+	case ModQuestionMark, ModAmp:
 		result.WriteByte('&')
 	default:
 		result.WriteByte(',')
@@ -207,9 +207,9 @@ func addSeparator(mod Mod, result *strings.Builder) {
 
 func addValue(mod Mod, token, value string, result *strings.Builder, maxChar int) {
 	switch mod {
-	case ModPlus, ModDash:
+	case ModPlus, ModHash:
 		addExpandedValue(value, result, maxChar, false)
-	case ModQuestionMark, ModAt:
+	case ModQuestionMark, ModAmp:
 		result.WriteString(token + "=")
 		addExpandedValue(value, result, maxChar, true)
 	case ModSemicolon:
@@ -225,9 +225,9 @@ func addValue(mod Mod, token, value string, result *strings.Builder, maxChar int
 
 func addValueElement(mod Mod, _, value string, result *strings.Builder, maxChar int) {
 	switch mod {
-	case ModPlus, ModDash:
+	case ModPlus, ModHash:
 		addExpandedValue(value, result, maxChar, false)
-	case ModQuestionMark, ModAt, ModSemicolon, ModDot, ModSlash, ModNone:
+	case ModQuestionMark, ModAmp, ModSemicolon, ModDot, ModSlash, ModNone:
 		addExpandedValue(value, result, maxChar, true)
 	}
 }

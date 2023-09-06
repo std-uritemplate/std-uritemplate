@@ -13,12 +13,12 @@ module StdUriTemplate
   module Modifier
     NO_MOD = :no_mod
     PLUS = :plus
-    DASH = :dash
+    HASH = :hash
     DOT = :dot
     SLASH = :slash
     SEMICOLON = :semicolon
     QUESTION_MARK = :question_mark
-    AT = :at
+    AMP = :amp
   end
 
   def self.validate_literal(c, col)
@@ -49,7 +49,7 @@ module StdUriTemplate
     when '+'
       Modifier::PLUS
     when '#'
-      Modifier::DASH
+      Modifier::HASH
     when '.'
       Modifier::DOT
     when '/'
@@ -59,7 +59,7 @@ module StdUriTemplate
     when '?'
       Modifier::QUESTION_MARK
     when '&'
-      Modifier::AT
+      Modifier::AMP
     else
       validate_literal(c, col)
       token << c
@@ -134,7 +134,7 @@ module StdUriTemplate
 
   def self.add_prefix(mod, result)
     case mod
-    when Modifier::DASH
+    when Modifier::HASH
       result << '#'
     when Modifier::DOT
       result << '.'
@@ -144,7 +144,7 @@ module StdUriTemplate
       result << ';'
     when Modifier::QUESTION_MARK
       result << '?'
-    when Modifier::AT
+    when Modifier::AMP
       result << '&'
     end
   end
@@ -157,7 +157,7 @@ module StdUriTemplate
       result << '/'
     when Modifier::SEMICOLON
       result << ';'
-    when Modifier::QUESTION_MARK, Modifier::AT
+    when Modifier::QUESTION_MARK, Modifier::AMP
       result << '&'
     else
       result << ','
@@ -166,9 +166,9 @@ module StdUriTemplate
 
   def self.add_value(mod, token, value, result, max_char)
     case mod
-    when Modifier::PLUS, Modifier::DASH
+    when Modifier::PLUS, Modifier::HASH
       add_expanded_value(value, result, max_char, false)
-    when Modifier::QUESTION_MARK, Modifier::AT
+    when Modifier::QUESTION_MARK, Modifier::AMP
       result << token + '='
       add_expanded_value(value, result, max_char, true)
     when Modifier::SEMICOLON
@@ -182,9 +182,9 @@ module StdUriTemplate
 
   def self.add_value_element(mod, token, value, result, max_char)
     case mod
-    when Modifier::PLUS, Modifier::DASH
+    when Modifier::PLUS, Modifier::HASH
       add_expanded_value(value, result, max_char, false)
-    when Modifier::QUESTION_MARK, Modifier::AT, Modifier::SEMICOLON, Modifier::DOT, Modifier::SLASH, Modifier::NO_MOD
+    when Modifier::QUESTION_MARK, Modifier::AMP, Modifier::SEMICOLON, Modifier::DOT, Modifier::SLASH, Modifier::NO_MOD
       add_expanded_value(value, result, max_char, true)
     end
   end

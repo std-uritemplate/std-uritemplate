@@ -6,12 +6,12 @@ from enum import Enum
 
 class _Modifier(Enum):
     PLUS = "+"
-    DASH = "#"
+    HASH = "#"
     DOT = "."
     SLASH = "/"
     SEMICOLON = ";"
     QUESTION_MARK = "?"
-    AT = "&"
+    AMP = "&"
     NO_MOD = ""
 
 
@@ -64,7 +64,7 @@ class StdUriTemplate:
         if character == "+":
             return _Modifier.PLUS
         elif character == "#":
-            return _Modifier.DASH
+            return _Modifier.HASH
         elif character == ".":
             return _Modifier.DOT
         elif character == "/":
@@ -74,7 +74,7 @@ class StdUriTemplate:
         elif character == "?":
             return _Modifier.QUESTION_MARK
         elif character == "&":
-            return _Modifier.AT
+            return _Modifier.AMP
         else:
             StdUriTemplate.__validate_literal(character, col)
             token.append(character)
@@ -161,7 +161,7 @@ class StdUriTemplate:
 
     @staticmethod
     def __add_prefix(mod: str, result: List[str]) -> None:
-        if mod == _Modifier.DASH:
+        if mod == _Modifier.HASH:
             result.append("#")
         elif mod == _Modifier.DOT:
             result.append(".")
@@ -171,7 +171,7 @@ class StdUriTemplate:
             result.append(";")
         elif mod == _Modifier.QUESTION_MARK:
             result.append("?")
-        elif mod == _Modifier.AT:
+        elif mod == _Modifier.AMP:
             result.append("&")
 
     @staticmethod
@@ -182,7 +182,7 @@ class StdUriTemplate:
             result.append("/")
         elif mod == _Modifier.SEMICOLON:
             result.append(";")
-        elif mod == _Modifier.QUESTION_MARK or mod == _Modifier.AT:
+        elif mod == _Modifier.QUESTION_MARK or mod == _Modifier.AMP:
             result.append("&")
         else:
             result.append(",")
@@ -191,9 +191,9 @@ class StdUriTemplate:
     def __add_value(
         mod: str, token: str, value: str, result: List[str], max_char: int
     ) -> None:
-        if mod == _Modifier.PLUS or mod == _Modifier.DASH:
+        if mod == _Modifier.PLUS or mod == _Modifier.HASH:
             StdUriTemplate.__add_expanded_value(value, result, max_char, False)
-        elif mod == _Modifier.QUESTION_MARK or mod == _Modifier.AT:
+        elif mod == _Modifier.QUESTION_MARK or mod == _Modifier.AMP:
             result.append(token + "=")
             StdUriTemplate.__add_expanded_value(value, result, max_char, True)
         elif mod == _Modifier.SEMICOLON:
@@ -208,11 +208,11 @@ class StdUriTemplate:
     def __add_value_element(
         mod: str, token: str, value: str, result: List[str], max_char: int
     ) -> None:
-        if mod == _Modifier.PLUS or mod == _Modifier.DASH:
+        if mod == _Modifier.PLUS or mod == _Modifier.HASH:
             StdUriTemplate.__add_expanded_value(value, result, max_char, False)
         elif (
             mod == _Modifier.QUESTION_MARK
-            or mod == _Modifier.AT
+            or mod == _Modifier.AMP
             or mod == _Modifier.SEMICOLON
             or mod == _Modifier.DOT
             or mod == _Modifier.SLASH

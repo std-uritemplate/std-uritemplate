@@ -2,3 +2,6 @@ target
 .idea
 test.jar
 lib
+.classpath
+.project
+.settings

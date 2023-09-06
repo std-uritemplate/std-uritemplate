@@ -51,12 +51,12 @@ class StdUriTemplate {
     private static function getModifier($c, &$token, $col) {
         switch ($c) {
             case '+': return 'PLUS';
-            case '#': return 'DASH';
+            case '#': return 'HASH';
             case '.': return 'DOT';
             case '/': return 'SLASH';
             case ';': return 'SEMICOLON';
             case '?': return 'QUESTION_MARK';
-            case '&': return 'AT';
+            case '&': return 'AMP';
             default:
                 self::validateLiteral($c, $col);
                 $token .= $c;
@@ -142,7 +142,7 @@ class StdUriTemplate {
 
     private static function addPrefix($mod, &$result) {
         switch ($mod) {
-            case 'DASH':
+            case 'HASH':
                 $result .= '#';
                 break;
             case 'DOT':
@@ -157,7 +157,7 @@ class StdUriTemplate {
             case 'QUESTION_MARK':
                 $result .= '?';
                 break;
-            case 'AT':
+            case 'AMP':
                 $result .= '&';
                 break;
             default:
@@ -177,7 +177,7 @@ class StdUriTemplate {
                 $result .= ';';
                 break;
             case 'QUESTION_MARK':
-            case 'AT':
+            case 'AMP':
                 $result .= '&';
                 break;
             default:
@@ -189,11 +189,11 @@ class StdUriTemplate {
     private static function addValue($mod, $token, $value, &$result, $maxChar) {
         switch ($mod) {
             case 'PLUS':
-            case 'DASH':
+            case 'HASH':
                 self::addExpandedValue($value, $result, $maxChar, false);
                 break;
             case 'QUESTION_MARK':
-            case 'AT':
+            case 'AMP':
 
                 $result .= $token . '=';
                 self::addExpandedValue($value, $result, $maxChar, true);
@@ -215,11 +215,11 @@ class StdUriTemplate {
     private static function addValueElement($mod, $token, $value, &$result, $maxChar) {
         switch ($mod) {
             case 'PLUS':
-            case 'DASH':
+            case 'HASH':
                 self::addExpandedValue($value, $result, $maxChar, false);
                 break;
             case 'QUESTION_MARK':
-            case 'AT':
+            case 'AMP':
             case 'SEMICOLON':
             case 'DOT':
             case 'SLASH':

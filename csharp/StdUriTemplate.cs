@@ -19,12 +19,12 @@ public class StdUriTemplate
     {
         NO_MOD,
         PLUS,
-        DASH,
+        HASH,
         DOT,
         SLASH,
         SEMICOLON,
         QUESTION_MARK,
-        AT
+        AMP
     }
 
     private static void ValidateLiteral(char c, int col)
@@ -74,12 +74,12 @@ public class StdUriTemplate
         switch (c)
         {
             case '+': return Modifier.PLUS;
-            case '#': return Modifier.DASH;
+            case '#': return Modifier.HASH;
             case '.': return Modifier.DOT;
             case '/': return Modifier.SLASH;
             case ';': return Modifier.SEMICOLON;
             case '?': return Modifier.QUESTION_MARK;
-            case '&': return Modifier.AT;
+            case '&': return Modifier.AMP;
             default:
                 ValidateLiteral(c, col);
                 token.Append(c);
@@ -197,7 +197,7 @@ public class StdUriTemplate
     {
         switch (mod)
         {
-            case Modifier.DASH:
+            case Modifier.HASH:
                 result.Append('#');
                 break;
             case Modifier.DOT:
@@ -212,7 +212,7 @@ public class StdUriTemplate
             case Modifier.QUESTION_MARK:
                 result.Append('?');
                 break;
-            case Modifier.AT:
+            case Modifier.AMP:
                 result.Append('&');
                 break;
             default:
@@ -234,7 +234,7 @@ public class StdUriTemplate
                 result.Append(';');
                 break;
             case Modifier.QUESTION_MARK:
-            case Modifier.AT:
+            case Modifier.AMP:
                 result.Append('&');
                 break;
             default:
@@ -248,11 +248,11 @@ public class StdUriTemplate
         switch (mod)
         {
             case Modifier.PLUS:
-            case Modifier.DASH:
+            case Modifier.HASH:
                 AddExpandedValue(value, result, maxChar, false);
                 break;
             case Modifier.QUESTION_MARK:
-            case Modifier.AT:
+            case Modifier.AMP:
                 result.Append(token + '=');
                 AddExpandedValue(value, result, maxChar, true);
                 break;
@@ -277,11 +277,11 @@ public class StdUriTemplate
         switch (mod)
         {
             case Modifier.PLUS:
-            case Modifier.DASH:
+            case Modifier.HASH:
                 AddExpandedValue(value, result, maxChar, false);
                 break;
             case Modifier.QUESTION_MARK:
-            case Modifier.AT:
+            case Modifier.AMP:
             case Modifier.SEMICOLON:
             case Modifier.DOT:
             case Modifier.SLASH:
