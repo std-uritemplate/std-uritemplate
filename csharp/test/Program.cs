@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using stduritemplate;
 
 class Program
 {
@@ -38,7 +37,7 @@ class Program
 
             try
             {
-                string result = StdUriTemplate.Expand(template, data);
+                string result = Std.UriTemplate.Expand(template, data);
                 Console.Write(result);
             }
             catch (Exception e)

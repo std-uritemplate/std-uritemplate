@@ -122,11 +122,7 @@ dotnet add package Std.UriTemplate
 and use it:
 
 ```csharp
-using stduritemplate;
-
-...
-
-StdUriTemplate.Expand(template, substitutions);
+Std.UriTemplate.Expand(template, substitutions);
 ```
 
 ### Ruby
