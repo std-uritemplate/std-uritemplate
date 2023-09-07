@@ -1,12 +1,12 @@
 ﻿#nullable disable
-namespace stduritemplate;
+namespace Std;
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-public class StdUriTemplate
+public class UriTemplate
 {
     // Public API
     public static string Expand(string template, Dictionary<string, object> substitutions)
