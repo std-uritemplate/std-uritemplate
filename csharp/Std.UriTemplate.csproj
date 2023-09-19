@@ -7,8 +7,8 @@
     <AssemblyName>Std.UriTemplate</AssemblyName>
     <PackageTags>RFC6570;UriTemplate;Std.UriTemplate</PackageTags>
     <Version>$(VERSION)</Version>
-    <Authors>std-uritemplate</Authors>
-    <Company>std-uritemplate</Company>
+    <Authors>Std.UriTemplate</Authors>
+    <Company>Std.UriTemplate</Company>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
