@@ -27,8 +27,9 @@ jobs:
         php-version:
           - '7.4'
           - '8.2'
+        exclude:
+          - php-version: '8.2'
         include:
-          - php-version: '7.4'
           - language: php
             php-version: '7.4'
           - language: php
