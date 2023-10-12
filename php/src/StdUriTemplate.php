@@ -294,10 +294,10 @@ class StdUriTemplate {
         if (is_array($value)) {
             // https://stackoverflow.com/a/173479/7898052
             if (!function_exists('array_is_list')) {
-                if ($arr === []) {
+                if ($value === []) {
                     return true;
                 }
-                return array_keys($arr) === range(0, count($arr) - 1);
+                return array_keys($value) === range(0, count($arr) - 1);
             }
             return !array_is_list($value);
         }
