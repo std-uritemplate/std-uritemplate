@@ -1,5 +1,5 @@
 <?php
-namespace stduritemplate;
+namespace StdUriTemplate;
 
 class StdUriTemplate {
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env php
 <?php
+use StdUriTemplate\StdUriTemplate;
+
+require_once __DIR__.'/src/StdUriTemplate.php';
+
 if ($argc != 3) {
     fwrite(STDERR, "Usage: " . $argv[0] . " <template_file> <data_file>\n");
     exit(1);
@@ -34,8 +38,7 @@ try {
 }
 
 try {
-    require_once __DIR__.'/src/StdUriTemplate.php';
-    $result = stduritemplate\StdUriTemplate::expand($template, $data);
+    $result = StdUriTemplate::expand($template, $data);
     echo $result;
 } catch (Exception $e) {
     fwrite(STDERR, "Error expanding template: " . $e->getMessage() . "\n");

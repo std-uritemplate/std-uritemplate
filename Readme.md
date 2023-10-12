@@ -154,7 +154,11 @@ composer require stduritemplate/stduritemplate
 and use it:
 
 ```php
-stduritemplate\StdUriTemplate::expand($template, $substitutions);
+use StdUriTemplate\StdUriTemplate;
+
+...
+
+StdUriTemplate::expand($template, $substitutions);
 ```
 
 ### Swift
