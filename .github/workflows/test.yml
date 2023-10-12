@@ -26,6 +26,7 @@ jobs:
           - swift
         include:
           - php-version: '7.4'
+          - php-version: '7.4'
             language: php
           - php-version: '8.2'
             language: php
