@@ -297,7 +297,7 @@ class StdUriTemplate {
                 if ($value === []) {
                     return true;
                 }
-                return array_keys($value) === range(0, count($value) - 1);
+                return array_keys($value) !== range(0, count($value) - 1);
             }
             return !array_is_list($value);
         }
