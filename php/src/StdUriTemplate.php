@@ -291,14 +291,17 @@ class StdUriTemplate {
     }
 
     private static function isMap($value) {
-      // https://stackoverflow.com/a/173479/7898052
-      if (!function_exists('array_is_list')) {
-        if ($arr === []) {
-            return true;
+        if (is_array($value)) {
+            // https://stackoverflow.com/a/173479/7898052
+            if (!function_exists('array_is_list')) {
+                if ($arr === []) {
+                    return true;
+                }
+                return array_keys($arr) === range(0, count($arr) - 1);
+            }
+            return !array_is_list($value);
         }
-        return array_keys($arr) === range(0, count($arr) - 1);
-      }
-      return !array_is_list($value);
+        return false;
     }
 
     private static function getSubstitutionType($value, $col) {
