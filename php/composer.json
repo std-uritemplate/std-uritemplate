@@ -3,6 +3,9 @@
     "description": "Std UriTemplate, RFC 6570 implementation",
     "type": "library",
     "license": "Apache-2.0",
+    "require": {
+        "php": "^7.4 || ^8.0"
+    },
     "autoload": {
         "psr-4": {
             "StdUriTemplate\\": "src/"
@@ -13,6 +16,5 @@
             "name": "Andrea Peruffo",
             "email": "andrea.peruffo1982@gmail.com"
         }
-    ],
-    "require": {}
+    ]
 }
