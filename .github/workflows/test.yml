@@ -24,12 +24,15 @@ jobs:
           - ruby
           - php
           - swift
+        php-version:
+          - '7.4'
+          - '8.2'
         include:
           - php-version: '7.4'
-          - php-version: '7.4'
-            language: php
-          - php-version: '8.2'
-            language: php
+          - language: php
+            php-version: '7.4'
+          - language: php
+            php-version: '8.2'
     steps:
       - name: Common - Checkout
         uses: actions/checkout@v4
