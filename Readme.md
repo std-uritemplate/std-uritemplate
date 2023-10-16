@@ -24,7 +24,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Go | ✅ | ✅ | ✅ |
 | C# | ✅ | ✅ | ✅ |
 | Ruby | ✅ | ❌ | ✅ |
-| PHP | ✅ | ❌ | ✅ |
+| PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
 
 ## Usage
