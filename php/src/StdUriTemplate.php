@@ -1,13 +1,27 @@
 <?php
 namespace StdUriTemplate;
 
+use InvalidArgumentException;
+use TypeError;
+
 class StdUriTemplate {
 
-    public static function expand($template, $substitutions) {
+    /**
+     * @param string $template
+     * @param array $substitutions
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    public static function expand(string $template, array $substitutions): string {
         return self::expandImpl($template, $substitutions);
     }
 
-    private static function validateLiteral($c, $col) {
+    /**
+     * @param string $c
+     * @param int $col
+     * @throws InvalidArgumentException
+     */
+    private static function validateLiteral(string $c, int $col): void {
         switch ($c) {
             case '+':
             case '#':
@@ -24,13 +38,17 @@ class StdUriTemplate {
             case ':':
             case '~':
             case '-':
-                throw new \InvalidArgumentException("Illegal character identified in the token at col: $col");
+                throw new InvalidArgumentException("Illegal character identified in the token at col: $col");
             default:
                 break;
         }
     }
 
-    private static function getMaxChar($buffer, $col) {
+    /**
+     * @param string|null $buffer
+     * @return int
+     */
+    private static function getMaxChar(?string $buffer): int {
         if ($buffer === null) {
             return -1;
         } else {
@@ -39,16 +57,18 @@ class StdUriTemplate {
             if (empty($value)) {
                 return -1;
             } else {
-                try {
-                    return (int)$value;
-                } catch (NumberFormatException $e) {
-                    throw new \InvalidArgumentException("Cannot parse max chars at col: $col");
-                }
+                return (int)$value;
             }
         }
     }
 
-    private static function getOperator($c, &$token, $col) {
+    /**
+     * @param string $c
+     * @param string &$token
+     * @param int $col
+     * @return string
+     */
+    private static function getOperator(string $c, string &$token, int $col): string {
         switch ($c) {
             case '+': return 'PLUS';
             case '#': return 'HASH';
@@ -64,7 +84,13 @@ class StdUriTemplate {
         }
     }
 
-    private static function expandImpl($str, $substitutions) {
+    /**
+     * @param string $str
+     * @param array $substitutions
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    private static function expandImpl(string $str, array $substitutions): string {
         $result = '';
         $token = null;
 
@@ -82,7 +108,11 @@ class StdUriTemplate {
                     break;
                 case '}':
                     if ($token !== null) {
-                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
+                        try {
+                            $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer), $firstToken, $substitutions, $result, $i);
+                        } catch (TypeError $ex) {
+                            throw new InvalidArgumentException("Cannot parse max chars at col: $i");
+                        }
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
@@ -91,12 +121,16 @@ class StdUriTemplate {
                         $composite = false;
                         $maxCharBuffer = null;
                     } else {
-                        throw new \InvalidArgumentException("Failed to expand token, invalid at col: $i");
+                        throw new InvalidArgumentException("Failed to expand token, invalid at col: $i");
                     }
                     break;
                 case ',':
                     if ($token !== null) {
-                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
+                        try {
+                            $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer), $firstToken, $substitutions, $result, $i);
+                        } catch (\TypeError $ex) {
+                            throw new InvalidArgumentException("Cannot parse max chars at col: $i");
+                        }
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
@@ -114,7 +148,7 @@ class StdUriTemplate {
                             if (is_numeric($character)) {
                                 $maxCharBuffer .= $character;
                             } else {
-                                throw new \InvalidArgumentException("Illegal character identified in the token at col: $i");
+                                throw new InvalidArgumentException("Illegal character identified in the token at col: $i");
                             }
                         } else {
                             if ($character === ':') {
@@ -136,11 +170,15 @@ class StdUriTemplate {
         if ($token === null) {
             return $result;
         } else {
-            throw new \InvalidArgumentException("Unterminated token");
+            throw new InvalidArgumentException("Unterminated token");
         }
     }
 
-    private static function addPrefix($op, &$result) {
+    /**
+     * @param string $op
+     * @param string &$result
+     */
+    private static function addPrefix(string $op, string &$result): void {
         switch ($op) {
             case 'HASH':
                 $result .= '#';
@@ -165,7 +203,11 @@ class StdUriTemplate {
         }
     }
 
-    private static function addSeparator($op, &$result) {
+    /**
+     * @param string $op
+     * @param string &$result
+     */
+    private static function addSeparator(string $op, string &$result): void {
         switch ($op) {
             case 'DOT':
                 $result .= '.';
@@ -186,7 +228,14 @@ class StdUriTemplate {
         }
     }
 
-    private static function addValue($op, $token, $value, &$result, $maxChar) {
+    /**
+     * @param string $op
+     * @param string $token
+     * @param string $value
+     * @param string &$result
+     * @param int $maxChar
+     */
+    private static function addValue(string $op, string $token, string $value, string &$result, int $maxChar): void {
         switch ($op) {
             case 'PLUS':
             case 'HASH':
@@ -212,7 +261,14 @@ class StdUriTemplate {
         }
     }
 
-    private static function addValueElement($op, $token, $value, &$result, $maxChar) {
+    /**
+     * @param string $op
+     * @param string $token
+     * @param string $value
+     * @param string &$result
+     * @param int $maxChar
+     */
+    private static function addValueElement(string $op, string $token, string $value, string &$result, int $maxChar): void {
         switch ($op) {
             case 'PLUS':
             case 'HASH':
@@ -228,7 +284,13 @@ class StdUriTemplate {
         }
     }
 
-    private static function addExpandedValue($value, &$result, $maxChar, $replaceReserved) {
+    /**
+     * @param string $value
+     * @param string &$result
+     * @param int $maxChar
+     * @param bool $replaceReserved
+     */
+    private static function addExpandedValue(string $value, string &$result, int $maxChar, bool $replaceReserved): void {
         $max = ($maxChar !== -1) ? min($maxChar, strlen($value)) : strlen($value);
         $result .= '';
         $reservedBuffer = null;
@@ -248,7 +310,7 @@ class StdUriTemplate {
                     try {
                         $decoded = urldecode($reservedBuffer);
                         $isEncoded = ($decoded !== $reservedBuffer);
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         // ignore
                     }
 
@@ -286,11 +348,19 @@ class StdUriTemplate {
         }
     }
 
-    private static function isList($value) {
+    /**
+     * @param mixed $value
+     * @return bool
+     */
+    private static function isList($value): bool {
         return is_array($value);
     }
 
-    private static function isMap($value) {
+    /**
+     * @param mixed $value
+     * @return bool
+     */
+    private static function isMap($value): bool {
         if (is_array($value)) {
             // https://stackoverflow.com/a/173479/7898052
             if (!function_exists('array_is_list')) {
@@ -304,7 +374,12 @@ class StdUriTemplate {
         return false;
     }
 
-    private static function getSubstitutionType($value, $col) {
+    /**
+     * @param mixed $value
+     * @param int $col
+     * @return string
+     */
+    private static function getSubstitutionType($value, int $col): string {
         if (is_string($value) || $value === null) {
             return 'STRING';
         } elseif (self::isMap($value)) {
@@ -312,20 +387,24 @@ class StdUriTemplate {
         } elseif (self::isList($value)) {
             return 'LIST';
         } else {
-            throw new \InvalidArgumentException("Illegal class passed as substitution, found " . get_class($value) . " at col: $col");
+            throw new InvalidArgumentException("Illegal class passed as substitution, found " . get_class($value) . " at col: $col");
         }
     }
 
-    private static function isEmpty($substType, $value) {
+    /**
+     * @param string $substType
+     * @param mixed $value
+     * @return bool
+     */
+    private static function isEmpty(string $substType, $value): bool {
         if ($value === null) {
             return true;
         } else {
             switch ($substType) {
                 case 'STRING':
                     return false;
-                case 'LIST':
-                    return empty($value);
                 case 'MAP':
+                case 'LIST':
                     return empty($value);
                 default:
                     return true;
@@ -333,9 +412,20 @@ class StdUriTemplate {
         }
     }
 
-    private static function expandToken($operator, $token, $composite, $maxChar, $firstToken, $substitutions, &$result, $col) {
+    /**
+     * @param string $operator
+     * @param string $token
+     * @param bool $composite
+     * @param int $maxChar
+     * @param bool $firstToken
+     * @param array $substitutions
+     * @param string &$result
+     * @param int $col
+     * @return bool
+     */
+    private static function expandToken(string $operator, string $token, bool $composite, int $maxChar, bool $firstToken, array $substitutions, string &$result, int $col): bool {
         if (empty($token)) {
-            throw new \InvalidArgumentException("Found an empty token at col: $col");
+            throw new InvalidArgumentException("Found an empty token at col: $col");
         }
 
         $value = $substitutions[$token] ?? null;
@@ -345,7 +435,7 @@ class StdUriTemplate {
             } else {
                 $value = "false";
             }
-        } else if (is_bool($value) || is_int($value) || is_float($value) || is_double($value)) {
+        } else if (is_int($value) || is_float($value) || is_double($value)) {
             $value = (string)$value;
         } else if ($value instanceof \DateTime) {
             $value = $value->format('Y-m-d\TH:i:s\Z');
@@ -377,11 +467,27 @@ class StdUriTemplate {
         return true;
     }
 
-    private static function addStringValue($operator, $token, $value, &$result, $maxChar) {
+    /**
+     * @param string $operator
+     * @param string $token
+     * @param string $value
+     * @param string $result
+     * @param int $maxChar
+     */
+    private static function addStringValue(string $operator, string $token, string $value, string &$result, int $maxChar) {
         self::addValue($operator, $token, $value, $result, $maxChar);
     }
 
-    private static function addListValue($operator, $token, $value, &$result, $maxChar, $composite) {
+    /**
+     * @param string $operator
+     * @param string $token
+     * @param array<string> $value
+     * @param string &$result
+     * @param int $maxChar
+     * @param bool $composite
+     * @return bool
+     */
+    private static function addListValue(string $operator, string $token, array $value, string &$result, int $maxChar, bool $composite): bool {
         $first = true;
         foreach ($value as $v) {
             if ($first) {
@@ -400,10 +506,19 @@ class StdUriTemplate {
         return !$first;
     }
 
-    private static function addMapValue($operator, $token, $value, &$result, $maxChar, $composite) {
+    /**
+     * @param string $operator
+     * @param string $token
+     * @param array $value
+     * @param string &$result
+     * @param int $maxChar
+     * @param bool $composite
+     * @return bool
+     */
+    private static function addMapValue(string $operator, string $token, array $value, string &$result, int $maxChar, bool $composite): bool {
         $first = true;
         if ($maxChar !== -1) {
-            throw new \InvalidArgumentException("Value trimming is not allowed on Maps");
+            throw new InvalidArgumentException("Value trimming is not allowed on Maps");
         }
         foreach ($value as $k => $v) {
             if ($composite) {
@@ -429,4 +544,3 @@ class StdUriTemplate {
 
 }
 
-?>
