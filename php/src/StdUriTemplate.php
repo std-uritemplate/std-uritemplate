@@ -3,6 +3,7 @@ namespace StdUriTemplate;
 
 use InvalidArgumentException;
 use TypeError;
+use Exception;
 
 class StdUriTemplate {
 
@@ -128,7 +129,7 @@ class StdUriTemplate {
                     if ($token !== null) {
                         try {
                             $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer), $firstToken, $substitutions, $result, $i);
-                        } catch (\TypeError $ex) {
+                        } catch (TypeError $ex) {
                             throw new InvalidArgumentException("Cannot parse max chars at col: $i");
                         }
                         if ($expanded && $firstToken) {
@@ -310,7 +311,7 @@ class StdUriTemplate {
                     try {
                         $decoded = urldecode($reservedBuffer);
                         $isEncoded = ($decoded !== $reservedBuffer);
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // ignore
                     }
 
