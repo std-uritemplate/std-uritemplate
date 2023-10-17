@@ -47,9 +47,11 @@ class StdUriTemplate {
 
     /**
      * @param string|null $buffer
+     * @param int $col
      * @return int
+     * @throws InvalidArgumentException
      */
-    private static function getMaxChar(?string $buffer): int {
+    private static function getMaxChar(?string $buffer, int $col): int {
         if ($buffer === null) {
             return -1;
         } else {
@@ -58,7 +60,11 @@ class StdUriTemplate {
             if (empty($value)) {
                 return -1;
             } else {
-                return (int)$value;
+                $intValue = (int)$value;
+                if (!is_int($intValue)) {
+                    throw new InvalidArgumentException("Cannot parse max chars at col: $col");
+                }
+                return $intValue;
             }
         }
     }
@@ -109,11 +115,7 @@ class StdUriTemplate {
                     break;
                 case '}':
                     if ($token !== null) {
-                        try {
-                            $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer), $firstToken, $substitutions, $result, $i);
-                        } catch (TypeError $ex) {
-                            throw new InvalidArgumentException("Cannot parse max chars at col: $i");
-                        }
+                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
@@ -127,11 +129,7 @@ class StdUriTemplate {
                     break;
                 case ',':
                     if ($token !== null) {
-                        try {
-                            $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer), $firstToken, $substitutions, $result, $i);
-                        } catch (TypeError $ex) {
-                            throw new InvalidArgumentException("Cannot parse max chars at col: $i");
-                        }
+                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
@@ -404,8 +402,8 @@ class StdUriTemplate {
             switch ($substType) {
                 case 'STRING':
                     return false;
-                case 'MAP':
                 case 'LIST':
+                case 'MAP':
                     return empty($value);
                 default:
                     return true;
