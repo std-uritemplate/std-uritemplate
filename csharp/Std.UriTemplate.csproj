@@ -25,6 +25,7 @@
     <AssemblyOriginatorKeyFile>Std.UriTemplate.snk</AssemblyOriginatorKeyFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
