@@ -64,7 +64,7 @@ jobs:
 
       # Typescript setup
       - name: Typescript - Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: matrix.language == 'typescript'
         with:
           node-version: 18
