@@ -372,7 +372,8 @@ public class StdUriTemplate {
                 value instanceof Integer ||
                 value instanceof Long ||
                 value instanceof Float ||
-                value instanceof Double) {
+                value instanceof Double ||
+                value instanceof Enum) {
             value = value.toString();
         } else if (value instanceof Date) {
             value = ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);

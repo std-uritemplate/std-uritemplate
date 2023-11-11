@@ -18,6 +18,10 @@ import io.github.stduritemplate.StdUriTemplate;
 
 public class test {
 
+    enum MyEnum {
+        MY_VALUE;
+    }
+
     public static void main(String... args) {
         // Here it goes the logic to parse the arguments in a positional manner, first attempt:
         // args[0] = A file that contains the template
@@ -34,6 +38,7 @@ public class test {
                 new Date(Long.valueOf(v.toString())));
             substs.computeIfPresent("nativedatetwo", (k, v) ->
                 new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
+            substs.computeIfPresent("myenum", (k, v) -> MyEnum.valueOf(v.toString()));
 
             out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {

@@ -3,11 +3,18 @@ namespace test;
 
 using System;
 using System.IO;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 class Program
 {
+
+    enum MyEnum
+    {
+        MY_VALUE
+    }
+
     static void Main(string[] args)
     {
         if (args.Length < 2)
@@ -31,6 +38,10 @@ class Program
             if (data.ContainsKey("nativedatetwo"))
             {
                 data["nativedatetwo"] = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMilliseconds((long)data["nativedatetwo"]);
+            }
+            if (data.ContainsKey("myenum"))
+            {
+                data["myenum"] = Enum.Parse<MyEnum>(data["myenum"].ToString());
             }
 
             string template = File.ReadAllText(templateFile).Trim();

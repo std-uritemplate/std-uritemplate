@@ -458,6 +458,8 @@ public class UriTemplate
                 value is double)
         {
             value = value.ToString().ToLower();
+        } else if (value is Enum) {
+            value = value.ToString();
         } else if (value is DateTime dt)
         {
             value = dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
