@@ -211,7 +211,7 @@ public class StdUriTemplate {
         }
     }
 
-    private static void addValue(Operator op, String token, String value, StringBuilder result, int maxChar) {
+    private static void addValue(Operator op, String token, Object value, StringBuilder result, int maxChar) {
         switch (op) {
             case PLUS:
             case HASH:
@@ -224,7 +224,7 @@ public class StdUriTemplate {
                 break;
             case SEMICOLON:
                 result.append(token);
-                if (!value.isEmpty()) {
+                if (!(value instanceof String) || !((String)value).isEmpty()) {
                     result.append("=");
                 }
                 addExpandedValue(value, result, maxChar, true);
@@ -236,7 +236,7 @@ public class StdUriTemplate {
         }
     }
 
-    private static void addValueElement(Operator op, String token, String value, StringBuilder result, int maxChar) {
+    private static void addValueElement(Operator op, String token, Object value, StringBuilder result, int maxChar) {
         switch (op) {
             case PLUS:
             case HASH:
@@ -252,13 +252,14 @@ public class StdUriTemplate {
         }
     }
 
-    private static void addExpandedValue(String value, StringBuilder result, int maxChar, boolean replaceReserved) {
-        var max = (maxChar != -1) ? Math.min(maxChar, value.length()) : value.length();
+    private static void addExpandedValue(Object value, StringBuilder result, int maxChar, boolean replaceReserved) {
+        String substitutedValue = (String) convertNativeTypes(value);
+        var max = (maxChar != -1) ? Math.min(maxChar, substitutedValue.length()) : substitutedValue.length();
         result.ensureCapacity(max * 2); // hint to SB
         StringBuilder reservedBuffer = null;
 
         for (var i = 0; i < max; i++) {
-            char character = value.charAt(i);
+            char character = substitutedValue.charAt(i);
 
             if (character == '%' && !replaceReserved) {
                 reservedBuffer = new StringBuilder(3);
@@ -353,11 +354,11 @@ public class StdUriTemplate {
 
     private static Object convertNativeTypes(Object value) {
         if (value instanceof Boolean ||
-                value instanceof Integer ||
-                value instanceof Long ||
-                value instanceof Float ||
-                value instanceof Double ||
-                value instanceof Enum) {
+            value instanceof Integer ||
+            value instanceof Long ||
+            value instanceof Float ||
+            value instanceof Double ||
+            value instanceof Enum) {
             return value.toString();
         } else if (value instanceof Date) {
             return ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);
@@ -396,34 +397,25 @@ public class StdUriTemplate {
 
         switch (substType) {
             case STRING:
-                value = convertNativeTypes(value);
-                addStringValue(operator, token, (String)value, result, maxChar);
+                addStringValue(operator, token, value, result, maxChar);
                 break;
             case LIST:
-                List<String> listValues = new ArrayList();
-                for (Object v: (List<Object>)value) {
-                    listValues.add((String) convertNativeTypes(v));
-                }
-                addListValue(operator, token, listValues, result, maxChar, composite);
+                addListValue(operator, token, (List<Object>)value, result, maxChar, composite);
                 break;
             case MAP:
-                Map<String, String> mapValues = new HashMap();
-                for (Map.Entry<String, Object> v: ((Map<String, Object>)value).entrySet()) {
-                    mapValues.put(v.getKey(), (String) convertNativeTypes(v.getValue()));
-                }
-                addMapValue(operator, token, mapValues, result, maxChar, composite);
+                addMapValue(operator, token, (Map<String, Object>)value, result, maxChar, composite);
                 break;
         }
 
         return true;
     }
 
-    private static boolean addStringValue(Operator operator, String token, String value, StringBuilder result, int maxChar) {
+    private static boolean addStringValue(Operator operator, String token, Object value, StringBuilder result, int maxChar) {
         addValue(operator, token, value, result, maxChar);
         return true;
     }
 
-    private static boolean addListValue(Operator operator, String token, List<String> value, StringBuilder result, int maxChar, boolean composite) {
+    private static boolean addListValue(Operator operator, String token, List<Object> value, StringBuilder result, int maxChar, boolean composite) {
         boolean first = true;
         for (var v: value) {
             if (first) {
@@ -442,7 +434,7 @@ public class StdUriTemplate {
         return !first;
     }
 
-    private static boolean addMapValue(Operator operator, String token, Map<String, String> value, StringBuilder result, int maxChar, boolean composite) {
+    private static boolean addMapValue(Operator operator, String token, Map<String, Object> value, StringBuilder result, int maxChar, boolean composite) {
         boolean first = true;
         if (maxChar != -1) {
             throw new IllegalArgumentException("Value trimming is not allowed on Maps");
