@@ -5,9 +5,14 @@ const process = require('process');
 const templateFile = process.argv[2];
 const dataFile = process.argv[3];
 
-const MyEnum = {
-	MyValue: "MY_VALUE"
-}
+// const MyEnum = {
+// 	MyValue: "MY_VALUE"
+// }
+
+var MyEnum;
+(function (MyEnum) {
+    MyEnum["MyValue"] = "MY_VALUE";
+})(MyEnum || (MyEnum = {}));
 
 try {
   const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
