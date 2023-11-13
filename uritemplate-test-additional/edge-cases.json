@@ -26,10 +26,10 @@
   "Language native enums" :
   {
     "variables" : {
-      "myenum": "MY_VALUE"
+      "nativeenum": "MY_VALUE"
      },
      "testcases" : [
-        ["{myenum}", "MY_VALUE"]
+        ["{nativeenum}", "MY_VALUE"]
      ]
   }
 }

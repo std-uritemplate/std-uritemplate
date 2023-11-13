@@ -8,6 +8,10 @@ require_relative 'stduritemplate'
 template_file = ARGV[0]
 data_file = ARGV[1]
 
+module MyEnum
+  MyValue = "MY_VALUE"
+end
+
 begin
   data = JSON.parse(File.read(data_file))
 rescue Errno::ENOENT
@@ -23,6 +27,9 @@ if data.key?("nativedate")
 end
 if data.key?("nativedatetwo")
   data["nativedatetwo"] = DateTime.strptime(data["nativedatetwo"].to_s, '%Q')
+end
+if data.key?("nativeenum")
+  data["nativeenum"] = MyEnum::MyValue
 end
 
 begin

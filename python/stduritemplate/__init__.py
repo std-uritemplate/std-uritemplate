@@ -1,4 +1,5 @@
 from datetime import datetime
+import enum
 import urllib.parse
 from typing import Any, Dict, List
 from enum import Enum
@@ -324,6 +325,8 @@ class StdUriTemplate:
             value = str(value).lower()
         elif isinstance(value, (int, float)):
             value = str(value)
+        elif isinstance(value, enum.Enum):
+            value = value.value
         elif isinstance(value, datetime):
             value = value.isoformat("T") + "Z"
         subst_type = StdUriTemplate.__get_substitution_type(value, col)

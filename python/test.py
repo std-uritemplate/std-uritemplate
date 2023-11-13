@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from enum import Enum
 import sys
 import json
 import traceback
@@ -8,6 +9,9 @@ from stduritemplate import StdUriTemplate
 
 template_file = sys.argv[1]
 data_file = sys.argv[2]
+
+class MyEnum(Enum):
+    MyValue = "MY_VALUE"
 
 try:
     with open(data_file, "r") as file:
@@ -23,6 +27,8 @@ if "nativedate" in data:
     data["nativedate"] = datetime.fromtimestamp(data["nativedate"]/1000)
 if "nativedatetwo" in data:
     data["nativedatetwo"] = datetime.fromtimestamp(data["nativedatetwo"]/1000)
+if "nativeenum" in data:
+    data["nativeenum"] = MyEnum.MyValue
 
 try:
     with open(template_file, "r") as file:

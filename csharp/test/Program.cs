@@ -39,9 +39,9 @@ class Program
             {
                 data["nativedatetwo"] = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMilliseconds((long)data["nativedatetwo"]);
             }
-            if (data.ContainsKey("myenum"))
+            if (data.ContainsKey("nativeenum"))
             {
-                data["myenum"] = Enum.Parse<MyEnum>(data["myenum"].ToString());
+                data["nativeenum"] = Enum.Parse<MyEnum>(data["nativeenum"].ToString());
             }
 
             string template = File.ReadAllText(templateFile).Trim();

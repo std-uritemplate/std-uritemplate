@@ -19,7 +19,18 @@ import io.github.stduritemplate.StdUriTemplate;
 public class test {
 
     enum MyEnum {
-        MY_VALUE;
+        MyValue("MY_VALUE");
+
+        private final String value;
+
+        MyEnum(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
     }
 
     public static void main(String... args) {
@@ -38,7 +49,7 @@ public class test {
                 new Date(Long.valueOf(v.toString())));
             substs.computeIfPresent("nativedatetwo", (k, v) ->
                 new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
-            substs.computeIfPresent("myenum", (k, v) -> MyEnum.valueOf(v.toString()));
+            substs.computeIfPresent("nativeenum", (k, v) -> MyEnum.MyValue);
 
             out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {

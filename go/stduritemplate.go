@@ -3,6 +3,7 @@ package stduritemplate
 import (
 	"fmt"
 	"net/url"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -347,6 +348,15 @@ func expandToken(
 		value = fmt.Sprintf("%v", value)
 	case time.Time:
 		value = value.(time.Time).Format(time.RFC3339)
+	case string:
+		value = fmt.Sprintf("%v", value)
+	}
+	// Unwrap alias types
+	if value != nil {
+		switch reflect.TypeOf(value).Kind() {
+		case reflect.String, reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
+			value = fmt.Sprintf("%v", value)
+		}
 	}
 
 	substType := getSubstitutionType(value, col)

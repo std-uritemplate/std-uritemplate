@@ -10,6 +10,10 @@ guard arguments.count == 3 else {
 let templateFile = arguments[1]
 let dataFile = arguments[2]
 
+enum MyEnum: String {
+    case MyValue = "MY_VALUE"
+}
+
 do {
     let dataURL = URL(fileURLWithPath: dataFile)
     let data = try Data(contentsOf: dataURL)
@@ -24,6 +28,9 @@ do {
     }
     if let date = jsonData["nativedatetwo"] {
         jsonData.updateValue(Date(timeIntervalSince1970: (date as! Double / 1000.0)) as Any, forKey: "nativedatetwo")
+    }
+    if let _ = jsonData["nativeenum"] {
+        jsonData.updateValue(MyEnum.MyValue as Any, forKey: "nativeenum")
     }
     
     let template = try String(contentsOfFile: templateFile)

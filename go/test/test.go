@@ -10,6 +10,12 @@ import (
 	stduritemplate "github.com/std-uritemplate/std-uritemplate/go"
 )
 
+type MyEnum string
+
+const (
+	MyValue MyEnum = "MY_VALUE"
+)
+
 func main() {
 	templateFile := os.Args[1]
 	dataFile := os.Args[2]
@@ -31,6 +37,10 @@ func main() {
 		if f2, ok := val2.(float64); ok {
 			data["nativedatetwo"] = time.UnixMilli(int64(f2))
 		}
+	}
+	var _, okEnum = data["nativeenum"]
+	if okEnum {
+		data["nativeenum"] = MyValue
 	}
 
 	template, err := readFile(templateFile)

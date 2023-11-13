@@ -335,6 +335,8 @@ public class StdUriTemplate {
             value = String(doubleValue)
         } else if let dateValue = value as? Date {
             value = RFC3339DateFormatter.string(from: dateValue)
+        } else if let enumValue = value as? (any RawRepresentable) {
+            value = enumValue.rawValue
         }
         
         let substType = try getSubstitutionType(value, col)

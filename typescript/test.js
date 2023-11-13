@@ -5,6 +5,10 @@ const process = require('process');
 const templateFile = process.argv[2];
 const dataFile = process.argv[3];
 
+const MyEnum = {
+	MyValue: "MY_VALUE"
+}
+
 try {
   const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 
@@ -13,6 +17,9 @@ try {
   }
   if (data["nativedatetwo"] !== undefined) {
     data["nativedatetwo"] = new Date(data["nativedatetwo"]);
+  }
+  if (data["nativeenum"] !== undefined) {
+    data["nativeenum"] = MyEnum.MyValue;
   }
 
   const template = fs.readFileSync(templateFile, 'utf8').trim();
