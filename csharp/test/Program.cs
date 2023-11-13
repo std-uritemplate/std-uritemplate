@@ -41,7 +41,7 @@ class Program
             }
             if (data.ContainsKey("nativeenum"))
             {
-                data["nativeenum"] = Enum.Parse<MyEnum>(data["nativeenum"].ToString());
+                data["nativeenum"] = MyEnum.MY_VALUE;
             }
 
             string template = File.ReadAllText(templateFile).Trim();
