@@ -4,9 +4,16 @@ use StdUriTemplate\StdUriTemplate;
 
 require_once __DIR__.'/src/StdUriTemplate.php';
 
-enum MyEnum: string
-{
-    case MyValue = "MY_VALUE";
+if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
+    enum MyEnum: string
+    {
+        case MyValue = "MY_VALUE";
+    }
+} else {
+    class MyEnum
+    {
+        const MyValue = "MY_VALUE";
+    }
 }
 
 if ($argc != 3) {
