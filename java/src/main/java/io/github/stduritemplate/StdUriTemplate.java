@@ -327,14 +327,12 @@ public class StdUriTemplate {
     }
 
     private static SubstitutionType getSubstitutionType(Object value, int col) {
-        if (value instanceof String || value == null) {
-            return SubstitutionType.STRING;
-        } else if (isList(value)) {
+        if (isList(value)) {
             return SubstitutionType.LIST;
         } else if (isMap(value)) {
             return SubstitutionType.MAP;
         } else {
-            throw new IllegalArgumentException("Illegal class passed as substitution, found " + value.getClass() + " at col:" + col);
+            return SubstitutionType.STRING;
         }
     }
 
@@ -353,6 +351,22 @@ public class StdUriTemplate {
 
     private static final DateTimeFormatter RFC3339 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[XXX][VV]");
 
+    private static Object convertNativeTypes(Object value) {
+        if (value instanceof Boolean ||
+                value instanceof Integer ||
+                value instanceof Long ||
+                value instanceof Float ||
+                value instanceof Double ||
+                value instanceof Enum) {
+            return value.toString();
+        } else if (value instanceof Date) {
+            return ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).format(RFC3339);
+        }
+        return value;
+    }
+
     // returns true if expansion happened
     private static boolean expandToken(
             Operator operator,
@@ -368,18 +382,6 @@ public class StdUriTemplate {
         }
 
         Object value = substitutions.get(token);
-        if (value instanceof Boolean ||
-                value instanceof Integer ||
-                value instanceof Long ||
-                value instanceof Float ||
-                value instanceof Double ||
-                value instanceof Enum) {
-            value = value.toString();
-        } else if (value instanceof Date) {
-            value = ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);
-        } else if (value instanceof OffsetDateTime) {
-            value = ((OffsetDateTime) value).format(RFC3339);
-        }
 
         var substType = getSubstitutionType(value, col);
         if (isEmpty(substType, value)) {
@@ -394,13 +396,22 @@ public class StdUriTemplate {
 
         switch (substType) {
             case STRING:
+                value = convertNativeTypes(value);
                 addStringValue(operator, token, (String)value, result, maxChar);
                 break;
             case LIST:
-                addListValue(operator, token, (List<String>)value, result, maxChar, composite);
+                List<String> listValues = new ArrayList();
+                for (Object v: (List<Object>)value) {
+                    listValues.add((String) convertNativeTypes(v));
+                }
+                addListValue(operator, token, listValues, result, maxChar, composite);
                 break;
             case MAP:
-                addMapValue(operator, token, (Map<String, String>)value, result, maxChar, composite);
+                Map<String, String> mapValues = new HashMap();
+                for (Map.Entry<String, Object> v: ((Map<String, Object>)value).entrySet()) {
+                    mapValues.put(v.getKey(), (String) convertNativeTypes(v.getValue()));
+                }
+                addMapValue(operator, token, mapValues, result, maxChar, composite);
                 break;
         }
 

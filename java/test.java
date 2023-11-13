@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.System.*;
@@ -50,6 +51,7 @@ public class test {
             substs.computeIfPresent("nativedatetwo", (k, v) ->
                 new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
             substs.computeIfPresent("nativeenum", (k, v) -> MyEnum.MyValue);
+            substs.computeIfPresent("nativeenumarray", (k, v) -> List.of(MyEnum.MyValue, MyEnum.MyValue));
 
             out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {

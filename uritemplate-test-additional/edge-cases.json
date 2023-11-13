@@ -26,10 +26,12 @@
   "Language native enums" :
   {
     "variables" : {
-      "nativeenum": "NOT_MY_VALUE"
+      "nativeenum": "NOT_MY_VALUE",
+      "nativeenumarray": "NOT_MY_VALUE"
      },
      "testcases" : [
-        ["{nativeenum}", "MY_VALUE"]
+        ["{nativeenum}", "MY_VALUE"],
+        ["{nativeenumarray}", "MY_VALUE,MY_VALUE"]
      ]
   }
 }
