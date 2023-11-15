@@ -32,9 +32,10 @@ const (
 )
 
 const (
-	SubstitutionTypeString = "STRING"
-	SubstitutionTypeList   = "LIST"
-	SubstitutionTypeMap    = "MAP"
+	SubstitutionTypeString        = "STRING"
+	SubstitutionTypeList          = "LIST"
+	SubstitutionTypeListOfStrings = "LISTOFSTRINGS"
+	SubstitutionTypeMap           = "MAP"
 )
 
 func validateLiteral(c rune, col int) error {
@@ -301,6 +302,8 @@ func getSubstitutionType(value any, col int) string {
 	switch value.(type) {
 	case string, nil:
 		return SubstitutionTypeString
+	case []string:
+		return SubstitutionTypeListOfStrings
 	case []any:
 		return SubstitutionTypeList
 	case map[string]any:
@@ -314,6 +317,8 @@ func isEmpty(substType string, value any) bool {
 	switch substType {
 	case SubstitutionTypeString:
 		return value == nil
+	case SubstitutionTypeListOfStrings:
+		return len(value.([]string)) == 0
 	case SubstitutionTypeList:
 		return len(value.([]any)) == 0
 	case SubstitutionTypeMap:
@@ -363,6 +368,8 @@ func expandToken(
 	switch substType {
 	case SubstitutionTypeString:
 		addStringValue(operator, token, value.(string), result, maxChar)
+	case SubstitutionTypeListOfStrings:
+		addListOfStringsValue(operator, token, value.([]string), result, maxChar, composite)
 	case SubstitutionTypeList:
 		addListValue(operator, token, value.([]any), result, maxChar, composite)
 	case SubstitutionTypeMap:
@@ -380,6 +387,23 @@ func addStringValue(operator Op, token string, value string, result *strings.Bui
 
 }
 
+func addListOfStringsValue(operator Op, token string, value []string, result *strings.Builder, maxChar int, composite bool) {
+	first := true
+	for _, v := range value {
+		if first {
+			addValue(operator, token, v, result, maxChar)
+			first = false
+		} else {
+			if composite {
+				addSeparator(operator, result)
+				addValue(operator, token, v, result, maxChar)
+			} else {
+				result.WriteString(",")
+				addValueElement(operator, token, v, result, maxChar)
+			}
+		}
+	}
+}
 func addListValue(operator Op, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
