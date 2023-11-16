@@ -255,7 +255,7 @@ public class StdUriTemplate {
 
     private static void addExpandedValue(String prefix, Object value, StringBuilder result, int maxChar, boolean replaceReserved) {
         String stringValue = convertNativeTypes(value);
-        var max = (maxChar != -1) ? Math.min(maxChar, stringValue.length()) : stringValue.length();
+        int max = (maxChar != -1) ? Math.min(maxChar, stringValue.length()) : stringValue.length();
         result.ensureCapacity(max * 2); // hint to SB
         boolean goToReserved = false;
         final StringBuilder reservedBuffer = new StringBuilder(3);
@@ -292,6 +292,7 @@ public class StdUriTemplate {
                         result.append(reservedBuffer.substring(1));
                     }
                     goToReserved = false;
+                    reservedBuffer.setLength(0);
                 }
             } else {
                 if (character == ' ') {
@@ -409,7 +410,7 @@ public class StdUriTemplate {
 
         Object value = substitutions.get(token);
         var substType = getSubstitutionType(value, col);
-        if (substType == SubstitutionType.EMPTY) {
+        if (substType == SubstitutionType.EMPTY || isEmpty(substType, value)) {
             return false;
         }
 
