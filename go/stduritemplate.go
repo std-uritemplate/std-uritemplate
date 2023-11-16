@@ -3,6 +3,7 @@ package stduritemplate
 import (
 	"fmt"
 	"net/url"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -32,10 +33,10 @@ const (
 )
 
 const (
-	SubstitutionTypeString        = "STRING"
-	SubstitutionTypeList          = "LIST"
-	SubstitutionTypeListOfStrings = "LISTOFSTRINGS"
-	SubstitutionTypeMap           = "MAP"
+	SubstitutionTypeString = "STRING"
+	SubstitutionTypeArray  = "ARRAY"
+	SubstitutionTypeSlice  = "SLICE"
+	SubstitutionTypeMap    = "MAP"
 )
 
 func validateLiteral(c rune, col int) error {
@@ -303,13 +304,23 @@ func getSubstitutionType(value any, col int) string {
 	case string, nil:
 		return SubstitutionTypeString
 	case []string:
-		return SubstitutionTypeListOfStrings
+		return SubstitutionTypeSlice
 	case []any:
-		return SubstitutionTypeList
+		return SubstitutionTypeArray
 	case map[string]any:
 		return SubstitutionTypeMap
 	default:
-		return fmt.Sprintf("illegal class passed as substitution, found %T at col: %d", value, col)
+		// resort to reflection to identify more complex types
+		switch reflect.ValueOf(value).Kind() {
+		case reflect.Slice:
+			return SubstitutionTypeSlice
+		case reflect.Array:
+			return SubstitutionTypeArray
+		case reflect.Map:
+			return SubstitutionTypeMap
+		default:
+			return fmt.Sprintf("illegal class passed as substitution, found %T at col: %d", value, col)
+		}
 	}
 }
 
@@ -317,10 +328,10 @@ func isEmpty(substType string, value any) bool {
 	switch substType {
 	case SubstitutionTypeString:
 		return value == nil
-	case SubstitutionTypeListOfStrings:
-		return len(value.([]string)) == 0
-	case SubstitutionTypeList:
+	case SubstitutionTypeArray:
 		return len(value.([]any)) == 0
+	case SubstitutionTypeSlice:
+		return len(value.([]string)) == 0
 	case SubstitutionTypeMap:
 		return len(value.(map[string]any)) == 0
 	default:
@@ -368,10 +379,10 @@ func expandToken(
 	switch substType {
 	case SubstitutionTypeString:
 		addStringValue(operator, token, value.(string), result, maxChar)
-	case SubstitutionTypeListOfStrings:
-		addListOfStringsValue(operator, token, value.([]string), result, maxChar, composite)
-	case SubstitutionTypeList:
-		addListValue(operator, token, value.([]any), result, maxChar, composite)
+	case SubstitutionTypeArray:
+		addArrayValue(operator, token, value.([]any), result, maxChar, composite)
+	case SubstitutionTypeSlice:
+		addSliceValue(operator, token, value.([]string), result, maxChar, composite)
 	case SubstitutionTypeMap:
 		err := addMapValue(operator, token, value.(map[string]any), result, maxChar, composite)
 		if err != nil {
@@ -387,24 +398,7 @@ func addStringValue(operator Op, token string, value string, result *strings.Bui
 
 }
 
-func addListOfStringsValue(operator Op, token string, value []string, result *strings.Builder, maxChar int, composite bool) {
-	first := true
-	for _, v := range value {
-		if first {
-			addValue(operator, token, v, result, maxChar)
-			first = false
-		} else {
-			if composite {
-				addSeparator(operator, result)
-				addValue(operator, token, v, result, maxChar)
-			} else {
-				result.WriteString(",")
-				addValueElement(operator, token, v, result, maxChar)
-			}
-		}
-	}
-}
-func addListValue(operator Op, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
+func addArrayValue(operator Op, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
 		if first {
@@ -417,6 +411,24 @@ func addListValue(operator Op, token string, value []any, result *strings.Builde
 			} else {
 				result.WriteString(",")
 				addValueElement(operator, token, v.(string), result, maxChar)
+			}
+		}
+	}
+}
+
+func addSliceValue(operator Op, token string, value []string, result *strings.Builder, maxChar int, composite bool) {
+	first := true
+	for _, v := range value {
+		if first {
+			addValue(operator, token, v, result, maxChar)
+			first = false
+		} else {
+			if composite {
+				addSeparator(operator, result)
+				addValue(operator, token, v, result, maxChar)
+			} else {
+				result.WriteString(",")
+				addValueElement(operator, token, v, result, maxChar)
 			}
 		}
 	}
