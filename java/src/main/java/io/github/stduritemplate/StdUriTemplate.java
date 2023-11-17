@@ -381,7 +381,8 @@ public class StdUriTemplate {
     }
 
     private static String convertNativeTypes(Object value) {
-        if (value instanceof Boolean ||
+        if (value instanceof String ||
+            value instanceof Boolean ||
             value instanceof Integer ||
             value instanceof Long ||
             value instanceof Float ||
@@ -392,7 +393,7 @@ public class StdUriTemplate {
         } else if (value instanceof OffsetDateTime) {
             return ((OffsetDateTime) value).format(RFC3339);
         }
-        return value.toString();
+        throw new IllegalArgumentException("Illegal class passed as substitution, found " + value.getClass());
     }
 
     private static final DateTimeFormatter RFC3339 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[XXX][VV]");
