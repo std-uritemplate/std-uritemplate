@@ -465,7 +465,7 @@ public class UriTemplate
         return value switch
         {
             string str => str,
-            bool => value.ToString(),
+            bool => value.ToString().ToLower(),
             int number => number.ToString(CultureInfo.InvariantCulture),
             long number => number.ToString(CultureInfo.InvariantCulture),
             float number => number.ToString(CultureInfo.InvariantCulture),
@@ -494,23 +494,6 @@ public class UriTemplate
 
         object value;
         substitutions.TryGetValue(token, out value);
-        if (value is bool ||
-                value is int ||
-                value is long ||
-                value is float ||
-                value is double)
-        {
-            value = value.ToString().ToLower();
-        }
-        else if (value is DateTime dt)
-        {
-            value = dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
-        }
-        else if (value is DateTimeOffset dto)
-        {
-            value = dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
-        }
-
         SubstitutionType substType = GetSubstitutionType(value, col);
         if (substType == SubstitutionType.EMPTY || IsEmpty(substType, value))
         {
