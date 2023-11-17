@@ -460,24 +460,13 @@ public class UriTemplate
 
     private static string convertNativeTypes(object value)
     {
-        if (value is string ||
-            value is bool ||
-            value is int ||
-            value is long ||
-            value is float ||
-            value is double)
-        {
-            return value.ToString();
-        }
-        else if (value is DateTime dt)
-        {
-            return dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
-        }
-        else if (value is DateTimeOffset dto)
-        {
-            return dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
-        }
-        throw new ArgumentException($"Illegal class passed as substitution, found {value.GetType()}");
+        return value switch {
+            string str => str,
+            bool or int or long or float or double => value.ToString(),
+            DateTime dt => dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
+            DateTimeOffset dto => dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
+            _ => throw new ArgumentException($"Illegal class passed as substitution, found {value.GetType()}"),
+        };
     }
 
     // returns true if expansion happened
