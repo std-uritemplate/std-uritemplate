@@ -91,7 +91,8 @@ public class StdUriTemplate {
     private static String expandImpl(String str, Map<String, Object> substitutions) {
         final StringBuilder result = new StringBuilder(str.length() * 2);
 
-        StringBuilder token = null;
+        boolean toToken = false;
+        final StringBuilder token = new StringBuilder();
 
         Operator operator = null;
         boolean composite = false;
@@ -103,16 +104,18 @@ public class StdUriTemplate {
             var character = str.charAt(i);
             switch (character) {
                 case '{':
-                    token = new StringBuilder();
+                    toToken = true;
+                    token.setLength(0);
                     firstToken = true;
                     break;
                 case '}':
-                    if (token != null) {
+                    if (toToken) {
                         var expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
-                        token = null;
+                        toToken = false;
+                        token.setLength(0);
                         operator = null;
                         composite = false;
                         toMaxCharBuffer = false;
@@ -122,12 +125,12 @@ public class StdUriTemplate {
                     }
                     break;
                 case ',':
-                    if (token != null) {
+                    if (toToken) {
                         var expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
-                        token = new StringBuilder(token.length() * 2);
+                        token.setLength(0);
                         composite = false;
                         toMaxCharBuffer = false;
                         maxCharBuffer.setLength(0);
@@ -135,7 +138,7 @@ public class StdUriTemplate {
                     }
                     // Intentional fall-through for commas outside the {}
                 default:
-                    if (token != null) {
+                    if (toToken) {
                         if (operator == null) {
                             operator = getOperator(character, token, i);
                         } else if (toMaxCharBuffer) {
@@ -162,7 +165,7 @@ public class StdUriTemplate {
             }
         }
 
-        if (token == null) {
+        if (!toToken) {
             return result.toString();
         } else {
             throw new IllegalArgumentException("Unterminated token");
@@ -257,7 +260,7 @@ public class StdUriTemplate {
         String stringValue = convertNativeTypes(value);
         int max = (maxChar != -1) ? Math.min(maxChar, stringValue.length()) : stringValue.length();
         result.ensureCapacity(max * 2); // hint to SB
-        boolean goToReserved = false;
+        boolean toReserved = false;
         final StringBuilder reservedBuffer = new StringBuilder(3);
 
         if (max > 0 && prefix != null) {
@@ -268,11 +271,11 @@ public class StdUriTemplate {
             char character = stringValue.charAt(i);
 
             if (character == '%' && !replaceReserved) {
-                goToReserved = true;
+                toReserved = true;
                 reservedBuffer.setLength(0);
             }
 
-            if (goToReserved) {
+            if (toReserved) {
                 reservedBuffer.append(character);
 
                 if (reservedBuffer.length() == 3) {
@@ -291,7 +294,7 @@ public class StdUriTemplate {
                         // only if !replaceReserved
                         result.append(reservedBuffer.substring(1));
                     }
-                    goToReserved = false;
+                    toReserved = false;
                     reservedBuffer.setLength(0);
                 }
             } else {
@@ -309,7 +312,7 @@ public class StdUriTemplate {
             }
         }
 
-        if (goToReserved) {
+        if (toReserved) {
             result.append("%25");
             if (replaceReserved) {
                 result.append(URLEncoder.encode(reservedBuffer.substring(1), StandardCharsets.UTF_8));
