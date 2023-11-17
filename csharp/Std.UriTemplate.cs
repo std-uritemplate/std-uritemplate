@@ -453,11 +453,7 @@ public class UriTemplate
 
     private static bool isNativeType(object value)
     {
-        return value switch
-        {
-            string or bool or int or long or float or double or DateTime or DateTimeOffset => true,
-            _ => false
-        };
+        return value is string or bool or int or long or float or double or DateTime or DateTimeOffset;
     }
 
     private static string convertNativeTypes(object value)
