@@ -167,34 +167,38 @@ module StdUriTemplate
   def self.add_value(op, token, value, result, max_char)
     case op
     when Operator::PLUS, Operator::HASH
-      add_expanded_value(value, result, max_char, false)
+      add_expanded_value(nil, value, result, max_char, false)
     when Operator::QUESTION_MARK, Operator::AMP
       result << token + '='
-      add_expanded_value(value, result, max_char, true)
+      add_expanded_value(nil, value, result, max_char, true)
     when Operator::SEMICOLON
       result << token
-      result << '=' unless value.empty?
-      add_expanded_value(value, result, max_char, true)
+      add_expanded_value('=', value, result, max_char, true)
     when Operator::DOT, Operator::SLASH, Operator::NO_OP
-      add_expanded_value(value, result, max_char, true)
+      add_expanded_value(nil, value, result, max_char, true)
     end
   end
 
   def self.add_value_element(op, token, value, result, max_char)
     case op
     when Operator::PLUS, Operator::HASH
-      add_expanded_value(value, result, max_char, false)
+      add_expanded_value(nil, value, result, max_char, false)
     when Operator::QUESTION_MARK, Operator::AMP, Operator::SEMICOLON, Operator::DOT, Operator::SLASH, Operator::NO_OP
-      add_expanded_value(value, result, max_char, true)
+      add_expanded_value(nil, value, result, max_char, true)
     end
   end
 
-  def self.add_expanded_value(value, result, max_char, replace_reserved)
-    max = (max_char != -1) ? [max_char, value.length].min : value.length
+  def self.add_expanded_value(prefix, value, result, max_char, replace_reserved)
+    string_value = convert_native_types(value)
+    max = (max_char != -1) ? [max_char, string_value.length].min : string_value.length
     reserved_buffer = nil
 
+    if (max > 0 && !prefix.nil?)
+      result << prefix
+    end
+
     max.times do |i|
-      character = value[i]
+      character = string_value[i]
 
       if character == '%' && !replace_reserved
         reserved_buffer = ''
@@ -254,13 +258,16 @@ module StdUriTemplate
   end
 
   module SubstitutionType
+    EMPTY = :empty
     STRING = :string
     LIST = :list
     MAP = :map
   end
 
   def self.get_substitution_type(value, col)
-    if (value.nil? || value.kind_of?(String))
+    if value.nil?
+      SubstitutionType::EMPTY
+    elsif is_native_type(value)
       SubstitutionType::STRING
     elsif map?(value)
       SubstitutionType::MAP
@@ -284,15 +291,34 @@ module StdUriTemplate
     end
   end
 
+  def self.is_native_type(value)
+    if (
+      ([Integer, Float, String].any? { |type| value.is_a?(type) }) || ([true, false].include? value) ||
+      ([DateTime].any? { |type| value.is_a?(type) }))
+      true
+    else
+      false
+    end
+  end
+
+  def self.convert_native_types(value)
+    if ([Integer, Float, String].any? { |type| value.is_a?(type) }) || ([true, false].include? value)
+      value.to_s
+    elsif ([DateTime].any? { |type| value.is_a?(type) })
+      value.strftime("%Y-%m-%dT%H:%M:%SZ")
+    else
+      raise ArgumentError, "Illegal class passed as substitution, found #{value.class}"
+    end
+  end
+
   def self.expand_token(operator, token, composite, max_char, first_token, substitutions, result, col)
     raise ArgumentError, "Found an empty token at col:#{col}" if token.empty?
 
     value = substitutions[token]
-    value = value.to_s if ([Integer, Float].any? { |type| value.is_a?(type) }) || ([true, false].include? value)
-    value = value.strftime("%Y-%m-%dT%H:%M:%SZ") if ([DateTime].any? { |type| value.is_a?(type) })
-
     subst_type = get_substitution_type(value, col)
-    return false if empty?(subst_type, value)
+    if (subst_type == SubstitutionType::EMPTY || empty?(subst_type, value))
+      return false
+    end
 
     if first_token
       add_prefix(operator, result)
@@ -302,7 +328,7 @@ module StdUriTemplate
 
     case subst_type
     when SubstitutionType::STRING
-      add_string_value(operator, token, value.to_s, result, max_char)
+      add_string_value(operator, token, value, result, max_char)
     when SubstitutionType::LIST
       add_list_value(operator, token, value, result, max_char, composite)
     when SubstitutionType::MAP
@@ -320,15 +346,15 @@ module StdUriTemplate
     first = true
     value.each do |v|
       if first
-        add_value(operator, token, v.to_s, result, max_char)
+        add_value(operator, token, v, result, max_char)
         first = false
       else
         if composite
           add_separator(operator, result)
-          add_value(operator, token, v.to_s, result, max_char)
+          add_value(operator, token, v, result, max_char)
         else
           result << ','
-          add_value_element(operator, token, v.to_s, result, max_char)
+          add_value_element(operator, token, v, result, max_char)
         end
       end
     end
@@ -353,7 +379,7 @@ module StdUriTemplate
         end
         result << ','
       end
-      add_value_element(operator, token, val.to_s, result, max_char)
+      add_value_element(operator, token, val, result, max_char)
       first = false
     end
     !first
