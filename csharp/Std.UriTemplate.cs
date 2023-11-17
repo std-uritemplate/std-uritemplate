@@ -4,6 +4,7 @@ namespace Std;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 public class UriTemplate
@@ -464,7 +465,11 @@ public class UriTemplate
         return value switch
         {
             string str => str,
-            bool or int or long or float or double => value.ToString(),
+            bool => value.ToString(),
+            int number => number.ToString(CultureInfo.InvariantCulture),
+            long number => number.ToString(CultureInfo.InvariantCulture),
+            float number => number.ToString(CultureInfo.InvariantCulture),
+            double number => number.ToString(CultureInfo.InvariantCulture),
             DateTime dt => dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
             DateTimeOffset dto => dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
             _ => throw new ArgumentException($"Illegal class passed as substitution, found {value.GetType()}"),
