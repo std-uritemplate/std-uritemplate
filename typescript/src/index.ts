@@ -12,6 +12,7 @@ enum Operator {
 }
 
 enum SubstitutionType {
+  EMPTY,
   STRING,
   LIST,
   MAP,
@@ -225,37 +226,34 @@ export class StdUriTemplate {
     }
   }
 
-  private static addValue(op: Operator | null, token: string, value: string, result: string[], maxChar: number): void {
+  private static addValue(op: Operator | null, token: string, value: any, result: string[], maxChar: number): void {
     switch (op) {
       case Operator.PLUS:
       case Operator.HASH:
-        StdUriTemplate.addExpandedValue(value, result, maxChar, false);
+        StdUriTemplate.addExpandedValue(null, value, result, maxChar, false);
         break;
       case Operator.QUESTION_MARK:
       case Operator.AMP:
         result.push(`${token}=`);
-        StdUriTemplate.addExpandedValue(value, result, maxChar, true);
+        StdUriTemplate.addExpandedValue(null, value, result, maxChar, true);
         break;
       case Operator.SEMICOLON:
         result.push(token);
-        if (value.length > 0) {
-          result.push('=');
-        }
-        StdUriTemplate.addExpandedValue(value, result, maxChar, true);
+        StdUriTemplate.addExpandedValue('=', value, result, maxChar, true);
         break;
       case Operator.DOT:
       case Operator.SLASH:
       case Operator.NO_OP:
-        StdUriTemplate.addExpandedValue(value, result, maxChar, true);
+        StdUriTemplate.addExpandedValue(null, value, result, maxChar, true);
         break;
     }
   }
 
-  private static addValueElement(op: Operator | null, token: string, value: string, result: string[], maxChar: number): void {
+  private static addValueElement(op: Operator | null, token: string, value: any, result: string[], maxChar: number): void {
     switch (op) {
       case Operator.PLUS:
       case Operator.HASH:
-        StdUriTemplate.addExpandedValue(value, result, maxChar, false);
+        StdUriTemplate.addExpandedValue(null, value, result, maxChar, false);
         break;
       case Operator.QUESTION_MARK:
       case Operator.AMP:
@@ -263,17 +261,22 @@ export class StdUriTemplate {
       case Operator.DOT:
       case Operator.SLASH:
       case Operator.NO_OP:
-        StdUriTemplate.addExpandedValue(value, result, maxChar, true);
+        StdUriTemplate.addExpandedValue(null, value, result, maxChar, true);
         break;
     }
   }
 
-  private static addExpandedValue(value: string, result: string[], maxChar: number, replaceReserved: boolean): void {
-    const max = maxChar !== -1 ? Math.min(maxChar, value.length) : value.length;
+  private static addExpandedValue(prefix: string | null, value: any, result: string[], maxChar: number, replaceReserved: boolean): void {
+    const stringValue = StdUriTemplate.convertNativeTypes(value);
+    const max = maxChar !== -1 ? Math.min(maxChar, stringValue.length) : stringValue.length;
     let reservedBuffer: string[] | undefined = undefined;
 
+    if (max > 0 && prefix != null) {
+      result.push(prefix)
+    }
+
     for (let i = 0; i < max; i++) {
-      const character = value.charAt(i);
+      const character = stringValue.charAt(i);
 
       if (character === '%' && !replaceReserved) {
         reservedBuffer = [];
@@ -339,7 +342,9 @@ export class StdUriTemplate {
   }
 
   private static getSubstitutionType(value: any, col: number): SubstitutionType {
-    if (typeof value === 'string' || value === undefined || value === null) {
+    if (value === undefined || value === null) {
+      return SubstitutionType.EMPTY;
+    } else if (StdUriTemplate.isNativeType(value)) {
       return SubstitutionType.STRING;
     } else if (StdUriTemplate.isList(value)) {
       return SubstitutionType.LIST;
@@ -367,6 +372,25 @@ export class StdUriTemplate {
     }
   }
 
+  private static isNativeType(value: any): boolean {
+    return (typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean' ||
+      value instanceof Date);
+  }
+
+  private static convertNativeTypes(value: any): string {
+    if (typeof value === 'string') {
+      return value;
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      return value.toString();
+    } else if (value instanceof Date) {
+      return value.toISOString().split('.')[0] + "Z";
+    } else {
+      throw new Error(`Illegal class passed as substitution, found ${typeof value}`);
+    }
+  }
+
   private static expandToken(
     operator: Operator | null,
     token: string,
@@ -381,15 +405,9 @@ export class StdUriTemplate {
       throw new Error(`Found an empty token at col: ${col}`);
     }
 
-    let value = substitutions[token];
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      value = value.toString();
-    } else if (value instanceof Date) {
-      value = value.toISOString().split('.')[0] + "Z";
-    }
-
+    const value = substitutions[token];
     const substType = StdUriTemplate.getSubstitutionType(value, col);
-    if (StdUriTemplate.isEmpty(substType, value)) {
+    if (substType === SubstitutionType.EMPTY || StdUriTemplate.isEmpty(substType, value)) {
       return false;
     }
 
@@ -414,14 +432,14 @@ export class StdUriTemplate {
     return true;
   }
 
-  private static addStringValue(operator: Operator | null, token: string, value: string, result: string[], maxChar: number): void {
+  private static addStringValue(operator: Operator | null, token: string, value: any, result: string[], maxChar: number): void {
     StdUriTemplate.addValue(operator, token, value, result, maxChar);
   }
 
   private static addListValue(
     operator: Operator | null,
     token: string,
-    value: string[],
+    value: any[],
     result: string[],
     maxChar: number,
     composite: boolean
@@ -446,7 +464,7 @@ export class StdUriTemplate {
   private static addMapValue(
     operator: Operator | null,
     token: string,
-    value: { [key: string]: string },
+    value: { [key: string]: any },
     result: string[],
     maxChar: number,
     composite: boolean
