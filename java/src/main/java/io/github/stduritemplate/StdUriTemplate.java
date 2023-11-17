@@ -381,8 +381,9 @@ public class StdUriTemplate {
     }
 
     private static String convertNativeTypes(Object value) {
-        if (value instanceof String ||
-            value instanceof Boolean ||
+        if (value instanceof String) {
+            return (String)value;
+        } else if (value instanceof Boolean ||
             value instanceof Integer ||
             value instanceof Long ||
             value instanceof Float ||
