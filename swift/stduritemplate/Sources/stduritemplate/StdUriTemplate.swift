@@ -334,21 +334,15 @@ public class StdUriTemplate {
         }
     }
 
-    // https://stackoverflow.com/a/30223989/7898052
-    private static func isBoolNumber(_ value: Any) -> Bool {
-        if let numValue = value as? NSNumber {
-            let boolID = CFBooleanGetTypeID() // the type ID of CFBoolean
-            let numID = CFGetTypeID(numValue) // the type ID of num
-            return numID == boolID
-        } else {
-            return false
-        }
+    // based on: https://stackoverflow.com/a/49641395/7898052
+    private static func isBool(_ value: NSNumber) -> Bool {
+        return type(of: value) == type(of: NSNumber(booleanLiteral: true))
     }
 
     private static func convertNativeTypes(_ value: Any) -> String {
         if let stringValue = value as? String {
             return stringValue
-        } else if isBoolNumber(value), let boolValue = value as? Bool {
+        } else if let nsNumberValue = value as? NSNumber, isBool(nsNumberValue), let boolValue = value as? Bool {
             return String(boolValue)
         } else if let intValue = value as? Int {
             return String(intValue)
