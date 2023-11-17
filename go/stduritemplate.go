@@ -19,12 +19,6 @@ func Expand(template string, substitutions Substitutions) (string, error) {
 // Private implementation
 type Op rune
 
-// type Native interface {
-// 	string | float32 | float64 | int | int8 | int16 | int32 | int64 | bool | time.Time
-// }
-// type ListOfNative []Native
-// type MapOfNative map[string]interface{ Native }
-
 const (
 	OpUndefined    Op = 0
 	OpNone         Op = -1
