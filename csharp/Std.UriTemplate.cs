@@ -452,7 +452,8 @@ public class UriTemplate
 
     private static bool isNativeType(object value)
     {
-        return value switch {
+        return value switch
+        {
             string or bool or int or long or float or double or DateTime or DateTimeOffset => true,
             _ => false
         };
@@ -460,7 +461,8 @@ public class UriTemplate
 
     private static string convertNativeTypes(object value)
     {
-        return value switch {
+        return value switch
+        {
             string str => str,
             bool or int or long or float or double => value.ToString(),
             DateTime dt => dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
