@@ -16,6 +16,7 @@ class _Operator(Enum):
 
 
 class _SubstitutionType(Enum):
+    EMPTY = 0
     STRING = 1
     LIST = 2
     MAP = 3
@@ -189,27 +190,25 @@ class StdUriTemplate:
 
     @staticmethod
     def __add_value(
-        op: str, token: str, value: str, result: List[str], max_char: int
+        op: str, token: str, value: Any, result: List[str], max_char: int
     ) -> None:
         if op == _Operator.PLUS or op == _Operator.HASH:
-            StdUriTemplate.__add_expanded_value(value, result, max_char, False)
+            StdUriTemplate.__add_expanded_value(None, value, result, max_char, False)
         elif op == _Operator.QUESTION_MARK or op == _Operator.AMP:
             result.append(token + "=")
-            StdUriTemplate.__add_expanded_value(value, result, max_char, True)
+            StdUriTemplate.__add_expanded_value(None, value, result, max_char, True)
         elif op == _Operator.SEMICOLON:
             result.append(token)
-            if len(value) > 0:
-                result.append("=")
-            StdUriTemplate.__add_expanded_value(value, result, max_char, True)
+            StdUriTemplate.__add_expanded_value("=", value, result, max_char, True)
         elif op == _Operator.DOT or op == _Operator.SLASH or op == _Operator.NO_OP:
-            StdUriTemplate.__add_expanded_value(value, result, max_char, True)
+            StdUriTemplate.__add_expanded_value(None, value, result, max_char, True)
 
     @staticmethod
     def __add_value_element(
-        op: str, token: str, value: str, result: List[str], max_char: int
+        op: str, token: str, value: Any, result: List[str], max_char: int
     ) -> None:
         if op == _Operator.PLUS or op == _Operator.HASH:
-            StdUriTemplate.__add_expanded_value(value, result, max_char, False)
+            StdUriTemplate.__add_expanded_value(None, value, result, max_char, False)
         elif (
             op == _Operator.QUESTION_MARK
             or op == _Operator.AMP
@@ -218,16 +217,19 @@ class StdUriTemplate:
             or op == _Operator.SLASH
             or op == _Operator.NO_OP
         ):
-            StdUriTemplate.__add_expanded_value(value, result, max_char, True)
+            StdUriTemplate.__add_expanded_value(None, value, result, max_char, True)
 
     @staticmethod
     def __add_expanded_value(
-        value: str, result: List[str], max_char: int, replace_reserved: bool
+        prefix: str, value: Any, result: List[str], max_char: int, replace_reserved: bool
     ) -> None:
-        max_val = min(max_char, len(value)) if max_char != -1 else len(value)
+        stringValue = StdUriTemplate.__convert_native_types(value)
+        max_val = min(max_char, len(stringValue)) if max_char != -1 else len(stringValue)
         reserved_buffer = None
+        if max_val > 0 and prefix is not None:
+            result.append(prefix)
         for i in range(max_val):
-            character = value[i]
+            character = stringValue[i]
             if character == "%" and not replace_reserved:
                 reserved_buffer = []
             if reserved_buffer is not None:
@@ -281,7 +283,9 @@ class StdUriTemplate:
 
     @staticmethod
     def __get_substitution_type(value: Any, col: int) -> str:
-        if isinstance(value, str) or value is None:
+        if value is None:
+            return _SubstitutionType.EMPTY
+        elif StdUriTemplate.__is_native_type(value):
             return _SubstitutionType.STRING
         elif StdUriTemplate.__is_list(value):
             return _SubstitutionType.LIST
@@ -305,6 +309,22 @@ class StdUriTemplate:
                 return len(value) == 0
             else:
                 return True
+            
+    @staticmethod
+    def __is_native_type(value: Any) -> bool:
+        if isinstance(value, (str)) or isinstance(value, (bool)) or isinstance(value, (int, float)) or isinstance(value, datetime):
+            return True
+
+    @staticmethod
+    def __convert_native_types(value: Any) -> str:
+        if isinstance(value, (str)):
+            return value
+        if isinstance(value, (bool)):
+            return str(value).lower()
+        elif isinstance(value, (int, float)):
+            return str(value)
+        elif isinstance(value, datetime):
+            return value.isoformat("T") + "Z"
 
     @staticmethod
     def __expand_token(
@@ -320,14 +340,8 @@ class StdUriTemplate:
         if len(token) == 0:
             raise ValueError(f"Found an empty token at col: {col}")
         value = substitutions.get(token)
-        if isinstance(value, (bool)):
-            value = str(value).lower()
-        elif isinstance(value, (int, float)):
-            value = str(value)
-        elif isinstance(value, datetime):
-            value = value.isoformat("T") + "Z"
         subst_type = StdUriTemplate.__get_substitution_type(value, col)
-        if StdUriTemplate.__is_empty(subst_type, value):
+        if subst_type is _SubstitutionType.EMPTY or StdUriTemplate.__is_empty(subst_type, value):
             return False
         if first_token:
             StdUriTemplate.__add_prefix(operator, result)
@@ -347,7 +361,7 @@ class StdUriTemplate:
 
     @staticmethod
     def __add_string_value(
-        operator: str, token: str, value: str, result: List[str], max_char: int
+        operator: str, token: str, value: Any, result: List[str], max_char: int
     ) -> None:
         StdUriTemplate.__add_value(operator, token, value, result, max_char)
 
@@ -355,7 +369,7 @@ class StdUriTemplate:
     def __add_list_value(
         operator: str,
         token: str,
-        value: List[str],
+        value: List[Any],
         result: List[str],
         max_char: int,
         composite: bool,
@@ -379,7 +393,7 @@ class StdUriTemplate:
     def __add_map_value(
         operator: str,
         token: str,
-        value: Dict[str, str],
+        value: Dict[str, Any],
         result: List[str],
         max_char: int,
         composite: bool,
