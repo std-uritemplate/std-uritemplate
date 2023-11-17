@@ -221,10 +221,16 @@ class StdUriTemplate:
 
     @staticmethod
     def __add_expanded_value(
-        prefix: str, value: Any, result: List[str], max_char: int, replace_reserved: bool
+        prefix: str,
+        value: Any,
+        result: List[str],
+        max_char: int,
+        replace_reserved: bool,
     ) -> None:
         stringValue = StdUriTemplate.__convert_native_types(value)
-        max_val = min(max_char, len(stringValue)) if max_char != -1 else len(stringValue)
+        max_val = (
+            min(max_char, len(stringValue)) if max_char != -1 else len(stringValue)
+        )
         reserved_buffer = None
         if max_val > 0 and prefix is not None:
             result.append(prefix)
@@ -309,10 +315,15 @@ class StdUriTemplate:
                 return len(value) == 0
             else:
                 return True
-            
+
     @staticmethod
     def __is_native_type(value: Any) -> bool:
-        if isinstance(value, (str)) or isinstance(value, (bool)) or isinstance(value, (int, float)) or isinstance(value, datetime):
+        if (
+            isinstance(value, (str))
+            or isinstance(value, (bool))
+            or isinstance(value, (int, float))
+            or isinstance(value, datetime)
+        ):
             return True
 
     @staticmethod
@@ -341,7 +352,9 @@ class StdUriTemplate:
             raise ValueError(f"Found an empty token at col: {col}")
         value = substitutions.get(token)
         subst_type = StdUriTemplate.__get_substitution_type(value, col)
-        if subst_type is _SubstitutionType.EMPTY or StdUriTemplate.__is_empty(subst_type, value):
+        if subst_type is _SubstitutionType.EMPTY or StdUriTemplate.__is_empty(
+            subst_type, value
+        ):
             return False
         if first_token:
             StdUriTemplate.__add_prefix(operator, result)
