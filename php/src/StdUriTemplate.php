@@ -230,48 +230,45 @@ class StdUriTemplate {
     /**
      * @param string $op
      * @param string $token
-     * @param string $value
+     * @param mixed $value
      * @param string &$result
      * @param int $maxChar
      */
-    private static function addValue(string $op, string $token, string $value, string &$result, int $maxChar): void {
+    private static function addValue(string $op, string $token, $value, string &$result, int $maxChar): void {
         switch ($op) {
             case 'PLUS':
             case 'HASH':
-                self::addExpandedValue($value, $result, $maxChar, false);
+                self::addExpandedValue(null, $value, $result, $maxChar, false);
                 break;
             case 'QUESTION_MARK':
             case 'AMP':
 
                 $result .= $token . '=';
-                self::addExpandedValue($value, $result, $maxChar, true);
+                self::addExpandedValue(null, $value, $result, $maxChar, true);
                 break;
             case 'SEMICOLON':
                 $result .= $token;
-                if ($value !== '') {
-                    $result .= '=';
-                }
-                self::addExpandedValue($value, $result, $maxChar, true);
+                self::addExpandedValue("=", $value, $result, $maxChar, true);
                 break;
             case 'DOT':
             case 'SLASH':
             case 'NO_OP':
-                self::addExpandedValue($value, $result, $maxChar, true);
+                self::addExpandedValue(null, $value, $result, $maxChar, true);
         }
     }
 
     /**
      * @param string $op
      * @param string $token
-     * @param string $value
+     * @param mixed $value
      * @param string &$result
      * @param int $maxChar
      */
-    private static function addValueElement(string $op, string $token, string $value, string &$result, int $maxChar): void {
+    private static function addValueElement(string $op, string $token, $value, string &$result, int $maxChar): void {
         switch ($op) {
             case 'PLUS':
             case 'HASH':
-                self::addExpandedValue($value, $result, $maxChar, false);
+                self::addExpandedValue(null, $value, $result, $maxChar, false);
                 break;
             case 'QUESTION_MARK':
             case 'AMP':
@@ -279,23 +276,29 @@ class StdUriTemplate {
             case 'DOT':
             case 'SLASH':
             case 'NO_OP':
-                self::addExpandedValue($value, $result, $maxChar, true);
+                self::addExpandedValue(null, $value, $result, $maxChar, true);
         }
     }
 
     /**
-     * @param string $value
+     * @param mixed $prefix
+     * @param mixed $value
      * @param string &$result
      * @param int $maxChar
      * @param bool $replaceReserved
      */
-    private static function addExpandedValue(string $value, string &$result, int $maxChar, bool $replaceReserved): void {
-        $max = ($maxChar !== -1) ? min($maxChar, strlen($value)) : strlen($value);
+    private static function addExpandedValue($prefix, $value, string &$result, int $maxChar, bool $replaceReserved): void {
+        $stringValue = self::convertNativeTypes($value);
+        $max = ($maxChar !== -1) ? min($maxChar, strlen($stringValue)) : strlen($stringValue);
         $result .= '';
         $reservedBuffer = null;
 
+        if ($max > 0 && $prefix !== null) {
+            $result .= $prefix;
+        }
+
         for ($i = 0; $i < $max; $i++) {
-            $character = $value[$i];
+            $character = $stringValue[$i];
 
             if ($character === '%' && !$replaceReserved) {
                 $reservedBuffer = '';
@@ -379,7 +382,9 @@ class StdUriTemplate {
      * @return string
      */
     private static function getSubstitutionType($value, int $col): string {
-        if (is_string($value) || $value === null) {
+        if ($value === null) {
+            return 'EMPTY';
+        } elseif (self::isNativeType($value)) {
             return 'STRING';
         } elseif (self::isMap($value)) {
             return 'MAP';
@@ -412,6 +417,40 @@ class StdUriTemplate {
     }
 
     /**
+     * @param mixed $value
+     * @return bool
+     */
+    private static function isNativeType($value): bool {
+        if (is_string($value) ||
+            is_bool($value) ||
+            is_int($value) ||
+            is_float($value) ||
+            is_double($value) ||
+            $value instanceof \DateTime) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    private static function convertNativeTypes($value): string {
+        if (is_bool($value)) {
+            if ($value) {
+                return "true";
+            } else {
+                return "false";
+            }
+        } else if (is_string($value) || is_int($value) || is_float($value) || is_double($value)) {
+            return (string)$value;
+        } else if ($value instanceof \DateTime) {
+            return $value->format('Y-m-d\TH:i:s\Z');
+        }
+    }
+
+    /**
      * @param string $operator
      * @param string $token
      * @param bool $composite
@@ -428,20 +467,8 @@ class StdUriTemplate {
         }
 
         $value = $substitutions[$token] ?? null;
-        if (is_bool($value)) {
-            if ($value) {
-                $value = "true";
-            } else {
-                $value = "false";
-            }
-        } else if (is_int($value) || is_float($value) || is_double($value)) {
-            $value = (string)$value;
-        } else if ($value instanceof \DateTime) {
-            $value = $value->format('Y-m-d\TH:i:s\Z');
-        }
-
         $substType = self::getSubstitutionType($value, $col);
-        if (self::isEmpty($substType, $value)) {
+        if ($substType === 'EMPTY' || self::isEmpty($substType, $value)) {
             return false;
         }
 
@@ -469,18 +496,18 @@ class StdUriTemplate {
     /**
      * @param string $operator
      * @param string $token
-     * @param string $value
+     * @param mixed $value
      * @param string $result
      * @param int $maxChar
      */
-    private static function addStringValue(string $operator, string $token, string $value, string &$result, int $maxChar) {
+    private static function addStringValue(string $operator, string $token, $value, string &$result, int $maxChar) {
         self::addValue($operator, $token, $value, $result, $maxChar);
     }
 
     /**
      * @param string $operator
      * @param string $token
-     * @param array<string> $value
+     * @param array<mixed> $value
      * @param string &$result
      * @param int $maxChar
      * @param bool $composite
@@ -508,7 +535,7 @@ class StdUriTemplate {
     /**
      * @param string $operator
      * @param string $token
-     * @param array $value
+     * @param array<mixed> $value
      * @param string &$result
      * @param int $maxChar
      * @param bool $composite
