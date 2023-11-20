@@ -108,7 +108,7 @@ jobs:
       - name: C# - Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7
+          dotnet-version: 8
       - name: Release to NuGet
         working-directory: csharp
         run: |

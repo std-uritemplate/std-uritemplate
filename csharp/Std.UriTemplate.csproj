@@ -9,7 +9,7 @@
     <Version>$(VERSION)</Version>
     <Authors>Std.UriTemplate</Authors>
     <Company>Std.UriTemplate</Company>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
@@ -25,6 +25,8 @@
     <AssemblyOriginatorKeyFile>Std.UriTemplate.snk</AssemblyOriginatorKeyFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFrameworkVersion)' == 'net5.0'">
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
