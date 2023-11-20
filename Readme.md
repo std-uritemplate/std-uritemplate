@@ -172,7 +172,7 @@ let package = Package(
         ...
         .package(
             url: "https://github.com/std-uritemplate/std-uritemplate-swift.git", 
-            from: "0.0.26"
+            from: "<version>"
         )
     ],
     targets: [

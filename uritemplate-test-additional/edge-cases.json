@@ -22,5 +22,32 @@
         ["{+nativedatetwo}", "2023-02-13T18:49:00Z"],
         ["{nativedatetwo}", "2023-02-13T18%3A49%3A00Z"]
      ]
+  },
+  "Nested primitives" :
+  {
+    "variables" : {
+      "list": [1, 2, 3],
+      "map": {"one": 1, "two": 2, "three": 3}
+     },
+     "testcases" : [
+         ["{list}", "1,2,3"],
+         ["{list*}", "1,2,3"],
+         ["{map}", [
+            "one,1,two,2,three,3",
+            "one,1,three,3,two,2",
+            "two,2,one,1,three,3",
+            "two,2,three,3,one,1",
+            "three,3,one,1,two,2",
+            "three,3,two,2,one,1"
+         ]],
+         ["{map*}", [
+            "one=1,two=2,three=3",
+            "one=1,three=3,two=2",
+            "two=2,one=1,three=3",
+            "two=2,three=3,one=1",
+            "three=3,one=1,two=2",
+            "three=3,two=2,one=1"
+         ]]
+     ]
   }
 }

@@ -4,6 +4,7 @@ namespace Std;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 public class UriTemplate
@@ -91,11 +92,13 @@ public class UriTemplate
     {
         StringBuilder result = new StringBuilder(str.Length * 2);
 
-        StringBuilder token = null;
+        bool toToken = false;
+        StringBuilder token = new StringBuilder();
 
         Operator? op = null;
         bool composite = false;
-        StringBuilder maxCharBuffer = null;
+        bool toMaxCharBuffer = false;
+        StringBuilder maxCharBuffer = new StringBuilder(3);
         bool firstToken = true;
 
         for (int i = 0; i < str.Length; i++)
@@ -104,21 +107,24 @@ public class UriTemplate
             switch (character)
             {
                 case '{':
-                    token = new StringBuilder();
+                    toToken = true;
+                    token.Clear();
                     firstToken = true;
                     break;
                 case '}':
-                    if (token != null)
+                    if (toToken)
                     {
                         bool expanded = ExpandToken(op, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken)
                         {
                             firstToken = false;
                         }
-                        token = null;
+                        toToken = false;
+                        token.Clear();
                         op = null;
                         composite = false;
-                        maxCharBuffer = null;
+                        toMaxCharBuffer = false;
+                        maxCharBuffer.Clear();
                     }
                     else
                     {
@@ -126,28 +132,29 @@ public class UriTemplate
                     }
                     break;
                 case ',':
-                    if (token != null)
+                    if (toToken)
                     {
                         bool expanded = ExpandToken(op, token.ToString(), composite, GetMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken)
                         {
                             firstToken = false;
                         }
-                        token = new StringBuilder(token.Length * 2);
+                        token.Clear();
                         composite = false;
-                        maxCharBuffer = null;
+                        toMaxCharBuffer = false;
+                        maxCharBuffer.Clear();
                         break;
                     }
                     // Intentional fall-through for commas outside the {}
                     goto default;
                 default:
-                    if (token != null)
+                    if (toToken)
                     {
                         if (op == null)
                         {
                             op = GetOperator(character, token, i);
                         }
-                        else if (maxCharBuffer != null)
+                        else if (toMaxCharBuffer)
                         {
                             if (char.IsDigit(character))
                             {
@@ -162,7 +169,8 @@ public class UriTemplate
                         {
                             if (character == ':')
                             {
-                                maxCharBuffer = new StringBuilder(3);
+                                toMaxCharBuffer = true;
+                                maxCharBuffer.Clear();
                             }
                             else if (character == '*')
                             {
@@ -183,7 +191,7 @@ public class UriTemplate
             }
         }
 
-        if (token == null)
+        if (!toToken)
         {
             return result.ToString();
         }
@@ -243,42 +251,38 @@ public class UriTemplate
         }
     }
 
-    private static void AddValue(Operator? op, string token, string value, StringBuilder result, int maxChar)
+    private static void AddValue(Operator? op, string token, object value, StringBuilder result, int maxChar)
     {
         switch (op)
         {
             case Operator.PLUS:
             case Operator.HASH:
-                AddExpandedValue(value, result, maxChar, false);
+                AddExpandedValue(null, value, result, maxChar, false);
                 break;
             case Operator.QUESTION_MARK:
             case Operator.AMP:
                 result.Append(token + '=');
-                AddExpandedValue(value, result, maxChar, true);
+                AddExpandedValue(null, value, result, maxChar, true);
                 break;
             case Operator.SEMICOLON:
                 result.Append(token);
-                if (!string.IsNullOrEmpty(value))
-                {
-                    result.Append('=');
-                }
-                AddExpandedValue(value, result, maxChar, true);
+                AddExpandedValue("=", value, result, maxChar, true);
                 break;
             case Operator.DOT:
             case Operator.SLASH:
             case Operator.NO_OP:
-                AddExpandedValue(value, result, maxChar, true);
+                AddExpandedValue(null, value, result, maxChar, true);
                 break;
         }
     }
 
-    private static void AddValueElement(Operator? op, string token, string value, StringBuilder result, int maxChar)
+    private static void AddValueElement(Operator? op, string token, object value, StringBuilder result, int maxChar)
     {
         switch (op)
         {
             case Operator.PLUS:
             case Operator.HASH:
-                AddExpandedValue(value, result, maxChar, false);
+                AddExpandedValue(null, value, result, maxChar, false);
                 break;
             case Operator.QUESTION_MARK:
             case Operator.AMP:
@@ -286,27 +290,35 @@ public class UriTemplate
             case Operator.DOT:
             case Operator.SLASH:
             case Operator.NO_OP:
-                AddExpandedValue(value, result, maxChar, true);
+                AddExpandedValue(null, value, result, maxChar, true);
                 break;
         }
     }
 
-    private static void AddExpandedValue(string value, StringBuilder result, int maxChar, bool replaceReserved)
+    private static void AddExpandedValue(string prefix, object value, StringBuilder result, int maxChar, bool replaceReserved)
     {
-        int max = (maxChar != -1) ? Math.Min(maxChar, value.Length) : value.Length;
+        string stringValue = convertNativeTypes(value);
+        int max = (maxChar != -1) ? Math.Min(maxChar, stringValue.Length) : stringValue.Length;
         result.EnsureCapacity(max * 2); // hint to SB
-        StringBuilder reservedBuffer = null;
+        bool toReserved = false;
+        StringBuilder reservedBuffer = new StringBuilder(3);
+
+        if (max > 0 && prefix != null)
+        {
+            result.Append(prefix);
+        }
 
         for (int i = 0; i < max; i++)
         {
-            char character = value[i];
+            char character = stringValue[i];
 
             if (character == '%' && !replaceReserved)
             {
-                reservedBuffer = new StringBuilder(3);
+                toReserved = true;
+                reservedBuffer.Clear();
             }
 
-            if (reservedBuffer != null)
+            if (toReserved)
             {
                 reservedBuffer.Append(character);
 
@@ -333,7 +345,8 @@ public class UriTemplate
                         // only if !replaceReserved
                         result.Append(reservedBuffer.ToString(1, 2));
                     }
-                    reservedBuffer = null;
+                    toReserved = false;
+                    reservedBuffer.Clear();
                 }
             }
             else
@@ -360,7 +373,7 @@ public class UriTemplate
             }
         }
 
-        if (reservedBuffer != null)
+        if (toReserved)
         {
             result.Append("%25");
             if (replaceReserved)
@@ -386,6 +399,7 @@ public class UriTemplate
 
     private enum SubstitutionType
     {
+        EMPTY,
         STRING,
         LIST,
         DICTIONARY
@@ -393,7 +407,11 @@ public class UriTemplate
 
     private static SubstitutionType GetSubstitutionType(object value, int col)
     {
-        if (value is string || value == null)
+        if (value == null)
+        {
+            return SubstitutionType.EMPTY;
+        }
+        if (isNativeType(value))
         {
             return SubstitutionType.STRING;
         }
@@ -433,6 +451,27 @@ public class UriTemplate
         }
     }
 
+    private static bool isNativeType(object value)
+    {
+        return value is string or bool or int or long or float or double or DateTime or DateTimeOffset;
+    }
+
+    private static string convertNativeTypes(object value)
+    {
+        return value switch
+        {
+            string str => str,
+            bool => value.ToString().ToLower(),
+            int number => number.ToString(CultureInfo.InvariantCulture),
+            long number => number.ToString(CultureInfo.InvariantCulture),
+            float number => number.ToString(CultureInfo.InvariantCulture),
+            double number => number.ToString(CultureInfo.InvariantCulture),
+            DateTime dt => dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
+            DateTimeOffset dto => dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ"),
+            _ => throw new ArgumentException($"Illegal class passed as substitution, found {value.GetType()}"),
+        };
+    }
+
     // returns true if expansion happened
     private static bool ExpandToken(
             Operator? op,
@@ -451,22 +490,8 @@ public class UriTemplate
 
         object value;
         substitutions.TryGetValue(token, out value);
-        if (value is bool ||
-                value is int ||
-                value is long ||
-                value is float ||
-                value is double)
-        {
-            value = value.ToString().ToLower();
-        } else if (value is DateTime dt)
-        {
-            value = dt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
-        } else if (value is DateTimeOffset dto) {
-            value = dto.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ssZ");
-        }
-
         SubstitutionType substType = GetSubstitutionType(value, col);
-        if (IsEmpty(substType, value))
+        if (substType == SubstitutionType.EMPTY || IsEmpty(substType, value))
         {
             return false;
         }
@@ -483,7 +508,7 @@ public class UriTemplate
         switch (substType)
         {
             case SubstitutionType.STRING:
-                AddStringValue(op, token, (string)value, result, maxChar);
+                AddStringValue(op, token, value, result, maxChar);
                 break;
             case SubstitutionType.LIST:
                 AddListValue(op, token, (IList)value, result, maxChar, composite);
@@ -496,7 +521,7 @@ public class UriTemplate
         return true;
     }
 
-    private static bool AddStringValue(Operator? op, string token, string value, StringBuilder result, int maxChar)
+    private static bool AddStringValue(Operator? op, string token, object value, StringBuilder result, int maxChar)
     {
         AddValue(op, token, value, result, maxChar);
         return true;
@@ -505,7 +530,7 @@ public class UriTemplate
     private static bool AddListValue(Operator? op, string token, IList value, StringBuilder result, int maxChar, bool composite)
     {
         bool first = true;
-        foreach (string v in value)
+        foreach (object v in value)
         {
             if (first)
             {
@@ -560,7 +585,7 @@ public class UriTemplate
                 }
                 result.Append(',');
             }
-            AddValueElement(op, token, (string)v.Value, result, maxChar);
+            AddValueElement(op, token, v.Value, result, maxChar);
             first = false;
         }
         return !first;

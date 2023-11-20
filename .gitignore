@@ -6,3 +6,4 @@ tests/result
 
 publishing-notes
 .DS_Store
+.vscode

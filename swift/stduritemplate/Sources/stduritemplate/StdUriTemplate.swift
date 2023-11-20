@@ -164,30 +164,27 @@ public class StdUriTemplate {
         }
     }
     
-    private static func addValue(_ op: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+    private static func addValue(_ op: Operator, _ token: String, _ value: Any, _ result: inout String, _ maxChar: Int) {
         switch op {
             case .PLUS, .HASH:
-                addExpandedValue(value, &result, maxChar, replaceReserved: false)
+                addExpandedValue("", value, &result, maxChar, replaceReserved: false)
             case .QUESTION_MARK, .AMP:
                 result.append(token + "=")
-                addExpandedValue(value, &result, maxChar, replaceReserved: true)
+                addExpandedValue("", value, &result, maxChar, replaceReserved: true)
             case .SEMICOLON:
                 result.append(token)
-                if !value.isEmpty {
-                    result.append("=")
-                }
-                addExpandedValue(value, &result, maxChar, replaceReserved: true)
+                addExpandedValue("=", value, &result, maxChar, replaceReserved: true)
             case .DOT, .SLASH, .NO_OP:
-                addExpandedValue(value, &result, maxChar, replaceReserved: true)
+                addExpandedValue("", value, &result, maxChar, replaceReserved: true)
         }
     }
     
-    private static func addValueElement(_ op: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+    private static func addValueElement(_ op: Operator, _ token: String, _ value: Any, _ result: inout String, _ maxChar: Int) {
         switch op {
             case .PLUS, .HASH:
-                addExpandedValue(value, &result, maxChar, replaceReserved: false)
+                addExpandedValue("", value, &result, maxChar, replaceReserved: false)
             case .QUESTION_MARK, .AMP, .SEMICOLON, .DOT, .SLASH, .NO_OP:
-                addExpandedValue(value, &result, maxChar, replaceReserved: true)
+                addExpandedValue("", value, &result, maxChar, replaceReserved: true)
         }
     }
 
@@ -209,12 +206,17 @@ public class StdUriTemplate {
         return formatter
     }()
     
-    private static func addExpandedValue(_ value: String, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
-        let max = (maxChar != -1) ? min(maxChar, value.count) : value.count
+    private static func addExpandedValue(_ prefixStr: String, _ value: Any, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
+        let stringValue = convertNativeTypes(value)
+        let max = (maxChar != -1) ? min(maxChar, stringValue.count) : stringValue.count
         result.reserveCapacity(max * 2)
         var reservedBuffer: String?
+
+        if max > 0 && !prefixStr.isEmpty {
+            result.append(prefixStr)
+        }
         
-        for (i, character) in value.enumerated() {
+        for (i, character) in stringValue.enumerated() {
             if (i >= max) {
                 break
             }
@@ -273,6 +275,7 @@ public class StdUriTemplate {
     }
     
     private enum SubstitutionType {
+        case EMPTY
         case STRING
         case LIST
         case MAP
@@ -288,12 +291,14 @@ public class StdUriTemplate {
         }
     }
     
-    private static func getSubstitutionType(_ value: Any, _ col: Int) throws -> SubstitutionType {
-        if value is String || isNil(value) {
+    private static func getSubstitutionType(_ value: Any?, _ col: Int) throws -> SubstitutionType {
+        if isNil(value) {
+            return .EMPTY
+        } else if isNativeType(value!) {
             return .STRING
-        } else if isList(value) {
+        } else if isList(value!) {
             return .LIST
-        } else if isMap(value) {
+        } else if isMap(value!) {
             return .MAP
         } else {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Illegal class passed as substitution, found \(type(of: value)) at col: \(col)"])
@@ -308,9 +313,49 @@ public class StdUriTemplate {
             return true
         }
         switch substType {
+            case .EMPTY: return true
             case .STRING: return false
             case .LIST: return (value as! [Any]).isEmpty
             case .MAP: return (value as! [String: Any]).isEmpty
+        }
+    }
+
+    private static func isNativeType(_ value: Any) -> Bool {
+        if value is String ||
+            value is Bool ||
+            value is Int ||
+            value is Int64 ||
+            value is Float ||
+            value is Double ||
+            value is Date {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    // based on: https://stackoverflow.com/a/49641395/7898052
+    private static func isBool(_ value: NSNumber) -> Bool {
+        return type(of: value) == type(of: NSNumber(booleanLiteral: true))
+    }
+
+    private static func convertNativeTypes(_ value: Any) -> String {
+        if let stringValue = value as? String {
+            return stringValue
+        } else if let nsNumberValue = value as? NSNumber, isBool(nsNumberValue), let boolValue = value as? Bool {
+            return String(boolValue)
+        } else if let intValue = value as? Int {
+            return String(intValue)
+        } else if let longValue = value as? Int64 {
+            return String(longValue)
+        } else if let floatValue = value as? Float {
+            return String(floatValue)
+        } else if let doubleValue = value as? Double {
+            return String(doubleValue)
+        } else if let dateValue = value as? Date {
+            return RFC3339DateFormatter.string(from: dateValue)
+        } else {
+            return (value as? String)!
         }
     }
     
@@ -319,26 +364,9 @@ public class StdUriTemplate {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Found an empty token at col: \(col)"])
         }
         
-        guard var value = substitutions[token] else {
-            return false
-        }
-        
-        if let boolValue = value as? Bool {
-            value = String(boolValue)
-        } else if let intValue = value as? Int {
-            value = String(intValue)
-        } else if let longValue = value as? Int64 {
-            value = String(longValue)
-        } else if let floatValue = value as? Float {
-            value = String(floatValue)
-        } else if let doubleValue = value as? Double {
-            value = String(doubleValue)
-        } else if let dateValue = value as? Date {
-            value = RFC3339DateFormatter.string(from: dateValue)
-        }
-        
+        let value = substitutions[token]
         let substType = try getSubstitutionType(value, col)
-        if isEmpty(substType, value) {
+        if substType == .EMPTY || isEmpty(substType, value) {
             return false
         }
         
@@ -349,22 +377,24 @@ public class StdUriTemplate {
         }
         
         switch substType {
+            case .EMPTY:
+                break
             case .STRING:
-                addStringValue(op ?? .NO_OP, token, value as! String, &result, maxChar)
+                addStringValue(op ?? .NO_OP, token, value!, &result, maxChar)
             case .LIST:
-                addListValue(op ?? .NO_OP, token, value as! [String], &result, maxChar, composite)
+                addListValue(op ?? .NO_OP, token, value as! [Any], &result, maxChar, composite)
             case .MAP:
-                try addMapValue(op ?? .NO_OP, token, value as! [String: String], &result, maxChar, composite)
+                try addMapValue(op ?? .NO_OP, token, value as! [String: Any], &result, maxChar, composite)
         }
         
         return true
     }
     
-    private static func addStringValue(_ op: Operator, _ token: String, _ value: String, _ result: inout String, _ maxChar: Int) {
+    private static func addStringValue(_ op: Operator, _ token: String, _ value: Any, _ result: inout String, _ maxChar: Int) {
         addValue(op, token, value, &result, maxChar)
     }
     
-    private static func addListValue(_ op: Operator, _ token: String, _ value: [String], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
+    private static func addListValue(_ op: Operator, _ token: String, _ value: [Any], _ result: inout String, _ maxChar: Int, _ composite: Bool) {
         var first = true
         for v in value {
             if first {
@@ -382,7 +412,7 @@ public class StdUriTemplate {
         }
     }
     
-    private static func addMapValue(_ op: Operator, _ token: String, _ value: [String: String], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
+    private static func addMapValue(_ op: Operator, _ token: String, _ value: [String: Any], _ result: inout String, _ maxChar: Int, _ composite: Bool) throws {
         var first = true
         if maxChar != -1 {
             throw NSError(domain: "IllegalArgumentException", code: 0, userInfo: [NSLocalizedDescriptionKey: "Value trimming is not allowed on Maps"])

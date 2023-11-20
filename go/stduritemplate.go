@@ -32,6 +32,7 @@ const (
 )
 
 const (
+	SubstitutionTypeEmpty  = "EMPTY"
 	SubstitutionTypeString = "STRING"
 	SubstitutionTypeList   = "LIST"
 	SubstitutionTypeMap    = "MAP"
@@ -47,7 +48,7 @@ func validateLiteral(c rune, col int) error {
 }
 
 func getMaxChar(buffer *strings.Builder, col int) (int, error) {
-	if buffer == nil {
+	if buffer == nil || buffer.Len() == 0 {
 		return -1, nil
 	}
 	value := buffer.String()
@@ -92,19 +93,22 @@ func getOperator(c rune, token *strings.Builder, col int) (Op, error) {
 func expandImpl(str string, substitutions Substitutions) (string, error) {
 	var result strings.Builder
 
-	var token *strings.Builder
+	var token = &strings.Builder{}
+	var toToken = false
 	var operator = OpUndefined
 	var composite bool
-	var maxCharBuffer *strings.Builder
+	var maxCharBuffer = &strings.Builder{}
+	var toMaxCharBuffer = false
 	var firstToken = true
 
 	for i, character := range str {
 		switch character {
 		case '{':
-			token = &strings.Builder{}
+			toToken = true
+			token.Reset()
 			firstToken = true
 		case '}':
-			if token != nil {
+			if toToken {
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
 					return "", err
@@ -116,15 +120,17 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				if expanded && firstToken {
 					firstToken = false
 				}
-				token = nil
+				toToken = false
+				token.Reset()
 				operator = OpUndefined
 				composite = false
-				maxCharBuffer = nil
+				toMaxCharBuffer = false
+				maxCharBuffer.Reset()
 			} else {
 				return "", fmt.Errorf("failed to expand token, invalid at col: %d", i)
 			}
 		case ',':
-			if token != nil {
+			if toToken {
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
 					return "", err
@@ -136,15 +142,16 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				if expanded && firstToken {
 					firstToken = false
 				}
-				token = &strings.Builder{}
+				token.Reset()
 				composite = false
-				maxCharBuffer = nil
+				toMaxCharBuffer = false
+				maxCharBuffer.Reset()
 				break
 			}
 			// Intentional fall-through for commas outside the {}
 			fallthrough
 		default:
-			if token != nil {
+			if toToken {
 				switch {
 				case operator == OpUndefined:
 					var err error
@@ -152,7 +159,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					if err != nil {
 						return "", err
 					}
-				case maxCharBuffer != nil:
+				case toMaxCharBuffer:
 					if _, err := strconv.Atoi(string(character)); err == nil {
 						maxCharBuffer.WriteRune(character)
 					} else {
@@ -161,7 +168,8 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 				default:
 					switch character {
 					case ':':
-						maxCharBuffer = &strings.Builder{}
+						toMaxCharBuffer = true
+						maxCharBuffer.Reset()
 					case '*':
 						composite = true
 					default:
@@ -177,7 +185,7 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 		}
 	}
 
-	if token == nil {
+	if !toToken {
 		return result.String(), nil
 	}
 
@@ -205,40 +213,44 @@ func addSeparator(op Op, result *strings.Builder) {
 	}
 }
 
-func addValue(op Op, token, value string, result *strings.Builder, maxChar int) {
+func addValue(op Op, token string, value string, result *strings.Builder, maxChar int) {
 	switch op {
 	case OpPlus, OpHash:
-		addExpandedValue(value, result, maxChar, false)
+		addExpandedValue("", value, result, maxChar, false)
 	case OpQuestionMark, OpAmp:
 		result.WriteString(token + "=")
-		addExpandedValue(value, result, maxChar, true)
+		addExpandedValue("", value, result, maxChar, true)
 	case OpSemicolon:
 		result.WriteString(token)
 		if value != "" {
 			result.WriteByte('=')
 		}
-		addExpandedValue(value, result, maxChar, true)
+		addExpandedValue("", value, result, maxChar, true)
 	case OpDot, OpSlash, OpNone:
-		addExpandedValue(value, result, maxChar, true)
+		addExpandedValue("", value, result, maxChar, true)
 	}
 }
 
 func addValueElement(op Op, _, value string, result *strings.Builder, maxChar int) {
 	switch op {
 	case OpPlus, OpHash:
-		addExpandedValue(value, result, maxChar, false)
+		addExpandedValue("", value, result, maxChar, false)
 	case OpQuestionMark, OpAmp, OpSemicolon, OpDot, OpSlash, OpNone:
-		addExpandedValue(value, result, maxChar, true)
+		addExpandedValue("", value, result, maxChar, true)
 	}
 }
 
-func addExpandedValue(value string, result *strings.Builder, maxChar int, replaceReserved bool) {
+func addExpandedValue(prefix string, value string, result *strings.Builder, maxChar int, replaceReserved bool) {
 	max := maxChar
 	if maxChar == -1 || maxChar > len(value) {
 		max = len(value)
 	}
 	reservedBuffer := &strings.Builder{}
-	fillReserved := false
+	toReserved := false
+
+	if max > 0 && prefix != "" {
+		result.WriteString(prefix)
+	}
 
 	for i, character := range value {
 		if i >= max {
@@ -247,10 +259,10 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 
 		if character == '%' && !replaceReserved {
 			reservedBuffer.Reset()
-			fillReserved = true
+			toReserved = true
 		}
 
-		if fillReserved {
+		if toReserved {
 			reservedBuffer.WriteRune(character)
 
 			if reservedBuffer.Len() == 3 {
@@ -269,7 +281,7 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 					result.WriteString(reservedBuffer.String()[1:])
 				}
 				reservedBuffer.Reset()
-				fillReserved = false
+				toReserved = false
 			}
 		} else {
 			switch character {
@@ -287,7 +299,7 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 		}
 	}
 
-	if fillReserved {
+	if toReserved {
 		result.WriteString("%25")
 		if replaceReserved {
 			result.WriteString(url.QueryEscape(reservedBuffer.String()[1:]))
@@ -299,11 +311,13 @@ func addExpandedValue(value string, result *strings.Builder, maxChar int, replac
 
 func getSubstitutionType(value any, col int) string {
 	switch value.(type) {
-	case string, nil:
+	case nil:
+		return SubstitutionTypeEmpty
+	case string, float32, float64, int, int8, int16, int32, int64, bool, time.Time:
 		return SubstitutionTypeString
-	case []any:
+	case []string, []float32, []float64, []int, []int8, []int16, []int32, []int64, []bool, []time.Time, []any:
 		return SubstitutionTypeList
-	case map[string]any:
+	case map[string]string, map[string]float32, map[string]float64, map[string]int, map[string]int8, map[string]int16, map[string]int32, map[string]int64, map[string]bool, map[string]time.Time, map[string]any:
 		return SubstitutionTypeMap
 	default:
 		return fmt.Sprintf("illegal class passed as substitution, found %T at col: %d", value, col)
@@ -313,13 +327,279 @@ func getSubstitutionType(value any, col int) string {
 func isEmpty(substType string, value any) bool {
 	switch substType {
 	case SubstitutionTypeString:
-		return value == nil
+		switch value.(type) {
+		case string:
+			return value == nil
+		default: // primitives are value types
+			return false
+		}
 	case SubstitutionTypeList:
-		return len(value.([]any)) == 0
+		return getListLength(value) == 0
 	case SubstitutionTypeMap:
-		return len(value.(map[string]any)) == 0
+		return getMapLength(value) == 0
 	default:
 		return true
+	}
+}
+
+func getListLength(value any) int {
+	switch value.(type) {
+	case []string:
+		return len(value.([]string))
+	case []float32:
+		return len(value.([]float32))
+	case []float64:
+		return len(value.([]float64))
+	case []int:
+		return len(value.([]int))
+	case []int8:
+		return len(value.([]int8))
+	case []int16:
+		return len(value.([]int16))
+	case []int32:
+		return len(value.([]int32))
+	case []int64:
+		return len(value.([]int64))
+	case []bool:
+		return len(value.([]bool))
+	case []time.Time:
+		return len(value.([]time.Time))
+	case []any:
+		return len(value.([]any))
+	}
+	return 0
+}
+
+func getMapLength(value any) int {
+	switch value.(type) {
+	case map[string]string:
+		return len(value.(map[string]string))
+	case map[string]float32:
+		return len(value.(map[string]float32))
+	case map[string]float64:
+		return len(value.(map[string]float64))
+	case map[string]int:
+		return len(value.(map[string]int))
+	case map[string]int8:
+		return len(value.(map[string]int8))
+	case map[string]int16:
+		return len(value.(map[string]int16))
+	case map[string]int32:
+		return len(value.(map[string]int32))
+	case map[string]int64:
+		return len(value.(map[string]int64))
+	case map[string]bool:
+		return len(value.(map[string]bool))
+	case map[string]time.Time:
+		return len(value.(map[string]time.Time))
+	case map[string]any:
+		return len(value.(map[string]any))
+	}
+	return 0
+}
+
+func convertNativeList(value any) ([]string, error) {
+	var stringList = make([]string, getListLength(value))
+	switch value.(type) {
+	case []string:
+		for index, val := range value.([]string) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []float32:
+		for index, val := range value.([]float32) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []float64:
+		for index, val := range value.([]float64) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []int:
+		for index, val := range value.([]int) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []int8:
+		for index, val := range value.([]int8) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []int16:
+		for index, val := range value.([]int16) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []int32:
+		for index, val := range value.([]int32) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []int64:
+		for index, val := range value.([]int64) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []bool:
+		for index, val := range value.([]bool) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []time.Time:
+		for index, val := range value.([]time.Time) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	case []any:
+		for index, val := range value.([]any) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringList[index] = str
+		}
+	default:
+		return nil, fmt.Errorf("unrecognized type: %s", value)
+	}
+	return stringList, nil
+}
+
+func convertNativeMap(value any) (map[string]string, error) {
+	var stringMap = make(map[string]string, getMapLength(value))
+	switch value.(type) {
+	case map[string]string:
+		for key, val := range value.(map[string]string) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]float32:
+		for key, val := range value.(map[string]float32) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]float64:
+		for key, val := range value.(map[string]float64) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]int:
+		for key, val := range value.(map[string]int) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]int8:
+		for key, val := range value.(map[string]int8) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]int16:
+		for key, val := range value.(map[string]int16) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]int32:
+		for key, val := range value.(map[string]int32) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]int64:
+		for key, val := range value.(map[string]int64) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]bool:
+		for key, val := range value.(map[string]bool) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]time.Time:
+		for key, val := range value.(map[string]time.Time) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	case map[string]any:
+		for key, val := range value.(map[string]any) {
+			str, err := convertNativeTypes(val)
+			if err != nil {
+				return nil, err
+			}
+			stringMap[key] = str
+		}
+	default:
+		return nil, fmt.Errorf("unrecognized type: %s", value)
+	}
+	return stringMap, nil
+}
+
+func convertNativeTypes(value any) (string, error) {
+	switch value.(type) {
+	case string, float32, float64, int, int8, int16, int32, int64, bool:
+		return fmt.Sprintf("%v", value), nil
+	case time.Time:
+		return value.(time.Time).Format(time.RFC3339), nil
+	default:
+		return "", fmt.Errorf("unrecognized type: %s", value)
 	}
 }
 
@@ -342,15 +622,8 @@ func expandToken(
 		return false, nil
 	}
 
-	switch value.(type) {
-	case bool, int, int64, float32, float64:
-		value = fmt.Sprintf("%v", value)
-	case time.Time:
-		value = value.(time.Time).Format(time.RFC3339)
-	}
-
 	substType := getSubstitutionType(value, col)
-	if isEmpty(substType, value) {
+	if substType == SubstitutionTypeEmpty || isEmpty(substType, value) {
 		return false, nil
 	}
 
@@ -362,11 +635,23 @@ func expandToken(
 
 	switch substType {
 	case SubstitutionTypeString:
-		addStringValue(operator, token, value.(string), result, maxChar)
+		stringValue, err := convertNativeTypes(value)
+		if err != nil {
+			return false, err
+		}
+		addStringValue(operator, token, stringValue, result, maxChar)
 	case SubstitutionTypeList:
-		addListValue(operator, token, value.([]any), result, maxChar, composite)
+		listValue, err := convertNativeList(value)
+		if err != nil {
+			return false, err
+		}
+		addListValue(operator, token, listValue, result, maxChar, composite)
 	case SubstitutionTypeMap:
-		err := addMapValue(operator, token, value.(map[string]any), result, maxChar, composite)
+		mapValue, err := convertNativeMap(value)
+		if err != nil {
+			return false, err
+		}
+		err = addMapValue(operator, token, mapValue, result, maxChar, composite)
 		if err != nil {
 			return false, err
 		}
@@ -377,29 +662,27 @@ func expandToken(
 
 func addStringValue(operator Op, token string, value string, result *strings.Builder, maxChar int) {
 	addValue(operator, token, value, result, maxChar)
-
 }
 
-func addListValue(operator Op, token string, value []any, result *strings.Builder, maxChar int, composite bool) {
+func addListValue(operator Op, token string, value []string, result *strings.Builder, maxChar int, composite bool) {
 	first := true
 	for _, v := range value {
 		if first {
-			addValue(operator, token, v.(string), result, maxChar)
+			addValue(operator, token, v, result, maxChar)
 			first = false
 		} else {
 			if composite {
 				addSeparator(operator, result)
-				addValue(operator, token, v.(string), result, maxChar)
+				addValue(operator, token, v, result, maxChar)
 			} else {
 				result.WriteString(",")
-				addValueElement(operator, token, v.(string), result, maxChar)
+				addValueElement(operator, token, v, result, maxChar)
 			}
 		}
 	}
 }
 
-func addMapValue(operator Op, token string, value map[string]any, result *strings.Builder, maxChar int, composite bool) error {
-	first := true
+func addMapValue(operator Op, token string, value map[string]string, result *strings.Builder, maxChar int, composite bool) error {
 	if maxChar != -1 {
 		return fmt.Errorf("value trimming is not allowed on Maps")
 	}
@@ -411,18 +694,18 @@ func addMapValue(operator Op, token string, value map[string]any, result *string
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	for key := range keys {
-		k := keys[key]
+	for i := range keys {
+		k := keys[i]
 		v := value[k]
 
 		if composite {
-			if !first {
+			if i > 0 {
 				addSeparator(operator, result)
 			}
 			addValueElement(operator, token, k, result, maxChar)
 			result.WriteString("=")
 		} else {
-			if first {
+			if i == 0 {
 				addValue(operator, token, k, result, maxChar)
 			} else {
 				result.WriteString(",")
@@ -430,8 +713,7 @@ func addMapValue(operator Op, token string, value map[string]any, result *string
 			}
 			result.WriteString(",")
 		}
-		addValueElement(operator, token, v.(string), result, maxChar)
-		first = false
+		addValueElement(operator, token, v, result, maxChar)
 	}
 	return nil
 }
