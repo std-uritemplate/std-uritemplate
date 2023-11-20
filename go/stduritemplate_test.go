@@ -12,11 +12,13 @@ func TestExpandStringArray(t *testing.T) {
 	}
 	result, err := Expand(urlTemplate, data)
 
-	if err == nil {
+	if err != nil {
 		t.Fail()
+		t.Logf("Expected err, to be nil")
 	}
 
 	if "https://example.com/users?statuses=active,pending" != result {
 		t.Fail()
+		t.Logf("Expected '%s', got '%s'", "https://example.com/users?statuses=active,pending", result)
 	}
 }
