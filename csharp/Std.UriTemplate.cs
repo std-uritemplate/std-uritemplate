@@ -10,7 +10,7 @@ using System.Text;
 public class UriTemplate
 {
     // Public API
-    public static string Expand(string template, Dictionary<string, object> substitutions)
+    public static string Expand(string template, IReadOnlyDictionary<string, object> substitutions)
     {
         return ExpandImpl(template, substitutions);
     }
@@ -88,7 +88,7 @@ public class UriTemplate
         }
     }
 
-    private static string ExpandImpl(string str, Dictionary<string, object> substitutions)
+    private static string ExpandImpl(string str, IReadOnlyDictionary<string, object> substitutions)
     {
         StringBuilder result = new StringBuilder(str.Length * 2);
 
@@ -479,7 +479,7 @@ public class UriTemplate
             bool composite,
             int maxChar,
             bool firstToken,
-            Dictionary<string, object> substitutions,
+            IReadOnlyDictionary<string, object> substitutions,
             StringBuilder result,
             int col)
     {
