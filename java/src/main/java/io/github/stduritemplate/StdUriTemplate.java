@@ -256,6 +256,29 @@ public class StdUriTemplate {
         }
     }
 
+    private static final String HEX_ALPHABET = "0123456789ABCDEF";
+    private static void pctEncode(byte b, StringBuilder buff) {
+        int high = (b & 0xF0) >> 4;
+        int low = b & 0x0F;
+        buff.append('%');
+        buff.append(HEX_ALPHABET, high, high + 1);
+        buff.append(HEX_ALPHABET, low, low + 1);
+    }
+
+    private static boolean isSurrogate(char cp) {
+        return (cp >= 0xD800 && cp <= 0xDFFF);
+    }
+
+    private static boolean isIprivate(char cp) {
+        return (0xE000 <= cp && cp <= 0xF8FF);
+    }
+
+    private static boolean isUcschar(char cp) {
+        return (0xA0 <= cp && cp <= 0xD7FF)
+                || (0xF900 <= cp && cp <= 0xFDCF)
+                || (0xFDF0 <= cp && cp <= 0xFFEF);
+    }
+
     private static void addExpandedValue(String prefix, Object value, StringBuilder result, int maxChar, boolean replaceReserved) {
         String stringValue = convertNativeTypes(value);
         int max = (maxChar != -1) ? Math.min(maxChar, stringValue.length()) : stringValue.length();
@@ -275,8 +298,15 @@ public class StdUriTemplate {
                 reservedBuffer.setLength(0);
             }
 
+            String toAppend = Character.toString(character);
+            if (isSurrogate(character)) {
+                toAppend = URLEncoder.encode(Character.toString(stringValue.codePointAt(i++)), StandardCharsets.UTF_8);
+            } else if (isUcschar(character) || isIprivate(character) || replaceReserved) {
+                toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8);
+            }
+
             if (toReserved) {
-                reservedBuffer.append(character);
+                reservedBuffer.append(toAppend);
 
                 if (reservedBuffer.length() == 3) {
                     boolean isEncoded = false;
@@ -303,22 +333,14 @@ public class StdUriTemplate {
                 } else if (character == '%') {
                     result.append("%25");
                 } else {
-                    if (replaceReserved) {
-                        result.append(URLEncoder.encode(Character.toString(character), StandardCharsets.UTF_8));
-                    } else {
-                        result.append(character);
-                    }
+                    result.append(toAppend);
                 }
             }
         }
 
         if (toReserved) {
             result.append("%25");
-            if (replaceReserved) {
-                result.append(URLEncoder.encode(reservedBuffer.substring(1), StandardCharsets.UTF_8));
-            } else {
-                result.append(reservedBuffer.substring(1));
-            }
+            result.append(reservedBuffer.substring(1));
         }
     }
 
