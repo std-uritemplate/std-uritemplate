@@ -335,7 +335,7 @@ public class UriTemplate
             var toAppend = character.ToString();
             if (isSurrogate(character)) {
                 toAppend = Uri.EscapeDataString(char.ConvertFromUtf32(char.ConvertToUtf32(stringValue, i++)));
-            } else if (isUcschar(character) || isIprivate(character) || replaceReserved) {
+            } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
                 toAppend = Uri.EscapeDataString(toAppend);
             }
 

@@ -292,7 +292,7 @@ public class StdUriTemplate {
             String toAppend = Character.toString(character);
             if (isSurrogate(character)) {
                 toAppend = URLEncoder.encode(Character.toString(stringValue.codePointAt(i++)), StandardCharsets.UTF_8);
-            } else if (isUcschar(character) || isIprivate(character) || replaceReserved) {
+            } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
                 toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8);
             }
 
