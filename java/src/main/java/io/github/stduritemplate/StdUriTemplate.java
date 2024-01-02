@@ -256,15 +256,6 @@ public class StdUriTemplate {
         }
     }
 
-    private static final String HEX_ALPHABET = "0123456789ABCDEF";
-    private static void pctEncode(byte b, StringBuilder buff) {
-        int high = (b & 0xF0) >> 4;
-        int low = b & 0x0F;
-        buff.append('%');
-        buff.append(HEX_ALPHABET, high, high + 1);
-        buff.append(HEX_ALPHABET, low, low + 1);
-    }
-
     private static boolean isSurrogate(char cp) {
         return (cp >= 0xD800 && cp <= 0xDFFF);
     }
