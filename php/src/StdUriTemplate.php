@@ -345,7 +345,7 @@ class StdUriTemplate {
             }
 
             if ($reservedBuffer !== null) {
-                $reservedBuffer .= $character;
+                $reservedBuffer .= $toAppend;
 
                 if (strlen($reservedBuffer) === 3) {
                     $isEncoded = false;

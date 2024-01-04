@@ -284,7 +284,7 @@ func addExpandedValue(prefix string, value string, result *strings.Builder, maxC
 		}
 
 		if toReserved {
-			reservedBuffer.WriteRune(character)
+			reservedBuffer.WriteString(toAppend)
 
 			if reservedBuffer.Len() == 3 {
 				encoded := true
