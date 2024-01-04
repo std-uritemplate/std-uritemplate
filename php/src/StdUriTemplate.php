@@ -281,6 +281,41 @@ class StdUriTemplate {
     }
 
     /**
+     * @param string $cp
+     */
+    private static function isSurrogate(string $cp) {
+        if (empty($cp)) {
+            return true;
+        }
+        $codePoint = mb_ord($cp, 'UTF-8');
+        return ($codePoint >= 0xD800 && $codePoint <= 0xDFFF);
+    }
+    
+    /**
+     * @param string $cp
+     */
+    private static function isIprivate(string $cp) {
+        if (empty($cp)) {
+            return false;
+        }
+        $codePoint = mb_ord($cp, 'UTF-8');
+        return (0xE000 <= $codePoint && $codePoint <= 0xF8FF);
+    }
+    
+    /**
+     * @param string $cp
+     */
+    private static function isUcschar(string $cp) {
+        if (empty($cp)) {
+            return false;
+        }
+        $codePoint = mb_ord($cp, 'UTF-8');
+        return (0xA0 <= $codePoint && $codePoint <= 0xD7FF)
+            || (0xF900 <= $codePoint && $codePoint <= 0xFDCF)
+            || (0xFDF0 <= $codePoint && $codePoint <= 0xFFEF);
+    }
+
+    /**
      * @param mixed $prefix
      * @param mixed $value
      * @param string &$result
@@ -302,6 +337,13 @@ class StdUriTemplate {
 
             if ($character === '%' && !$replaceReserved) {
                 $reservedBuffer = '';
+            }
+
+            $toAppend = $character;
+            if (self::isSurrogate(mb_ord($character, 'UTF-8'))) {
+                $toAppend = urlencode($toAppend);
+            } elseif ($replaceReserved || self::isUcschar(mb_ord($character, 'UTF-8')) || self::isIprivate(mb_ord($character, 'UTF-8'))) {
+                $toAppend = urlencode($toAppend);
             }
 
             if ($reservedBuffer !== null) {
@@ -331,22 +373,14 @@ class StdUriTemplate {
                 } elseif ($character === '%') {
                     $result .= "%25";
                 } else {
-                    if ($replaceReserved) {
-                        $result .= urlencode($character);
-                    } else {
-                        $result .= $character;
-                    }
+                    $result .= $toAppend;
                 }
             }
         }
 
         if ($reservedBuffer !== null) {
             $result .= "%25";
-            if ($replaceReserved) {
-                $result .= urlencode(substr($reservedBuffer, 1));
-            } else {
-                $result .= substr($reservedBuffer, 1);
-            }
+            $result .= substr($toAppend, 1);
         }
     }
 
@@ -569,4 +603,3 @@ class StdUriTemplate {
     }
 
 }
-
