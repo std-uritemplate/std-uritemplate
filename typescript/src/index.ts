@@ -266,6 +266,22 @@ export class StdUriTemplate {
     }
   }
 
+  private static isSurrogate(cp: string): boolean {
+    const codeUnit = cp.charCodeAt(0);
+    return (codeUnit >= 0xD800 && codeUnit <= 0xDBFF);
+  }
+
+  private static isIprivate(cp: string): boolean {
+      return 0xE000 <= cp.charCodeAt(0) && cp.charCodeAt(0) <= 0xF8FF;
+  }
+
+  private static isUcschar(cp: string): boolean {
+      const codePoint = cp.codePointAt(0) || 0;
+      return (0xA0 <= codePoint && codePoint <= 0xD7FF) ||
+          (0xF900 <= codePoint && codePoint <= 0xFDCF) ||
+          (0xFDF0 <= codePoint && codePoint <= 0xFFEF);
+  }
+
   private static addExpandedValue(prefix: string | null, value: any, result: string[], maxChar: number, replaceReserved: boolean): void {
     const stringValue = StdUriTemplate.convertNativeTypes(value);
     const max = maxChar !== -1 ? Math.min(maxChar, stringValue.length) : stringValue.length;
@@ -282,8 +298,20 @@ export class StdUriTemplate {
         reservedBuffer = [];
       }
 
+      let toAppend: string = Buffer.from(character, 'utf-8').toString();
+      if (StdUriTemplate.isSurrogate(character)) {
+          toAppend = encodeURIComponent(stringValue.charAt(i) + stringValue.charAt(i + 1));
+          i++; // Skip the next character
+      } else if (replaceReserved || StdUriTemplate.isUcschar(character) || StdUriTemplate.isIprivate(character)) {
+        if (character === '!') { // Specific to JS/TS: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#description
+          toAppend = '%21'
+        } else {
+          toAppend = encodeURIComponent(toAppend);
+        }
+      }
+
       if (reservedBuffer) {
-        reservedBuffer.push(character);
+        reservedBuffer.push(toAppend);
 
         if (reservedBuffer.length === 3) {
           let isEncoded = false;
@@ -310,26 +338,14 @@ export class StdUriTemplate {
         } else if (character === '%') {
           result.push('%25');
         } else {
-          if (replaceReserved) {
-            if (character === '!') { // Specific to JS/TS: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#description
-              result.push('%21');
-            } else {
-              result.push(encodeURIComponent(character));
-            }
-          } else {
-            result.push(character);
-          }
+          result.push(toAppend);
         }
       }
     }
 
     if (reservedBuffer) {
       result.push('%25');
-      if (replaceReserved) {
-        result.push(encodeURIComponent(reservedBuffer.slice(1).join('')));
-      } else {
-        result.push(reservedBuffer.slice(1).join(''));
-      }
+      result.push(reservedBuffer.slice(1).join(''));
     }
   }
 

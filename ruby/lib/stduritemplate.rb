@@ -188,6 +188,20 @@ module StdUriTemplate
     end
   end
 
+  def self.is_surrogate(cp)
+    cp.bytes.length > 1
+  end
+  
+  def self.is_iprivate(cp)
+    (0xE000..0xF8FF).include?(cp.ord)
+  end
+  
+  def self.is_ucschar(cp)
+    (0xA0..0xD7FF).include?(cp.ord) ||
+      (0xF900..0xFDCF).include?(cp.ord) ||
+      (0xFDF0..0xFFEF).include?(cp.ord)
+  end
+
   def self.add_expanded_value(prefix, value, result, max_char, replace_reserved)
     string_value = convert_native_types(value)
     max = (max_char != -1) ? [max_char, string_value.length].min : string_value.length
@@ -202,6 +216,11 @@ module StdUriTemplate
 
       if character == '%' && !replace_reserved
         reserved_buffer = ''
+      end
+
+      to_append = character
+      if is_surrogate(character) || replace_reserved || is_ucschar(character) || is_iprivate(character)
+        to_append = URI.encode_www_form_component(character)
       end
 
       if reserved_buffer
@@ -230,22 +249,14 @@ module StdUriTemplate
         elsif character == '%'
           result << "%25"
         else
-          if replace_reserved
-            result << URI.encode_www_form_component(character)
-          else
-            result << character
-          end
+          result << to_append
         end
       end
     end
 
     if reserved_buffer
       result << "%25"
-      if replace_reserved
-        result << URI.encode_www_form_component(reserved_buffer[1..-1])
-      else
-        result << reserved_buffer[1..-1]
-      end
+      result << reserved_buffer[1..-1]
     end
   end
 
