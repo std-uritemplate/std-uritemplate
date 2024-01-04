@@ -340,9 +340,7 @@ class StdUriTemplate {
             }
 
             $toAppend = $character;
-            if (self::isSurrogate(mb_ord($character, 'UTF-8'))) {
-                $toAppend = urlencode($toAppend);
-            } elseif ($replaceReserved || self::isUcschar(mb_ord($character, 'UTF-8')) || self::isIprivate(mb_ord($character, 'UTF-8'))) {
+            if (self::isSurrogate(mb_ord($character, 'UTF-8')) || $replaceReserved || self::isUcschar(mb_ord($character, 'UTF-8')) || self::isIprivate(mb_ord($character, 'UTF-8'))) {
                 $toAppend = urlencode($toAppend);
             }
 
