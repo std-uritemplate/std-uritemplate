@@ -278,7 +278,6 @@ public class StdUriTemplate {
         
         if let reservedBuffer = reservedBuffer {
             result.append("%25")
-            // result.append((reservedBuffer as NSString).substring(from: 1).addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")
             result.append((reservedBuffer as NSString).substring(from: 1))
         }
     }
