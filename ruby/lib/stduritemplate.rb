@@ -224,7 +224,7 @@ module StdUriTemplate
       end
 
       if reserved_buffer
-        reserved_buffer << character
+        reserved_buffer << to_append
 
         if reserved_buffer.length == 3
           is_encoded = false

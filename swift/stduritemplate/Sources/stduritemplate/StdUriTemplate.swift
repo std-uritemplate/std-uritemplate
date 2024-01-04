@@ -205,6 +205,25 @@ public class StdUriTemplate {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         return formatter
     }()
+
+    private static func isSurrogate(_ cp: Character) -> Bool {
+        let utf16CodeUnit = cp.utf16.first!
+        return 0xD800 <= utf16CodeUnit && utf16CodeUnit <= 0xDBFF
+    }
+
+    private static func isIprivate(_ cp: Character) -> Bool {
+        return 0xE000 <= cp.utf16.first! && cp.utf16.first! <= 0xF8FF
+    }
+
+    private static func isUcschar(_ cp: Character) -> Bool {
+        guard let codePoint = cp.unicodeScalars.first?.value else {
+            return false
+        }
+
+        return (0xA0 <= codePoint && codePoint <= 0xD7FF) ||
+            (0xF900 <= codePoint && codePoint <= 0xFDCF) ||
+            (0xFDF0 <= codePoint && codePoint <= 0xFFEF)
+    }
     
     private static func addExpandedValue(_ prefixStr: String, _ value: Any, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
         let stringValue = convertNativeTypes(value)
@@ -216,16 +235,21 @@ public class StdUriTemplate {
             result.append(prefixStr)
         }
         
-        for (i, character) in stringValue.enumerated() {
-            if (i >= max) {
-                break
-            }
+        var index = stringValue.startIndex
+        for _ in 0..<max {
+            let character = stringValue[index]
             if character == "%" && !replaceReserved {
                 reservedBuffer = String()
             }
+
+            var toAppend = String(character)
+            if isSurrogate(character) || replaceReserved || isUcschar(character) || isIprivate(character) {
+                toAppend = toAppend.addingPercentEncoding(withAllowedCharacters: unreserved) ?? ""
+            }
+            index = stringValue.index(after: index)
             
             if let _ = reservedBuffer {
-                reservedBuffer!.append(character)
+                reservedBuffer!.append(toAppend)
                 
                 if reservedBuffer!.count == 3 {
                     var isEncoded = false
@@ -247,22 +271,15 @@ public class StdUriTemplate {
                 } else if character == "%" {
                     result.append("%25")
                 } else {
-                    if replaceReserved {
-                        result.append(String(character).addingPercentEncoding(withAllowedCharacters: unreserved) ?? String(character))
-                    } else {
-                        result.append(character)
-                    }
+                    result.append(toAppend)
                 }
             }
         }
         
         if let reservedBuffer = reservedBuffer {
             result.append("%25")
-            if replaceReserved {
-                result.append((reservedBuffer as NSString).substring(from: 1).addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")
-            } else {
-                result.append((reservedBuffer as NSString).substring(from: 1))
-            }
+            // result.append((reservedBuffer as NSString).substring(from: 1).addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")
+            result.append((reservedBuffer as NSString).substring(from: 1))
         }
     }
     
