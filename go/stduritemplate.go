@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 type Substitutions map[string]any
@@ -240,6 +241,21 @@ func addValueElement(op Op, _, value string, result *strings.Builder, maxChar in
 	}
 }
 
+func isSurrogate(str string) bool {
+	_, width := utf8.DecodeRuneInString(str)
+	return width > 1
+}
+
+func isIprivate(cp rune) bool {
+	return 0xE000 <= cp && cp <= 0xF8FF
+}
+
+func isUcschar(cp rune) bool {
+	return (0xA0 <= cp && cp <= 0xD7FF) ||
+		(0xF900 <= cp && cp <= 0xFDCF) ||
+		(0xFDF0 <= cp && cp <= 0xFFEF)
+}
+
 func addExpandedValue(prefix string, value string, result *strings.Builder, maxChar int, replaceReserved bool) {
 	max := maxChar
 	if maxChar == -1 || maxChar > len(value) {
@@ -262,8 +278,13 @@ func addExpandedValue(prefix string, value string, result *strings.Builder, maxC
 			toReserved = true
 		}
 
+		toAppend := string(character)
+		if isSurrogate(toAppend) || replaceReserved || isUcschar(character) || isIprivate(character) {
+			toAppend = url.QueryEscape(toAppend)
+		}
+
 		if toReserved {
-			reservedBuffer.WriteRune(character)
+			reservedBuffer.WriteString(toAppend)
 
 			if reservedBuffer.Len() == 3 {
 				encoded := true
@@ -290,22 +311,14 @@ func addExpandedValue(prefix string, value string, result *strings.Builder, maxC
 			case '%':
 				result.WriteString("%25")
 			default:
-				if replaceReserved {
-					result.WriteString(url.QueryEscape(string(character)))
-				} else {
-					result.WriteRune(character)
-				}
+				result.WriteString(toAppend)
 			}
 		}
 	}
 
 	if toReserved {
 		result.WriteString("%25")
-		if replaceReserved {
-			result.WriteString(url.QueryEscape(reservedBuffer.String()[1:]))
-		} else {
-			result.WriteString(reservedBuffer.String()[1:])
-		}
+		result.WriteString(reservedBuffer.String()[1:])
 	}
 }
 

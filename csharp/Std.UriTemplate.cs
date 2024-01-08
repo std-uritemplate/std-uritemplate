@@ -295,6 +295,20 @@ public class UriTemplate
         }
     }
 
+    private static bool isSurrogate(char cp) {
+        return (cp >= 0xD800 && cp <= 0xDFFF);
+    }
+
+    private static bool isIprivate(char cp) {
+        return (0xE000 <= cp && cp <= 0xF8FF);
+    }
+
+    private static bool isUcschar(char cp) {
+        return (0xA0 <= cp && cp <= 0xD7FF)
+                || (0xF900 <= cp && cp <= 0xFDCF)
+                || (0xFDF0 <= cp && cp <= 0xFFEF);
+    }
+
     private static void AddExpandedValue(string prefix, object value, StringBuilder result, int maxChar, bool replaceReserved)
     {
         string stringValue = convertNativeTypes(value);
@@ -318,9 +332,16 @@ public class UriTemplate
                 reservedBuffer.Clear();
             }
 
+            var toAppend = character.ToString();
+            if (isSurrogate(character)) {
+                toAppend = Uri.EscapeDataString(char.ConvertFromUtf32(char.ConvertToUtf32(stringValue, i++)));
+            } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
+                toAppend = Uri.EscapeDataString(toAppend);
+            }
+
             if (toReserved)
             {
-                reservedBuffer.Append(character);
+                reservedBuffer.Append(toAppend);
 
                 if (reservedBuffer.Length == 3)
                 {
@@ -361,14 +382,7 @@ public class UriTemplate
                 }
                 else
                 {
-                    if (replaceReserved)
-                    {
-                        result.Append(Uri.EscapeDataString(character.ToString()));
-                    }
-                    else
-                    {
-                        result.Append(character);
-                    }
+                    result.Append(toAppend);
                 }
             }
         }
@@ -376,14 +390,7 @@ public class UriTemplate
         if (toReserved)
         {
             result.Append("%25");
-            if (replaceReserved)
-            {
-                result.Append(Uri.EscapeDataString(reservedBuffer.ToString(1, reservedBuffer.Length - 1)));
-            }
-            else
-            {
-                result.Append(reservedBuffer.ToString(1, reservedBuffer.Length - 1));
-            }
+            result.Append(reservedBuffer.ToString(1, reservedBuffer.Length - 1));
         }
     }
 

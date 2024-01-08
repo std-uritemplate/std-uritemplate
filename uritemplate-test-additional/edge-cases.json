@@ -49,5 +49,20 @@
             "three=3,two=2,one=1"
          ]]
      ]
+  },
+  "Unicode characters" :
+  {
+      "variables" : {
+         "euro": "\u20AC",
+         "surrogate": "\ud83c\udf09",
+         "displayName": "\uD83D\uDEE1\uFE0F_"
+      },
+      "testcases" : [
+         ["{euro}", "%E2%82%AC"],
+         ["{+euro}", "%E2%82%AC"],
+         ["{surrogate}", "%F0%9F%8C%89"],
+         ["{+surrogate}", "%F0%9F%8C%89"],
+         ["{displayName}", "%F0%9F%9B%A1%EF%B8%8F_"]
+      ]
   }
 }

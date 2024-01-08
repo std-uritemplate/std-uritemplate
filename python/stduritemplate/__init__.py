@@ -220,6 +220,24 @@ class StdUriTemplate:
             StdUriTemplate.__add_expanded_value(None, value, result, max_char, True)
 
     @staticmethod
+    def __is_surrogate(cp):
+        return len(cp.encode("utf-8")) > 1
+
+    @staticmethod
+    def __is_iprivate(cp):
+        val = ord(cp)
+        return 0xE000 <= val <= 0xF8FF
+
+    @staticmethod
+    def __is_ucschar(cp):
+        val = ord(cp)
+        return (
+            (0xA0 <= val <= 0xD7FF)
+            or (0xF900 <= val <= 0xFDCF)
+            or (0xFDF0 <= val <= 0xFFEF)
+        )
+
+    @staticmethod
     def __add_expanded_value(
         prefix: str,
         value: Any,
@@ -238,8 +256,16 @@ class StdUriTemplate:
             character = stringValue[i]
             if character == "%" and not replace_reserved:
                 reserved_buffer = []
+            to_append = character
+            if (
+                StdUriTemplate.__is_surrogate(character)
+                or replace_reserved
+                or StdUriTemplate.__is_ucschar(character)
+                or StdUriTemplate.__is_iprivate(character)
+            ):
+                to_append = urllib.parse.quote(to_append, encoding="utf-8", safe="")
             if reserved_buffer is not None:
-                reserved_buffer.append(character)
+                reserved_buffer.append(to_append)
                 if len(reserved_buffer) == 3:
                     try:
                         reserved = "".join(reserved_buffer)
@@ -261,23 +287,11 @@ class StdUriTemplate:
                 elif character == "%":
                     result.append("%25")
                 else:
-                    if replace_reserved:
-                        result.append(
-                            urllib.parse.quote(character, encoding="utf-8", safe="")
-                        )
-                    else:
-                        result.append(character)
+                    result.append(to_append)
 
         if reserved_buffer is not None:
             result.append("%25")
-            if replace_reserved:
-                result.append(
-                    urllib.parse.quote(
-                        "".join(reserved_buffer[1:], encoding="utf-8", safe="")
-                    )
-                )
-            else:
-                result.append("".join(reserved_buffer[1:]))
+            result.append("".join(reserved_buffer[1:]))
 
     @staticmethod
     def __is_list(value: Any) -> bool:
