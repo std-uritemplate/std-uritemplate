@@ -291,14 +291,7 @@ class StdUriTemplate:
 
         if reserved_buffer is not None:
             result.append("%25")
-            if replace_reserved:
-                result.append(
-                    urllib.parse.quote(
-                        "".join(reserved_buffer[1:], encoding="utf-8", safe="")
-                    )
-                )
-            else:
-                result.append("".join(reserved_buffer[1:]))
+            result.append("".join(reserved_buffer[1:]))
 
     @staticmethod
     def __is_list(value: Any) -> bool:

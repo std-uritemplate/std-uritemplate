@@ -378,7 +378,7 @@ class StdUriTemplate {
 
         if ($reservedBuffer !== null) {
             $result .= "%25";
-            $result .= substr($toAppend, 1);
+            $result .= substr($reservedBuffer, 1);
         }
     }
 
