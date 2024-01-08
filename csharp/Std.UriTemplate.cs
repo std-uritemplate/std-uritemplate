@@ -390,14 +390,7 @@ public class UriTemplate
         if (toReserved)
         {
             result.Append("%25");
-            if (replaceReserved)
-            {
-                result.Append(Uri.EscapeDataString(reservedBuffer.ToString(1, reservedBuffer.Length - 1)));
-            }
-            else
-            {
-                result.Append(reservedBuffer.ToString(1, reservedBuffer.Length - 1));
-            }
+            result.Append(reservedBuffer.ToString(1, reservedBuffer.Length - 1));
         }
     }
 
