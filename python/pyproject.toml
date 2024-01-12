@@ -9,8 +9,8 @@ exclude = [
     { path = "stduritemplate/__pycache__", format=["sdist", "wheel"] },
 ]
 license = "Apache 2.0"
-homepage = "https://github.com/andreaTP/std-uritemplate"
-repository = "https://github.com/andreaTP/std-uritemplate"
+homepage = "https://github.com/std-uritemplate/std-uritemplate"
+repository = "https://github.com/std-uritemplate/std-uritemplate"
 keywords = ["std-uritemplate", "uritemplate", "uritemplates", "stduritemplate"]
 
 [tool.poetry.dependencies]
