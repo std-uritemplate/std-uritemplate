@@ -350,7 +350,6 @@ class StdUriTemplate {
 
   static bool _isMap(dynamic value) {
     if (value is Map) {
-      // https://stackoverflow.com/a/173479/7898052
       if (!const bool.fromEnvironment('dart.library.js')) {
         if (value.isEmpty) {
           return true;
