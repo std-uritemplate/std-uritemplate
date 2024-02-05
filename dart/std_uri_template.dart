@@ -349,17 +349,7 @@ class StdUriTemplate {
   }
 
   static bool _isMap(dynamic value) {
-    if (value is Map) {
-      if (!const bool.fromEnvironment('dart.library.js')) {
-        if (value.isEmpty) {
-          return true;
-        }
-        return value.keys.toList() !=
-            List.generate(value.length, (index) => index);
-      }
-      return !value.keys.every((key) => key is int);
-    }
-    return false;
+    return value is Map;
   }
 
   static String _getSubstitutionType(dynamic value, int col) {
