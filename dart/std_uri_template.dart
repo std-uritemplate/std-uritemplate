@@ -1,6 +1,8 @@
 import 'dart:math';
 
 class StdUriTemplate {
+  const StdUriTemplate._();
+
   static String expand(String template, Map<String, dynamic> substitutions) {
     return _expandImpl(template, substitutions);
   }
