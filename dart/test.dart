@@ -14,22 +14,44 @@ Future<void> main(List<String> args) async {
   final templateFile = args[0];
   final dataFile = args[1];
 
+  final dynamic data;
   try {
-    final data = jsonDecode(File(dataFile).readAsStringSync());
-    if (data is Map && data.containsKey("nativedate")) {
-      data["nativedate"] =
-          DateTime.fromMillisecondsSinceEpoch(data["nativedate"]);
-    }
-    if (data is Map && data.containsKey("nativedatetwo")) {
-      data["nativedatetwo"] =
-          DateTime.fromMillisecondsSinceEpoch(data["nativedatetwo"]);
-    }
+    data = jsonDecode(File(dataFile).readAsStringSync());
+  } catch (FileNotFoundError) {
+    stderr.write("Data file '$dataFile' not found.\n");
 
-    final template = File(templateFile).readAsStringSync().trim();
+    print("false");
+
+    return;
+  }
+
+  if (data is Map && data.containsKey("nativedate")) {
+    data["nativedate"] =
+        DateTime.fromMillisecondsSinceEpoch(data["nativedate"]);
+  }
+
+  if (data is Map && data.containsKey("nativedatetwo")) {
+    data["nativedatetwo"] =
+        DateTime.fromMillisecondsSinceEpoch(data["nativedatetwo"]);
+  }
+
+  final String template;
+  try {
+    template = File(templateFile).readAsStringSync().trim();
+  } catch (FileNotFoundError) {
+    stderr.write("Template file '$templateFile' not found.\n");
+
+    print("false");
+
+    return;
+  }
+
+  try {
     final result = StdUriTemplate.expand(template, data);
     print(result);
-  } catch (FileNotFoundError) {
-    stderr.write("File '$dataFile' not found.\n");
-    exit(1);
+  } catch (e) {
+    stderr.write("Error: $e\n");
+
+    print("false");
   }
 }
