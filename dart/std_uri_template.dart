@@ -281,8 +281,8 @@ class StdUriTemplate {
   static void _addExpandedValue(dynamic prefix, dynamic value,
       StringBuffer result, int maxChar, bool replaceReserved) {
     final stringValue = _convertNativeTypes(value);
-    final max =
-        (maxChar != -1) ? min(maxChar, stringValue.length) : stringValue.length;
+    final runes = stringValue.runes;
+    final max = (maxChar != -1) ? min(maxChar, runes.length) : runes.length;
     result.write('');
     StringBuffer? reservedBuffer;
 
@@ -291,17 +291,17 @@ class StdUriTemplate {
     }
 
     for (var i = 0; i < max; i++) {
-      final character = stringValue[i];
+      final character = String.fromCharCode(runes.elementAt(i));
 
       if (character == '%' && !replaceReserved) {
         reservedBuffer = StringBuffer();
       }
 
       var toAppend = character;
-      if (_isSurrogate(String.fromCharCode(character.codeUnitAt(0))) ||
-          replaceReserved ||
-          _isUcschar(String.fromCharCode(character.codeUnitAt(0))) ||
-          _isIprivate(String.fromCharCode(character.codeUnitAt(0)))) {
+      if (replaceReserved ||
+          _isSurrogate(character) ||
+          _isUcschar(character) ||
+          _isIprivate(character)) {
         toAppend = Uri.encodeQueryComponent(toAppend);
       }
 
