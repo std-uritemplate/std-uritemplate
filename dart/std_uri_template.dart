@@ -11,7 +11,6 @@ class StdUriTemplate {
     switch (c) {
       case '+':
       case '#':
-      case '.':
       case '/':
       case ';':
       case '?':
@@ -26,7 +25,7 @@ class StdUriTemplate {
       case '~':
       case '-':
         throw ArgumentError(
-            "Illegal character identified in the token at col: $col");
+            "Illegal character identified in the token at col: $col ($c)");
       default:
         break;
     }
