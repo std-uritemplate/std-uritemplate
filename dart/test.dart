@@ -17,8 +17,8 @@ Future<void> main(List<String> args) async {
   final dynamic data;
   try {
     data = jsonDecode(File(dataFile).readAsStringSync());
-  } catch (FileNotFoundError) {
-    stderr.write("Data file '$dataFile' not found.\n");
+  } catch (e, stack) {
+    stderr.write("Error loading data file: $e\n$stack\n");
 
     print("false");
 
@@ -38,8 +38,8 @@ Future<void> main(List<String> args) async {
   final String template;
   try {
     template = File(templateFile).readAsStringSync().trim();
-  } catch (FileNotFoundError) {
-    stderr.write("Template file '$templateFile' not found.\n");
+  } catch (e, stack) {
+    stderr.write("Error loading template file: $e\n$stack\n");
 
     print("false");
 
