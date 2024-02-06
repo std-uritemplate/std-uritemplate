@@ -49,8 +49,8 @@ Future<void> main(List<String> args) async {
   try {
     final result = StdUriTemplate.expand(template, data);
     print(result);
-  } catch (e) {
-    stderr.write("Error: $e\n");
+  } catch (e, stack) {
+    stderr.write("Error: $e\n$stack\n");
 
     print("false");
   }
