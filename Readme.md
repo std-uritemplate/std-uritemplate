@@ -10,6 +10,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/Std.UriTemplate.svg?style=flat&color=green)](https://www.nuget.org/packages/Std.UriTemplate/)
 [![Gem Version](https://badge.fury.io/rb/stduritemplate.svg?style=flat&color=green)](https://badge.fury.io/rb/stduritemplate)
 [![Packagist Version](http://poser.pugx.org/stduritemplate/stduritemplate/v?style=flat)](https://packagist.org/packages/stduritemplate/stduritemplate)
+[![Pub Version](https://img.shields.io/pub/v/std_uri_template)](https://pub.dev/packages/std_uri_template)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
@@ -26,6 +27,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Ruby | ✅ | ❌ | ✅ |
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
+| Dart | ✅ | ❌ | ✅ |
 
 ## Usage
 
@@ -197,6 +199,34 @@ import stduritemplate
 ...
 
 StdUriTemplate.expand(template, substitutions: substs)
+```
+
+### Dart
+
+Install the package:
+
+```bash
+dart pub add std_uri_template
+```
+
+(or for flutter:
+
+```bash
+flutter pub add std_uri_template
+```
+)
+
+and use it:
+
+```dart
+import 'package:std_uri_template/std_uri_template.dart';
+
+void main() {
+  final template = 'https://example.com/{var}';
+  final substitutions = {'var': 'value'};
+
+  print(StdUriTemplate.expand(template, substitutions));
+}
 ```
 
 ## Design decisions
