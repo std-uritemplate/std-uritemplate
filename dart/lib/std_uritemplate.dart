@@ -292,7 +292,7 @@ class StdUriTemplate {
     final stringValue = _convertNativeTypes(value);
     final runes = stringValue.runes;
     final max = (maxChar != -1) ? min(maxChar, runes.length) : runes.length;
-    result.write('');
+
     StringBuffer? reservedBuffer;
 
     if (max > 0 && prefix != null) {
