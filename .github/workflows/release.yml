@@ -216,6 +216,7 @@ jobs:
         run: |
           cp ../Readme.md .
           cp ../LICENSE .
+          sed -i 's/version:.*/version: ${GITHUB_REF_NAME}/' pubspec.yaml
       - name: Release to pub.dev
         working-directory: dart
         run: dart pub publish --force
