@@ -1,5 +1,9 @@
 import 'dart:math';
 
+enum _SubstitutionType { EMPTY, STRING, LIST, MAP }
+
+enum _Operator { PLUS, HASH, DOT, SLASH, SEMICOLON, QUESTION_MARK, AMP, NO_OP }
+
 class StdUriTemplate {
   const StdUriTemplate._();
 
@@ -49,36 +53,37 @@ class StdUriTemplate {
     }
   }
 
-  static String _getOperator(String c, StringBuffer token, int col) {
+  static _Operator _getOperator(String c, StringBuffer token, int col) {
     switch (c) {
       case '+':
-        return 'PLUS';
+        return _Operator.PLUS;
       case '#':
-        return 'HASH';
+        return _Operator.HASH;
       case '.':
-        return 'DOT';
+        return _Operator.DOT;
       case '/':
-        return 'SLASH';
+        return _Operator.SLASH;
       case ';':
-        return 'SEMICOLON';
+        return _Operator.SEMICOLON;
       case '?':
-        return 'QUESTION_MARK';
+        return _Operator.QUESTION_MARK;
       case '&':
-        return 'AMP';
+        return _Operator.AMP;
       default:
         _validateLiteral(c, col);
         token.write(c);
-        return 'NO_OP';
+        return _Operator.NO_OP;
     }
   }
 
   static String _expandImpl(String str, Map<String, dynamic> substitutions) {
     final result = StringBuffer('');
-    StringBuffer? token;
 
-    var operator;
-    var composite = false;
+    StringBuffer? token;
+    _Operator? operator = null;
     String? maxCharBuffer;
+
+    var composite = false;
     var firstToken = true;
 
     for (var i = 0; i < str.length; i++) {
@@ -90,8 +95,10 @@ class StdUriTemplate {
           break;
         case '}':
           if (token != null) {
+            assert(operator != null, "Operator cannot be null");
+
             final expanded = _expandToken(
-                operator,
+                operator!,
                 token.toString(),
                 composite,
                 _getMaxChar(maxCharBuffer, i),
@@ -112,8 +119,10 @@ class StdUriTemplate {
           break;
         case ',':
           if (token != null) {
+            assert(operator != null, "Operator cannot be null");
+
             final expanded = _expandToken(
-                operator,
+                operator!,
                 token.toString(),
                 composite,
                 _getMaxChar(maxCharBuffer, i),
@@ -166,24 +175,24 @@ class StdUriTemplate {
     }
   }
 
-  static void _addPrefix(String op, StringBuffer result) {
+  static void _addPrefix(_Operator op, StringBuffer result) {
     switch (op) {
-      case 'HASH':
+      case _Operator.HASH:
         result.write('#');
         break;
-      case 'DOT':
+      case _Operator.DOT:
         result.write('.');
         break;
-      case 'SLASH':
+      case _Operator.SLASH:
         result.write('/');
         break;
-      case 'SEMICOLON':
+      case _Operator.SEMICOLON:
         result.write(';');
         break;
-      case 'QUESTION_MARK':
+      case _Operator.QUESTION_MARK:
         result.write('?');
         break;
-      case 'AMP':
+      case _Operator.AMP:
         result.write('&');
         break;
       default:
@@ -191,19 +200,19 @@ class StdUriTemplate {
     }
   }
 
-  static void _addSeparator(String op, StringBuffer result) {
+  static void _addSeparator(_Operator op, StringBuffer result) {
     switch (op) {
-      case 'DOT':
+      case _Operator.DOT:
         result.write('.');
         break;
-      case 'SLASH':
+      case _Operator.SLASH:
         result.write('/');
         break;
-      case 'SEMICOLON':
+      case _Operator.SEMICOLON:
         result.write(';');
         break;
-      case 'QUESTION_MARK':
-      case 'AMP':
+      case _Operator.QUESTION_MARK:
+      case _Operator.AMP:
         result.write('&');
         break;
       default:
@@ -212,42 +221,42 @@ class StdUriTemplate {
     }
   }
 
-  static void _addValue(String op, String token, dynamic value,
+  static void _addValue(_Operator op, String token, dynamic value,
       StringBuffer result, int maxChar) {
     switch (op) {
-      case 'PLUS':
-      case 'HASH':
+      case _Operator.PLUS:
+      case _Operator.HASH:
         _addExpandedValue(null, value, result, maxChar, false);
         break;
-      case 'QUESTION_MARK':
-      case 'AMP':
+      case _Operator.QUESTION_MARK:
+      case _Operator.AMP:
         result.write('$token=');
         _addExpandedValue(null, value, result, maxChar, true);
         break;
-      case 'SEMICOLON':
+      case _Operator.SEMICOLON:
         result.write(token);
         _addExpandedValue('=', value, result, maxChar, true);
         break;
-      case 'DOT':
-      case 'SLASH':
-      case 'NO_OP':
+      case _Operator.DOT:
+      case _Operator.SLASH:
+      case _Operator.NO_OP:
         _addExpandedValue(null, value, result, maxChar, true);
     }
   }
 
-  static void _addValueElement(String op, String token, dynamic value,
+  static void _addValueElement(_Operator op, String token, dynamic value,
       StringBuffer result, int maxChar) {
     switch (op) {
-      case 'PLUS':
-      case 'HASH':
+      case _Operator.PLUS:
+      case _Operator.HASH:
         _addExpandedValue(null, value, result, maxChar, false);
         break;
-      case 'QUESTION_MARK':
-      case 'AMP':
-      case 'SEMICOLON':
-      case 'DOT':
-      case 'SLASH':
-      case 'NO_OP':
+      case _Operator.QUESTION_MARK:
+      case _Operator.AMP:
+      case _Operator.SEMICOLON:
+      case _Operator.DOT:
+      case _Operator.SLASH:
+      case _Operator.NO_OP:
         _addExpandedValue(null, value, result, maxChar, true);
     }
   }
@@ -351,30 +360,30 @@ class StdUriTemplate {
     return value is Map;
   }
 
-  static String _getSubstitutionType(dynamic value, int col) {
+  static _SubstitutionType _getSubstitutionType(dynamic value, int col) {
     if (value == null) {
-      return 'EMPTY';
+      return _SubstitutionType.EMPTY;
     } else if (_isNativeType(value)) {
-      return 'STRING';
+      return _SubstitutionType.STRING;
     } else if (_isMap(value)) {
-      return 'MAP';
+      return _SubstitutionType.MAP;
     } else if (_isList(value)) {
-      return 'LIST';
+      return _SubstitutionType.LIST;
     } else {
       throw ArgumentError(
           "Illegal class passed as substitution, found ${value.runtimeType} at col: $col");
     }
   }
 
-  static bool _isEmpty(String substType, dynamic value) {
+  static bool _isEmpty(_SubstitutionType substType, dynamic value) {
     if (value == null) {
       return true;
     } else {
       switch (substType) {
-        case 'STRING':
+        case _SubstitutionType.STRING:
           return false;
-        case 'LIST':
-        case 'MAP':
+        case _SubstitutionType.LIST:
+        case _SubstitutionType.MAP:
           return value.isEmpty;
         default:
           return true;
@@ -406,7 +415,7 @@ class StdUriTemplate {
   }
 
   static bool _expandToken(
-      String operator,
+      _Operator operator,
       String token,
       bool composite,
       int maxChar,
@@ -420,7 +429,7 @@ class StdUriTemplate {
 
     final value = substitutions[token] ?? null;
     final substType = _getSubstitutionType(value, col);
-    if (substType == 'EMPTY' || _isEmpty(substType, value)) {
+    if (substType == _SubstitutionType.EMPTY || _isEmpty(substType, value)) {
       return false;
     }
 
@@ -431,27 +440,30 @@ class StdUriTemplate {
     }
 
     switch (substType) {
-      case 'STRING':
+      case _SubstitutionType.STRING:
         _addStringValue(operator, token, value, result, maxChar);
         break;
-      case 'LIST':
+      case _SubstitutionType.LIST:
         _addListValue(operator, token, value, result, maxChar, composite);
         break;
-      case 'MAP':
+      case _SubstitutionType.MAP:
         _addMapValue(operator, token, value, result, maxChar, composite);
+        break;
+      case _SubstitutionType.EMPTY:
+        // do nothing
         break;
     }
 
     return true;
   }
 
-  static void _addStringValue(String operator, String token, dynamic value,
+  static void _addStringValue(_Operator operator, String token, dynamic value,
       StringBuffer result, int maxChar) {
     _addValue(operator, token, value, result, maxChar);
   }
 
-  static bool _addListValue(String operator, String token, List<dynamic> value,
-      StringBuffer result, int maxChar, bool composite) {
+  static bool _addListValue(_Operator operator, String token,
+      List<dynamic> value, StringBuffer result, int maxChar, bool composite) {
     var first = true;
     for (final v in value) {
       if (first) {
@@ -471,7 +483,7 @@ class StdUriTemplate {
   }
 
   static bool _addMapValue(
-      String operator,
+      _Operator operator,
       String token,
       Map<dynamic, dynamic> value,
       StringBuffer result,
