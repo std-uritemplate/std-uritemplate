@@ -219,7 +219,7 @@ flutter pub add std_uri_template
 and use it:
 
 ```dart
-import 'package:std_uri_template/std_uri_template.dart';
+import 'package:std_uritemplate/std_uritemplate.dart';
 
 void main() {
   final template = 'https://example.com/{var}';
