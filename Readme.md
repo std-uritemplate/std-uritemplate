@@ -10,7 +10,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/Std.UriTemplate.svg?style=flat&color=green)](https://www.nuget.org/packages/Std.UriTemplate/)
 [![Gem Version](https://badge.fury.io/rb/stduritemplate.svg?style=flat&color=green)](https://badge.fury.io/rb/stduritemplate)
 [![Packagist Version](http://poser.pugx.org/stduritemplate/stduritemplate/v?style=flat)](https://packagist.org/packages/stduritemplate/stduritemplate)
-[![Pub Version](https://img.shields.io/pub/v/std_uri_template)](https://pub.dev/packages/std_uri_template)
+[![Pub Version](https://img.shields.io/pub/v/std_uritemplate)](https://pub.dev/packages/std_uritemplate)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
 This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
