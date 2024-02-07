@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'std_uri_template.dart';
+import 'lib/std_uri_template.dart';
 
 Future<void> main(List<String> args) async {
   if (args.length != 2) {
