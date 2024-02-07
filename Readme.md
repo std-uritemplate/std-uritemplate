@@ -206,13 +206,13 @@ StdUriTemplate.expand(template, substitutions: substs)
 Install the package:
 
 ```bash
-dart pub add std_uri_template
+dart pub add std_uritemplate
 ```
 
 (or for flutter:
 
 ```bash
-flutter pub add std_uri_template
+flutter pub add std_uritemplate
 ```
 )
 
