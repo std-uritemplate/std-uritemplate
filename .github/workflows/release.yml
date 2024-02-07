@@ -209,6 +209,7 @@ jobs:
         with:
           sdk: stable
       - name: Install dependencies
+        working-directory: dart
         run: dart pub get
       - name: Prepare Release Files
         working-directory: dart
