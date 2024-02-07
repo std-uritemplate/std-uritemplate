@@ -4,6 +4,48 @@ enum _SubstitutionType { EMPTY, STRING, LIST, MAP }
 
 enum _Operator { PLUS, HASH, DOT, SLASH, SEMICOLON, QUESTION_MARK, AMP, NO_OP }
 
+extension on DateTime {
+  /// This is the same as [toIso8601String] but without milli- and microseconds.
+  String toIso8601StringWithoutMilliseconds() {
+    String y =
+        (year >= -9999 && year <= 9999) ? _fourDigits(year) : _sixDigits(year);
+    String m = _twoDigits(month);
+    String d = _twoDigits(day);
+    String h = _twoDigits(hour);
+    String min = _twoDigits(minute);
+    String sec = _twoDigits(second);
+    if (isUtc) {
+      return "$y-$m-${d}T$h:$min:${sec}Z";
+    } else {
+      return "$y-$m-${d}T$h:$min:$sec";
+    }
+  }
+
+  // Function below are copied from dart:core DateTime
+
+  static String _fourDigits(int n) {
+    int absN = n.abs();
+    String sign = n < 0 ? "-" : "";
+    if (absN >= 1000) return "$n";
+    if (absN >= 100) return "${sign}0$absN";
+    if (absN >= 10) return "${sign}00$absN";
+    return "${sign}000$absN";
+  }
+
+  static String _sixDigits(int n) {
+    assert(n < -9999 || n > 9999);
+    int absN = n.abs();
+    String sign = n < 0 ? "-" : "+";
+    if (absN >= 100000) return "$sign$absN";
+    return "${sign}0$absN";
+  }
+
+  static String _twoDigits(int n) {
+    if (n >= 10) return "${n}";
+    return "0${n}";
+  }
+}
+
 class StdUriTemplate {
   const StdUriTemplate._();
 
@@ -408,7 +450,7 @@ class StdUriTemplate {
     } else if (value is String || value is int || value is double) {
       return value.toString();
     } else if (value is DateTime) {
-      return value.toUtc().toIso8601String();
+      return value.toUtc().toIso8601StringWithoutMilliseconds();
     } else {
       return '';
     }
