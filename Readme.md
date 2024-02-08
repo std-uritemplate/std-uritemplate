@@ -27,7 +27,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Ruby | ✅ | ❌ | ✅ |
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
-| Dart | ✅ | ❌ | ✅ |
+| Dart | ✅ | ❌ | ❌ |
 
 ## Usage
 
