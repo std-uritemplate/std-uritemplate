@@ -19,8 +19,7 @@ Future<void> main(List<String> args) async {
     data = jsonDecode(File(dataFile).readAsStringSync());
   } catch (e, stack) {
     stderr.write("Error loading data file: $e\n$stack\n");
-
-    throw e;
+    exit(1);
   }
 
   if (data is Map && data.containsKey("nativedate")) {
@@ -38,8 +37,7 @@ Future<void> main(List<String> args) async {
     template = File(templateFile).readAsStringSync().trim();
   } catch (e, stack) {
     stderr.write("Error loading template file: $e\n$stack\n");
-
-    throw e;
+    exit(1);
   }
 
   try {
