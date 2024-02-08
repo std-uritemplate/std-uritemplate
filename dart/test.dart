@@ -20,9 +20,7 @@ Future<void> main(List<String> args) async {
   } catch (e, stack) {
     stderr.write("Error loading data file: $e\n$stack\n");
 
-    print("false");
-
-    return;
+    throw e;
   }
 
   if (data is Map && data.containsKey("nativedate")) {
@@ -41,9 +39,7 @@ Future<void> main(List<String> args) async {
   } catch (e, stack) {
     stderr.write("Error loading template file: $e\n$stack\n");
 
-    print("false");
-
-    return;
+    throw e;
   }
 
   try {
