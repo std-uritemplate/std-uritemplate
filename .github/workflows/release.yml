@@ -196,3 +196,27 @@ jobs:
           git push origin ${GITHUB_REF_NAME}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+#  # according to https://dart.dev/tools/pub/automated-publishing#configuring-automated-publishing-from-github-actions-on-pubdev
+#  publish-dart:
+#    permissions:
+#      id-token: write # Required for authentication using OIDC
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Setup Dart
+#        uses: dart-lang/setup-dart@v1
+#        with:
+#          sdk: stable
+#      - name: Install dependencies
+#        working-directory: dart
+#        run: dart pub get
+#      - name: Prepare Release Files
+#        working-directory: dart
+#        run: |
+#          cp ../Readme.md .
+#          cp ../LICENSE .
+#          sed -i 's/version:.*/version: ${GITHUB_REF_NAME}/' pubspec.yaml
+#      - name: Release to pub.dev
+#        working-directory: dart
+#        run: dart pub publish --force

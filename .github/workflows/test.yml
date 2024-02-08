@@ -24,6 +24,7 @@ jobs:
           - ruby
           - php
           - swift
+          - dart
         php-version:
           - '7.4'
           - '8.2'
@@ -102,6 +103,12 @@ jobs:
         if: matrix.language == 'swift'
         with:
           swift-version: "5.8"
+
+      # Dart setup
+      - uses: dart-lang/setup-dart@v1
+        if: matrix.language == 'dart'
+        with:
+          sdk: "stable"
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
