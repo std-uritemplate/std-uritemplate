@@ -27,7 +27,7 @@ This is intended to become a complete and maintained cross-language implementati
 | Ruby | ✅ | ❌ | ✅ |
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
-| Dart | ✅ | ❌ | ❌ |
+| Dart | ✅ | ❌ | ✅ |
 
 ## Usage
 
@@ -209,12 +209,11 @@ Install the package:
 dart pub add std_uritemplate
 ```
 
-(or for flutter:
+for flutter:
 
 ```bash
 flutter pub add std_uritemplate
 ```
-)
 
 and use it:
 
