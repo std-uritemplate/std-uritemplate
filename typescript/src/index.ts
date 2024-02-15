@@ -298,7 +298,7 @@ export class StdUriTemplate {
         reservedBuffer = [];
       }
 
-      let toAppend: string = Buffer.from(character, 'utf-8').toString();
+      let toAppend: string = character;
       if (StdUriTemplate.isSurrogate(character)) {
           toAppend = encodeURIComponent(stringValue.charAt(i) + stringValue.charAt(i + 1));
           i++; // Skip the next character
