@@ -4,6 +4,7 @@ import specExamples from '../../uritemplate-test/spec-examples.json';
 import specExamplesBySection from '../../uritemplate-test/spec-examples-by-section.json';
 import extendedTests from '../../uritemplate-test/extended-tests.json';
 import negativeTests from '../../uritemplate-test/negative-tests.json';
+import edgeCases from '../../uritemplate-test-additional/edge-cases.json';
 
 const levels = {
   "level": 1,
@@ -51,6 +52,13 @@ const negativeTestsLevels = [
   "Failure Tests"
 ]
 
+const edgeCasesLevels = [
+  "Handling of boolean values",
+  "Language native date-time format",
+  "Nested primitives",
+  "Unicode characters",
+]
+
 test('ensure browser mode is available', () => {
   expect(typeof window).not.toBe('undefined')
 })
@@ -79,9 +87,13 @@ describe("StdUriTemplate - expand", () => {
     expect(Object.keys(extendedTests)).toEqual(extendedTestsLevels);
   })
 
-  test("negativeTests.json exists", () => {
+  test("negative-tests.json exists", () => {
     expect(negativeTests).toBeDefined();
     expect(Object.keys(negativeTests)).toEqual(negativeTestsLevels);
+  })
+  test("edge-cases.json exists", () => {
+    expect(edgeCases).toBeDefined();
+    expect(Object.keys(edgeCases)).toEqual(edgeCasesLevels);
   })
 })
 
@@ -142,6 +154,38 @@ describe.each(negativeTestsLevels)('testing %s', (level: string) => {
     const template = testcase[0] as unknown as string;
     const expected = testcase[1] as unknown;
     test.fails(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
+      const result = StdUriTemplate.expand(template, variables);
+      if(typeof expected === 'string'){
+        expectTypeOf(result).toBeString;
+        expect(result).toBe(expected)
+      }else if(Array.isArray(expected)){
+        expectTypeOf(expected).toBeArray;
+        expect(expected).toContain(result);
+      }
+    })
+  });
+})
+
+describe.each(edgeCasesLevels)('testing %s', (level: string) => {
+  const testcases = edgeCases[level]["testcases"]
+  expect(testcases).toBeDefined();
+
+  const variables = edgeCases[level]["variables"]
+  expect(variables).toBeDefined();
+  if (variables["nativedate"] !== undefined) {
+    const newDate = new Date(variables["nativedate"])
+    Object.assign(variables,{"nativedate":newDate})
+
+  }
+  if (variables["nativedatetwo"] !== undefined) {
+    const newDate = new Date(variables["nativedatetwo"])
+    Object.assign(variables,{"nativedatetwo":newDate})
+  }
+
+  testcases.forEach((testcase: Array<Array<any>>) => {
+    const template = testcase[0] as unknown as string;
+    const expected = testcase[1] as unknown as string;
+    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
       if(typeof expected === 'string'){
         expectTypeOf(result).toBeString;
