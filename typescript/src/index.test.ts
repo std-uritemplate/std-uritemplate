@@ -70,16 +70,15 @@ describe.each(specExamplesLevels)('testing %s', (level: string) => {
   testcases.forEach((testcase: Array<Array<any>>) => {
     const template = testcase[0] as unknown as string;
     const expected = testcase[1] as unknown;
-    test.runIf(typeof expected === 'string')(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
+    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
-      expectTypeOf(result).toBeString;
-      expect(result).toBe(expected)
-    })
-
-    test.runIf(Array.isArray(expected))(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
-      const result = StdUriTemplate.expand(template, variables);
-      expectTypeOf(expected).toBeArray;
-      expect(result).toStrictEqual(expected.pop());
+      if(typeof expected === 'string'){
+        expectTypeOf(result).toBeString;
+        expect(result).toBe(expected)
+      }else if(Array.isArray(expected)){
+        expectTypeOf(expected).toBeArray;
+        expect(result).toStrictEqual(expected.pop());
+      }
     })
   });
 })
