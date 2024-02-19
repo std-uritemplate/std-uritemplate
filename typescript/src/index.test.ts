@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, expectTypeOf, test } from 'vitest'
 import { StdUriTemplate } from './index'
 import specExamples from '../../uritemplate-test/spec-examples.json'
 
@@ -55,12 +55,14 @@ describe.each(specExamplesLevels)('testing %s', (level: string) => {
     const expected = testcase[1] as unknown;
     test.runIf(typeof expected === 'string')(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
+      expectTypeOf(result).toBeString;
       expect(result).toBe(expected)
     })
 
     test.runIf(Array.isArray(expected))(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
-      expect(result).toMatchObject(Array.from(expected))
+      expectTypeOf(expected).toBeArray;
+      expect(result).toStrictEqual(expected);
     })
   });
 })
