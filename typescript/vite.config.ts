@@ -8,7 +8,7 @@ export default defineConfig({
             headless: true
         },
         environmentMatchGlobs: [
-            ['src/index.test.ts', 'jsdom']
+            ['src/index.browser.test.ts', 'jsdom']
         ]
     },
 })
