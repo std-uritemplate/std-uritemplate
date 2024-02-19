@@ -5,7 +5,7 @@ set -euo pipefail
 LANGUAGE=${1}
 FILE_FILTER=${2:-"*.json"}
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-ALLOW_BROWSER_TESTS=${3}
+ALLOW_BROWSER_TESTS=${3:-}
 
 echo "Going to test compatibility with language ${LANGUAGE}"
 
