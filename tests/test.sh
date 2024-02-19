@@ -5,6 +5,7 @@ set -euo pipefail
 LANGUAGE=${1}
 FILE_FILTER=${2:-"*.json"}
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+ALLOW_BROWSER_TESTS=${3}
 
 echo "Going to test compatibility with language ${LANGUAGE}"
 
@@ -18,14 +19,19 @@ if [ ! -f ${SCRIPT_DIR}/../${LANGUAGE}/test.sh ]; then
   exit 1;
 fi
 
-if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ]; then
+if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ];then
   echo "Please clone this repo and all of the submodules with \"git clone --recurse-submodules\" or run \"git submodule update --init\""
   exit 1
+fi
+
+if [ $LANGUAGE = "typescript" ] && [ $ALLOW_BROWSER_TESTS = "--browser" ];then
+echo "Perfoming browser tests for typescript"
 fi
 
 echo "Initialize"
 bash ${SCRIPT_DIR}/../${LANGUAGE}/init.sh
 echo "Initialization done"
+
 
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" "${SCRIPT_DIR}/../uritemplate-test-additional" -name "${FILE_FILTER}" -type f); do
 
