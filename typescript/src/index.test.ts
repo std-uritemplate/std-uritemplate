@@ -63,15 +63,7 @@ test('ensure browser mode is available', () => {
   expect(typeof window).not.toBe('undefined')
 })
 
-describe("StdUriTemplate - expand", () => {
-  test("manual", () => {
-    const template = levels.testcases[0][0]
-    const expected = levels.testcases[0][1]
-    const data = levels.variables
-    const result = StdUriTemplate.expand(template, data);
-    expect(result).toBe(expected)
-  })
-
+describe("test files", () => {
   test("spec-examples.json exists", () => {
     expect(specExamples).toBeDefined();
     expect(Object.keys(specExamples)).toEqual(specExamplesLevels);
@@ -97,50 +89,53 @@ describe("StdUriTemplate - expand", () => {
   })
 })
 
-describe.each(specExamplesLevels)('testing %s', (level: string) => {
-  const testcases = specExamples[level]["testcases"]
-  expect(testcases).toBeDefined();
+const files: Record<string, object> = {
+  specExamples, specExamplesBySection, extendedTests, edgeCases
+}
 
-  const variables = specExamples[level]["variables"]
-  expect(variables).toBeDefined();
+const testcaseRunners: Record<string, string[]>[] = [
+  { 'specExamples': specExamplesLevels },
+  { 'specExamplesBySection': specExamplesBySectionLevels },
+  { 'extendedTests': extendedTestsLevels },
+  { 'edgeCases': edgeCasesLevels }
+]
 
-  testcases.forEach((testcase: Array<Array<any>>) => {
-    const template = testcase[0] as unknown as string;
-    const expected = testcase[1] as unknown;
-    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
-      const result = StdUriTemplate.expand(template, variables);
-      if(typeof expected === 'string'){
-        expectTypeOf(result).toBeString;
-        expect(result).toBe(expected)
-      }else if(Array.isArray(expected)){
-        expectTypeOf(expected).toBeArray;
-        expect(expected).toContain(result);
-      }
-    })
-  });
-})
+testcaseRunners.forEach((testcaseRunner) => {
+  const testName = Object.keys(testcaseRunner).pop() ?? '';
+  const testData = files[testName]
+  const levels = testcaseRunner[testName];
 
-describe.each(specExamplesBySectionLevels)('testing %s', (level: string) => {
-  const testcases = specExamplesBySection[level]["testcases"]
-  expect(testcases).toBeDefined();
+  describe.each(levels)('testing %s', (level: string) => {
+    const testcases = testData[level]["testcases"]
+    expect(testcases).toBeDefined();
 
-  const variables = specExamplesBySection[level]["variables"]
-  expect(variables).toBeDefined();
+    const variables = testData[level]["variables"]
+    expect(variables).toBeDefined();
+    if (variables["nativedate"] !== undefined) {
+      const newDate = new Date(variables["nativedate"])
+      Object.assign(variables, { "nativedate": newDate })
 
-  testcases.forEach((testcase: Array<Array<any>>) => {
-    const template = testcase[0] as unknown as string;
-    const expected = testcase[1] as unknown;
-    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
-      const result = StdUriTemplate.expand(template, variables);
-      if(typeof expected === 'string'){
-        expectTypeOf(result).toBeString;
-        expect(result).toBe(expected)
-      }else if(Array.isArray(expected)){
-        expectTypeOf(expected).toBeArray;
-        expect(expected).toContain(result);
-      }
-    })
-  });
+    }
+    if (variables["nativedatetwo"] !== undefined) {
+      const newDate = new Date(variables["nativedatetwo"])
+      Object.assign(variables, { "nativedatetwo": newDate })
+    }
+
+    testcases.forEach((testcase: Array<Array<any>>) => {
+      const template = testcase[0] as unknown as string;
+      const expected = testcase[1] as unknown as string;
+      test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
+        const result = StdUriTemplate.expand(template, variables);
+        if (typeof expected === 'string') {
+          expectTypeOf(result).toBeString;
+          expect(result).toBe(expected)
+        } else if (Array.isArray(expected)) {
+          expectTypeOf(expected).toBeArray;
+          expect(expected).toContain(result);
+        }
+      })
+    });
+  })
 })
 
 describe.each(negativeTestsLevels)('testing %s', (level: string) => {
@@ -155,42 +150,10 @@ describe.each(negativeTestsLevels)('testing %s', (level: string) => {
     const expected = testcase[1] as unknown;
     test.fails(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
-      if(typeof expected === 'string'){
+      if (typeof expected === 'string') {
         expectTypeOf(result).toBeString;
         expect(result).toBe(expected)
-      }else if(Array.isArray(expected)){
-        expectTypeOf(expected).toBeArray;
-        expect(expected).toContain(result);
-      }
-    })
-  });
-})
-
-describe.each(edgeCasesLevels)('testing %s', (level: string) => {
-  const testcases = edgeCases[level]["testcases"]
-  expect(testcases).toBeDefined();
-
-  const variables = edgeCases[level]["variables"]
-  expect(variables).toBeDefined();
-  if (variables["nativedate"] !== undefined) {
-    const newDate = new Date(variables["nativedate"])
-    Object.assign(variables,{"nativedate":newDate})
-
-  }
-  if (variables["nativedatetwo"] !== undefined) {
-    const newDate = new Date(variables["nativedatetwo"])
-    Object.assign(variables,{"nativedatetwo":newDate})
-  }
-
-  testcases.forEach((testcase: Array<Array<any>>) => {
-    const template = testcase[0] as unknown as string;
-    const expected = testcase[1] as unknown as string;
-    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
-      const result = StdUriTemplate.expand(template, variables);
-      if(typeof expected === 'string'){
-        expectTypeOf(result).toBeString;
-        expect(result).toBe(expected)
-      }else if(Array.isArray(expected)){
+      } else if (Array.isArray(expected)) {
         expectTypeOf(expected).toBeArray;
         expect(expected).toContain(result);
       }
