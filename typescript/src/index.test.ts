@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, test } from 'vitest'
 import { StdUriTemplate } from './index'
 import specExamples from '../../uritemplate-test/spec-examples.json';
 import specExamplesBySection from '../../uritemplate-test/spec-examples-by-section.json';
+import extendedTests from '../../uritemplate-test/extended-tests.json';
 
 const levels = {
   "level": 1,
@@ -36,6 +37,15 @@ const specExamplesBySectionLevels = [
   "3.2.9 Form-Style Query Continuation",
 ]
 
+const extendedTestsLevels = [
+  "Additional Examples 1",
+  "Additional Examples 2",
+  "Additional Examples 3: Empty Variables",
+  "Additional Examples 4: Numeric Keys",
+  "Additional Examples 5: Explode Combinations",
+  "Additional Examples 6: Reserved Expansion",
+]
+
 test('ensure browser mode is available', () => {
   expect(typeof window).not.toBe('undefined')
 })
@@ -58,6 +68,11 @@ describe("StdUriTemplate - expand", () => {
     expect(specExamplesBySection).toBeDefined();
     expect(Object.keys(specExamplesBySection)).toEqual(specExamplesBySectionLevels);
   })
+
+  test("extended-tests.json exists", () => {
+    expect(extendedTests).toBeDefined();
+    expect(Object.keys(extendedTests)).toEqual(extendedTestsLevels);
+  })
 })
 
 describe.each(specExamplesLevels)('testing %s', (level: string) => {
@@ -77,7 +92,7 @@ describe.each(specExamplesLevels)('testing %s', (level: string) => {
         expect(result).toBe(expected)
       }else if(Array.isArray(expected)){
         expectTypeOf(expected).toBeArray;
-        expect(result).toStrictEqual(expected.pop());
+        expect(expected).toContain(result);
       }
     })
   });
@@ -100,7 +115,30 @@ describe.each(specExamplesBySectionLevels)('testing %s', (level: string) => {
         expect(result).toBe(expected)
       }else if(Array.isArray(expected)){
         expectTypeOf(expected).toBeArray;
-        expect(result).toStrictEqual(expected.pop());
+        expect(expected).toContain(result);
+      }
+    })
+  });
+})
+
+describe.each(extendedTestsLevels)('testing %s', (level: string) => {
+  const testcases = extendedTests[level]["testcases"]
+  expect(testcases).toBeDefined();
+
+  const variables = extendedTests[level]["variables"]
+  expect(variables).toBeDefined();
+
+  testcases.forEach((testcase: Array<Array<any>>) => {
+    const template = testcase[0] as unknown as string;
+    const expected = testcase[1] as unknown;
+    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
+      const result = StdUriTemplate.expand(template, variables);
+      if(typeof expected === 'string'){
+        expectTypeOf(result).toBeString;
+        expect(result).toBe(expected)
+      }else if(Array.isArray(expected)){
+        expectTypeOf(expected).toBeArray;
+        expect(expected).toContain(result);
       }
     })
   });
