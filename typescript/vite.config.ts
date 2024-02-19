@@ -7,5 +7,8 @@ export default defineConfig({
             name: 'chrome',
             headless: true
         },
+        environmentMatchGlobs: [
+            ['src/index.test.ts', 'jsdom']
+        ]
     },
 })
