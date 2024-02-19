@@ -62,7 +62,7 @@ describe.each(specExamplesLevels)('testing %s', (level: string) => {
     test.runIf(Array.isArray(expected))(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
       expectTypeOf(expected).toBeArray;
-      expect(result).toStrictEqual(expected);
+      expect(result).toStrictEqual(expected.pop());
     })
   });
 })
