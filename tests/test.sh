@@ -24,14 +24,14 @@ if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ];then
   exit 1
 fi
 
-if [ $LANGUAGE = "typescript" ] && [ $ALLOW_BROWSER_TESTS = "--browser" ];then
-echo "Perfoming browser tests for typescript"
-fi
-
 echo "Initialize"
 bash ${SCRIPT_DIR}/../${LANGUAGE}/init.sh
 echo "Initialization done"
 
+if [ $LANGUAGE = "typescript" ] && [ $ALLOW_BROWSER_TESTS = "--browser" ];then
+echo "Perfoming browser tests for typescript"
+bash ${SCRIPT_DIR}/../${LANGUAGE}/test.browser.sh
+fi
 
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" "${SCRIPT_DIR}/../uritemplate-test-additional" -name "${FILE_FILTER}" -type f); do
 
