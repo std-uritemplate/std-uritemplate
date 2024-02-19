@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { StdUriTemplate } = require('./dist/index.js');
+const { StdUriTemplate } = require('./dist/src/index.js');
 const process = require('process');
 
 const templateFile = process.argv[2];
