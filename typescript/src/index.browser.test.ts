@@ -6,19 +6,6 @@ import extendedTests from '../../uritemplate-test/extended-tests.json';
 import negativeTests from '../../uritemplate-test/negative-tests.json';
 import edgeCases from '../../uritemplate-test-additional/edge-cases.json';
 
-const levels = {
-  "level": 1,
-  "variables": {
-    "var": "value",
-    "hello": "Hello World!"
-  },
-  "testcases": [
-    ["{var}", "value"],
-    ["'{var}'", "'value'"],
-    ["{hello}", "Hello%20World%21"]
-  ]
-}
-
 const specExamplesLevels = [
   "Level 1 Examples",
   "Level 2 Examples",
