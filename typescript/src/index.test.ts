@@ -3,6 +3,7 @@ import { StdUriTemplate } from './index'
 import specExamples from '../../uritemplate-test/spec-examples.json';
 import specExamplesBySection from '../../uritemplate-test/spec-examples-by-section.json';
 import extendedTests from '../../uritemplate-test/extended-tests.json';
+import negativeTests from '../../uritemplate-test/negative-tests.json';
 
 const levels = {
   "level": 1,
@@ -46,6 +47,10 @@ const extendedTestsLevels = [
   "Additional Examples 6: Reserved Expansion",
 ]
 
+const negativeTestsLevels = [
+  "Failure Tests"
+]
+
 test('ensure browser mode is available', () => {
   expect(typeof window).not.toBe('undefined')
 })
@@ -72,6 +77,11 @@ describe("StdUriTemplate - expand", () => {
   test("extended-tests.json exists", () => {
     expect(extendedTests).toBeDefined();
     expect(Object.keys(extendedTests)).toEqual(extendedTestsLevels);
+  })
+
+  test("negativeTests.json exists", () => {
+    expect(negativeTests).toBeDefined();
+    expect(Object.keys(negativeTests)).toEqual(negativeTestsLevels);
   })
 })
 
@@ -121,17 +131,17 @@ describe.each(specExamplesBySectionLevels)('testing %s', (level: string) => {
   });
 })
 
-describe.each(extendedTestsLevels)('testing %s', (level: string) => {
-  const testcases = extendedTests[level]["testcases"]
+describe.each(negativeTestsLevels)('testing %s', (level: string) => {
+  const testcases = negativeTests[level]["testcases"]
   expect(testcases).toBeDefined();
 
-  const variables = extendedTests[level]["variables"]
+  const variables = negativeTests[level]["variables"]
   expect(variables).toBeDefined();
 
   testcases.forEach((testcase: Array<Array<any>>) => {
     const template = testcase[0] as unknown as string;
     const expected = testcase[1] as unknown;
-    test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
+    test.fails(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
       if(typeof expected === 'string'){
         expectTypeOf(result).toBeString;
