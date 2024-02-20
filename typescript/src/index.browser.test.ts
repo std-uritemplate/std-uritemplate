@@ -114,7 +114,7 @@ testcaseRunners.forEach((testcaseRunner) => {
       test(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
         const result = StdUriTemplate.expand(template, variables);
         if (typeof expected === 'string') {
-          expectTypeOf(result).toBeString;
+          expectTypeOf(expected).toBeString;
           expect(result).toBe(expected)
         } else if (Array.isArray(expected)) {
           expectTypeOf(expected).toBeArray;
@@ -138,7 +138,7 @@ describe.each(negativeTestsLevels)('testing %s', (level: string) => {
     test.fails(`StdUriTemplate.expand(${template}, ${JSON.stringify(variables)})`, () => {
       const result = StdUriTemplate.expand(template, variables);
       if (typeof expected === 'string') {
-        expectTypeOf(result).toBeString;
+        expectTypeOf(expected).toBeString;
         expect(result).toBe(expected)
       } else if (Array.isArray(expected)) {
         expectTypeOf(expected).toBeArray;
