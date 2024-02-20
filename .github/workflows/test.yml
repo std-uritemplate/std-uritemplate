@@ -112,4 +112,9 @@ jobs:
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
-        run: ./tests/test.sh ${{ matrix.language }}
+        run: |
+          if [[ ${{ matrix.language }} == 'typescript' ]]; then
+            ./tests/test.sh ${{ matrix.language }} --browser
+          else
+            ./tests/test.sh ${{ matrix.language }}
+          fi
