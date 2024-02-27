@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -293,7 +294,9 @@ public class StdUriTemplate {
             String toAppend = Character.toString(character);
             try {
                 if (isSurrogate(character)) {
-                    toAppend = URLEncoder.encode(String.valueOf(stringValue.codePointAt(i++)), StandardCharsets.UTF_8.name());
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(Character.toChars(stringValue.codePointAt(i++)));
+                    toAppend = URLEncoder.encode(sb.toString(), StandardCharsets.UTF_8.name());
                 } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
                     toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8.name());
                 }
