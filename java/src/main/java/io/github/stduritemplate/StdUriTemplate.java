@@ -1,5 +1,6 @@
 package io.github.stduritemplate;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -100,8 +101,8 @@ public class StdUriTemplate {
         final StringBuilder maxCharBuffer = new StringBuilder(3);
         boolean firstToken = true;
 
-        for (var i = 0; i < str.length(); i++) {
-            var character = str.charAt(i);
+        for (int i = 0; i < str.length(); i++) {
+            char character = str.charAt(i);
             switch (character) {
                 case '{':
                     toToken = true;
@@ -110,7 +111,7 @@ public class StdUriTemplate {
                     break;
                 case '}':
                     if (toToken) {
-                        var expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
@@ -126,7 +127,7 @@ public class StdUriTemplate {
                     break;
                 case ',':
                     if (toToken) {
-                        var expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
@@ -281,7 +282,7 @@ public class StdUriTemplate {
             result.append(prefix);
         }
 
-        for (var i = 0; i < max; i++) {
+        for (int i = 0; i < max; i++) {
             char character = stringValue.charAt(i);
 
             if (character == '%' && !replaceReserved) {
@@ -290,10 +291,14 @@ public class StdUriTemplate {
             }
 
             String toAppend = Character.toString(character);
-            if (isSurrogate(character)) {
-                toAppend = URLEncoder.encode(Character.toString(stringValue.codePointAt(i++)), StandardCharsets.UTF_8);
-            } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
-                toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8);
+            try {
+                if (isSurrogate(character)) {
+                    toAppend = URLEncoder.encode(String.valueOf(stringValue.codePointAt(i++)), StandardCharsets.UTF_8.name());
+                } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
+                    toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8.name());
+                }
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
             }
 
             if (toReserved) {
@@ -302,7 +307,7 @@ public class StdUriTemplate {
                 if (reservedBuffer.length() == 3) {
                     boolean isEncoded = false;
                     try {
-                        URLDecoder.decode(reservedBuffer.toString(), StandardCharsets.UTF_8);
+                        URLDecoder.decode(reservedBuffer.toString(), StandardCharsets.UTF_8.name());
                         isEncoded = true;
                     } catch (Exception e) {
                         // ignore
@@ -427,7 +432,7 @@ public class StdUriTemplate {
         }
 
         Object value = substitutions.get(token);
-        var substType = getSubstitutionType(value, col);
+        SubstitutionType substType = getSubstitutionType(value, col);
         if (substType == SubstitutionType.EMPTY || isEmpty(substType, value)) {
             return false;
         }
@@ -460,7 +465,7 @@ public class StdUriTemplate {
 
     private static boolean addListValue(Operator operator, String token, List<Object> value, StringBuilder result, int maxChar, boolean composite) {
         boolean first = true;
-        for (var v: value) {
+        for (Object v: value) {
             if (first) {
                 addValue(operator, token, v, result, maxChar);
                 first = false;
@@ -482,7 +487,7 @@ public class StdUriTemplate {
         if (maxChar != -1) {
             throw new IllegalArgumentException("Value trimming is not allowed on Maps");
         }
-        for (var v : value.entrySet()) {
+        for (Map.Entry<String, Object> v : value.entrySet()) {
             if (composite) {
                 if (!first) {
                     addSeparator(operator, result);

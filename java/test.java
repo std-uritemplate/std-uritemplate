@@ -4,6 +4,7 @@
 //DEPS com.fasterxml.jackson.core:jackson-databind:2.15.2
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
@@ -24,12 +25,12 @@ public class test {
         // args[1] = A file that contains the dictionary to be parsed in JSON format
         // return the expanded template to stdout
         // stderr can be used for debugging purposes
-        var objectReader = new ObjectMapper().readerFor(Map.class);
+        ObjectReader objectReader = new ObjectMapper().readerFor(Map.class);
 
-        try (var fis = new FileInputStream(args[1])) {
-            var template = new String(Files.readAllBytes(Paths.get(args[0])));
+        try (FileInputStream fis = new FileInputStream(args[1])) {
+            String template = new String(Files.readAllBytes(Paths.get(args[0])));
 
-            var substs = (Map<String, Object>) objectReader.readValue(fis);
+            Map<String, Object> substs = (Map<String, Object>) objectReader.readValue(fis);
             substs.computeIfPresent("nativedate", (k, v) ->
                 new Date(Long.valueOf(v.toString())));
             substs.computeIfPresent("nativedatetwo", (k, v) ->
