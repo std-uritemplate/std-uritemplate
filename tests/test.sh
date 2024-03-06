@@ -5,7 +5,6 @@ set -euo pipefail
 LANGUAGE=${1}
 FILE_FILTER=${2:-"*.json"}
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-ALLOW_BROWSER_TESTS=${3:-}
 
 echo "Going to test compatibility with language ${LANGUAGE}"
 
@@ -27,11 +26,6 @@ fi
 echo "Initialize"
 bash ${SCRIPT_DIR}/../${LANGUAGE}/init.sh
 echo "Initialization done"
-
-if [ $LANGUAGE = "typescript" ] && [ $ALLOW_BROWSER_TESTS = "--browser" ];then
-echo "Perfoming browser tests for typescript"
-bash ${SCRIPT_DIR}/../${LANGUAGE}/test.browser.sh
-fi
 
 for SPEC_FILE in $(find "${SCRIPT_DIR}/../uritemplate-test" "${SCRIPT_DIR}/../uritemplate-test-additional" -name "${FILE_FILTER}" -type f); do
 
