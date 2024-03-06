@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test StdUriTemplate in the browser</title>
     <script type="module" src="./dist/index.js">
-        console.log('happenung')
-        console.log(StdUriTemplate.expand("{var}", {"var":"value","hello":"Hello World!"}))
+        // import {StdUriTemplate} from './dist/index.js';
+        window.StdUriTemplate = StdUriTemplate;
+        console.log(window.StdUriTemplate.expand("{var}", {"var":"value","hello":"Hello World!"}))
     </script>
 </head>
 <body>

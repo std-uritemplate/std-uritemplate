@@ -1,61 +1,39 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const process = require('process');
-const { pathToFileURL } = require('node:url');
-const {StdUriTemplate} = require('./dist/index.js')
-
-const htmlFilePath = pathToFileURL('./typescript-browser/test.html');
 
 (async () => {
   const templateFile = process.argv[2];
   const dataFile = process.argv[3];
   process.stdout.write(JSON.stringify({ templateFile, dataFile }))
   try {
-    // const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 
-    // if (data["nativedate"] !== undefined) {
-    //   data["nativedate"] = new Date(data["nativedate"]);
-    // }
-    // if (data["nativedatetwo"] !== undefined) {
-    //   data["nativedatetwo"] = new Date(data["nativedatetwo"]);
-    // }
+    if (data["nativedate"] !== undefined) {
+      data["nativedate"] = new Date(data["nativedate"]);
+    }
+    if (data["nativedatetwo"] !== undefined) {
+      data["nativedatetwo"] = new Date(data["nativedatetwo"]);
+    }
 
-    // const template = fs.readFileSync(templateFile, 'utf8').trim();
+    const template = fs.readFileSync(templateFile, 'utf8').trim();
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-
+    
     try {
-      // const expandFunction = ()=>{
-      //   window.StdUriTemplate = StdUriTemplate
-      // }
-      // await page.evaluateOnNewDocument(expandFunction, template, data);
-      // await page.goto(htmlFilePath);
-      // const result = await page.evaluate(() => {
-        // console.log(window.template, window.data);
-        // return window.StdUriTemplate.expand(window.template, window.data);
-      // });
-      // const result = await page.evaluateHandle(()=> StdUriTemplate.expand(template, data))
-      await page.exposeFunction('readfile', filePath => {
-        return fs.readFileSync(filePath, 'utf8')
-      });
-
-      await page.exposeFunction('expand', (template, data)=> StdUriTemplate.expand(template,data))
-
-      const result = await page.evaluate((dataFile,templateFile)=> {
-        const data = JSON.parse(window.readfile(dataFile));
-
-        if (data["nativedate"] !== undefined) {
-          data["nativedate"] = new Date(data["nativedate"]);
-        }
-        if (data["nativedatetwo"] !== undefined) {
-          data["nativedatetwo"] = new Date(data["nativedatetwo"]);
-        }
-
-        const template = window.readfile(templateFile).trim();
-
-        return window.expand(template, data)
-
-      },dataFile,templateFile)
+      const page = await browser.newPage();
+      const content = `import {StdUriTemplate} from './dist/index.js';window.StdUriTemplate = StdUriTemplate;window.template=${template};window.data=${JSON.stringify(data)}`
+      process.stdout.write(content)
+      await page.addScriptTag({
+        content,
+        type: "module",
+        src: "./dist/index.js"
+      })
+      const result = await page.evaluate(()=>{
+        const template = window.template;
+        const data = JSON.parse(window.data);
+        return window.StdUriTemplate.expand("{var}", {"var":"value","hello":"Hello World!"})
+        // return window.StdUriTemplate.expand(template, data)
+      })
       process.stdout.write(result.toString())
       await browser.close();
     } catch (e) {
