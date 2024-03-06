@@ -1,0 +1,26 @@
+{
+  "name": "@std-uritemplate/std-uritemplate",
+  "version": "0.0.1",
+  "description": "Browser testing for std-uritemplate implementation for TS/JS",
+  "scripts": {},
+  "keywords": [
+    "uritemplate",
+    "uritemplates",
+    "std-uritemplate"
+  ],
+  "author": "Andrea Peruffo <andrea.peruffo1982@gmail.com>",
+  "license": "APACHE2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/std-uritemplate/std-uritemplate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/std-uritemplate/std-uritemplate/issues"
+  },
+  "homepage": "https://github.com/std-uritemplate/std-uritemplate#readme",
+  "devDependencies": {
+    "puppeteer": "^22.4.0"
+  }
+}
