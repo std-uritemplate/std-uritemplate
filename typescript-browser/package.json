@@ -2,7 +2,10 @@
   "name": "@std-uritemplate/std-uritemplate",
   "version": "0.0.1",
   "description": "Browser testing for std-uritemplate implementation for TS/JS",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+  },
   "keywords": [
     "uritemplate",
     "uritemplates",
@@ -21,6 +24,7 @@
   },
   "homepage": "https://github.com/std-uritemplate/std-uritemplate#readme",
   "devDependencies": {
-    "puppeteer": "^22.4.0"
+    "puppeteer": "^22.4.0",
+    "typescript": "^5.1.6"
   }
 }

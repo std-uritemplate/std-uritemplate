@@ -5,14 +5,13 @@ TYPESCRIPT_DIR=${SCRIPT_DIR}/../typescript
 TYPESCRIPT_BROWSER_DIR=${SCRIPT_DIR}/../typescript-browser
 
 (
-  # Enter the typescript folder, build it and copy the dist folder to the typescript-browser folder.
-  cd "${TYPESCRIPT_DIR}" && \
-  rm -rf ${TYPESCRIPT_DIR}/dist && \
-  npm install
-  npm run clean && \
-  npm run build
+  # Copy the typescript/src folder, build it in the typescript-browser folder.
   cd "${TYPESCRIPT_BROWSER_DIR}" && \
+  rm -rf ${TYPESCRIPT_BROWSER_DIR}/src && \
   rm -rf ${TYPESCRIPT_BROWSER_DIR}/dist && \
-  cp -R ${TYPESCRIPT_DIR}/dist . && \
-  npm install
+  cp -R ${TYPESCRIPT_DIR}/src . && \
+  npm install && \
+  npm run clean && \
+  npm run build && \
+  rm -rf ${TYPESCRIPT_BROWSER_DIR}/src
 )
