@@ -18,8 +18,6 @@ This section explains the steps that are currently used to add a new language im
     - `./tests/test.sh <lang> negative-tests.json`
 6. There are extended tests to cover edge cases and the correct handling of dates, in case the substitutions map contains a key "nativedate" convert it to the language native date format and run the extended tests:
     - `./tests/test.sh <lang> edge-cases.json`
-    > For the `TypeScript` language, you can also perform browser tests by adding a `--browser` option. For example:
-    - `./tests/test.sh typescript spec-examples.json --browser`
 7. If a test doesn't pass you can easily re-run just the latest invocation by running: `./tests/re-test.sh <lang>`
 8. Verify one last time that everything works by running `./tests/test.sh <lang>`
 9. Add the language to the GH Action Matrix CI:
