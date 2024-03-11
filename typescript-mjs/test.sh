@@ -1,6 +1,8 @@
 #! /bin/bash
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# This directory is a placeholder needed to add a second test target for the typescript
+# project. Sources and tests are located in the typescript project.
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/../typescript
 
 # This is intended to be a customizable entrypoint for each language, it has to be generic enough
-node ${SCRIPT_DIR}/../typescript/test.mjs.mjs $@
+node ${SCRIPT_DIR}/test.mjs.mjs $@
