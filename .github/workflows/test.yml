@@ -70,13 +70,6 @@ jobs:
         with:
           node-version: 18
 
-      # Typescript browser setup
-      - name: Typescript browser - Setup Node
-        uses: actions/setup-node@v4
-        if: matrix.language == 'typescript-browser'
-        with:
-          node-version: 18
-      
       # Go setup
       - name: Go - Setup Go
         uses: actions/setup-go@v5

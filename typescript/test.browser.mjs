@@ -1,13 +1,17 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const process = require('process');
-const path = require("path");
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import process from 'process';
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ideally you want to load this as a module script, import the StdUriTemplate
 // class and use it in the browser, however, puppeteer doesn't host the
 // files in the browser page it creates. This content is now loaded in
 // manually and tested.
-const pkgContent = fs.readFileSync(path.join(__dirname, 'dist/index.js'), 'utf-8')
+const pkgContent = fs.readFileSync(path.join(__dirname, 'dist/index.mjs'), 'utf-8')
 
 const templateFile = process.argv[2];
 const dataFile = process.argv[3];
@@ -25,7 +29,7 @@ const template = fs.readFileSync(templateFile, 'utf8').trim();
 
 try {
   (async ()=>{
-    const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({headless: true});
 
     try {
       const page = await browser.newPage();
