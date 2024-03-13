@@ -99,7 +99,7 @@ jobs:
           php-version: ${{ matrix.php-version }}
 
       # Swift setup
-      - uses: swift-actions/setup-swift@v1
+      - uses: swift-actions/setup-swift@v2
         if: matrix.language == 'swift'
         with:
           swift-version: "5.8"
