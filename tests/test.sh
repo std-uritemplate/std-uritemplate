@@ -18,7 +18,7 @@ if [ ! -f ${SCRIPT_DIR}/../${LANGUAGE}/test.sh ]; then
   exit 1;
 fi
 
-if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ]; then
+if [ ! -f ${SCRIPT_DIR}/../uritemplate-test/spec-examples.json ];then
   echo "Please clone this repo and all of the submodules with \"git clone --recurse-submodules\" or run \"git submodule update --init\""
   exit 1
 fi

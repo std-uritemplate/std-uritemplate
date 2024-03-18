@@ -1,6 +1,6 @@
-const fs = require('fs');
-const { StdUriTemplate } = require('./dist/index.js');
-const process = require('process');
+import fs from 'fs';
+import process from 'process';
+import { StdUriTemplate } from './dist/index.cjs';
 
 const templateFile = process.argv[2];
 const dataFile = process.argv[3];

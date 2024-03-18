@@ -19,6 +19,7 @@ jobs:
           - java
           - python
           - typescript
+          - typescript-mjs
           - go
           - csharp
           - ruby
@@ -69,7 +70,14 @@ jobs:
         if: matrix.language == 'typescript'
         with:
           node-version: 18
-      
+
+      # Typescript mjs setup
+      - name: Typescript mjs - Setup Node
+        uses: actions/setup-node@v4
+        if: matrix.language == 'typescript-mjs'
+        with:
+          node-version: 18
+
       # Go setup
       - name: Go - Setup Go
         uses: actions/setup-go@v5

@@ -3,14 +3,28 @@
   "version": "0.0.1",
   "description": "std-uritemplate implementation for TS/JS",
   "scripts": {
-    "build": "tsc --build",
-    "clean": "tsc --build --clean"
+    "build": "unbuild",
+    "clean": "rimraf ./dist"
   },
-  "keywords": [ "uritemplate", "uritemplates", "std-uritemplate"],
+  "keywords": [
+    "uritemplate",
+    "uritemplates",
+    "std-uritemplate"
+  ],
   "author": "Andrea Peruffo <andrea.peruffo1982@gmail.com>",
   "license": "APACHE2",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/std-uritemplate/std-uritemplate.git"
@@ -20,7 +34,10 @@
   },
   "homepage": "https://github.com/std-uritemplate/std-uritemplate#readme",
   "devDependencies": {
+    "puppeteer": "^22.4.0",
+    "rimraf": "^5.0.5",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "unbuild": "^2.0.0"
   }
 }
