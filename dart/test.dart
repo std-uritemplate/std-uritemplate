@@ -22,14 +22,20 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
 
-  if (data is Map && data.containsKey("nativedate")) {
-    data["nativedate"] =
-        DateTime.fromMillisecondsSinceEpoch(data["nativedate"]);
-  }
+  if (data is Map) {
+    if (data.containsKey("nativedate")) {
+      data["nativedate"] =
+          DateTime.fromMillisecondsSinceEpoch(data["nativedate"]);
+    }
 
-  if (data is Map && data.containsKey("nativedatetwo")) {
-    data["nativedatetwo"] =
-        DateTime.fromMillisecondsSinceEpoch(data["nativedatetwo"]);
+    if (data.containsKey("nativedatetwo")) {
+      data["nativedatetwo"] =
+          DateTime.fromMillisecondsSinceEpoch(data["nativedatetwo"]);
+    }
+
+    if (data.containsKey("uuid")) {
+      // there are no native UUID in Dart: https://github.com/dart-lang/sdk/issues/49487
+    }
   }
 
   final String template;

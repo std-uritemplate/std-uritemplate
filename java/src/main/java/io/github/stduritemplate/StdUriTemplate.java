@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class StdUriTemplate {
 
@@ -394,7 +395,8 @@ public class StdUriTemplate {
             value instanceof Float ||
             value instanceof Double ||
             value instanceof Date ||
-            value instanceof OffsetDateTime) {
+            value instanceof OffsetDateTime ||
+            value instanceof UUID) {
             return true;
         }
         return false;
@@ -413,6 +415,8 @@ public class StdUriTemplate {
             return ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);
         } else if (value instanceof OffsetDateTime) {
             return ((OffsetDateTime) value).format(RFC3339);
+        } else if (value instanceof UUID) {
+            return value.toString();
         }
         throw new IllegalArgumentException("Illegal class passed as substitution, found " + value.getClass());
     }

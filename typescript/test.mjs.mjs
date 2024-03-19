@@ -40,6 +40,9 @@ try {
         if (data["nativedatetwo"] !== undefined) {
           data["nativedatetwo"] = new Date(data["nativedatetwo"]);
         }
+        if (data["uuid"] !== undefined) {
+          // Typscript doesn't have native UUID type: https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID
+        }
         const expansion = window.StdUriTemplate.expand(template, data)
         return expansion
       }, template, data)

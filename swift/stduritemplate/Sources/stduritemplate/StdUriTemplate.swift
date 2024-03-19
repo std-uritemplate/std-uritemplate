@@ -343,7 +343,8 @@ public class StdUriTemplate {
             value is Int64 ||
             value is Float ||
             value is Double ||
-            value is Date {
+            value is Date ||
+            value is UUID {
             return true
         } else {
             return false
@@ -370,6 +371,8 @@ public class StdUriTemplate {
             return String(doubleValue)
         } else if let dateValue = value as? Date {
             return RFC3339DateFormatter.string(from: dateValue)
+        } else if let uuidValue = value as? UUID {
+            return uuidValue.uuidString
         } else {
             return (value as? String)!
         }

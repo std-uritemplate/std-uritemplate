@@ -14,6 +14,9 @@ try {
   if (data["nativedatetwo"] !== undefined) {
     data["nativedatetwo"] = new Date(data["nativedatetwo"]);
   }
+  if (data["uuid"] !== undefined) {
+    // Typscript doesn't have native UUID type: https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID
+  }
 
   const template = fs.readFileSync(templateFile, 'utf8').trim();
 

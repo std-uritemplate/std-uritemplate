@@ -25,6 +25,9 @@ do {
     if let date = jsonData["nativedatetwo"] {
         jsonData.updateValue(Date(timeIntervalSince1970: (date as! Double / 1000.0)) as Any, forKey: "nativedatetwo")
     }
+    if let uuid = jsonData["uuid"] {
+        jsonData.updateValue(UUID.init(uuidString: uuid as! String) as Any, forKey: "uuid")
+    }
     
     let template = try String(contentsOfFile: templateFile)
     

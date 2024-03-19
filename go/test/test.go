@@ -32,6 +32,12 @@ func main() {
 			data["nativedatetwo"] = time.UnixMilli(int64(f2))
 		}
 	}
+	val3, ok := data["uuid"]
+	if ok {
+		if _, ok := val3.(string); ok {
+			// there are no UUID in the Go standard library: https://www.reddit.com/r/golang/comments/10bg0rn/which_uuid_package_do_you_use_and_why/
+		}
+	}
 
 	template, err := readFile(templateFile)
 	if err != nil {

@@ -3,6 +3,7 @@ import sys
 import json
 import traceback
 from datetime import datetime
+import uuid
 
 from stduritemplate import StdUriTemplate
 
@@ -23,6 +24,8 @@ if "nativedate" in data:
     data["nativedate"] = datetime.fromtimestamp(data["nativedate"] / 1000)
 if "nativedatetwo" in data:
     data["nativedatetwo"] = datetime.fromtimestamp(data["nativedatetwo"] / 1000)
+if "uuid" in data:
+    data["uuid"] = uuid.UUID(data["uuid"])
 
 try:
     with open(template_file, "r") as file:

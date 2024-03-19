@@ -28,6 +28,9 @@ if (array_key_exists("nativedate", $data)) {
 if (array_key_exists("nativedatetwo", $data)) {
     $data["nativedatetwo"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedatetwo"]/1000.0));
 }
+if (array_key_exists("uuid", $data)) {
+    // no native UUID in the PHP standard library: https://wiki.php.net/rfc/uuid -> Status: Declined
+}
 
 try {
     $template = file_get_contents($template_file);

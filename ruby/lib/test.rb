@@ -24,6 +24,9 @@ end
 if data.key?("nativedatetwo")
   data["nativedatetwo"] = DateTime.strptime(data["nativedatetwo"].to_s, '%Q')
 end
+if data.key?("uuid")
+  # no native UUID in Ruby? they are just strings
+end
 
 begin
   template = File.read(template_file).strip

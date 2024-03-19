@@ -1,5 +1,6 @@
 from datetime import datetime
 import urllib.parse
+import uuid
 from typing import Any, Dict, List
 from enum import Enum
 
@@ -337,6 +338,7 @@ class StdUriTemplate:
             or isinstance(value, (bool))
             or isinstance(value, (int, float))
             or isinstance(value, datetime)
+            or isinstance(value, uuid.UUID)
         ):
             return True
 
@@ -350,6 +352,8 @@ class StdUriTemplate:
             return str(value)
         elif isinstance(value, datetime):
             return value.isoformat("T") + "Z"
+        elif isinstance(value, uuid.UUID):
+            return str(value)
 
     @staticmethod
     def __expand_token(

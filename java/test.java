@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 import static java.lang.System.*;
 
@@ -35,6 +36,7 @@ public class test {
                 new Date(Long.valueOf(v.toString())));
             substs.computeIfPresent("nativedatetwo", (k, v) ->
                 new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
+            substs.computeIfPresent("uuid", (k, v) -> UUID.fromString(v.toString()));
 
             out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {

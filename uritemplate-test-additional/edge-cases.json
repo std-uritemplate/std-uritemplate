@@ -23,6 +23,16 @@
         ["{nativedatetwo}", "2023-02-13T18%3A49%3A00Z"]
      ]
   },
+  "Language native uuid format" :
+  {
+    "variables" : {
+      "uuid": "df5bc9f5-eed5-45fb-ac80-04c512f42928"
+     },
+     "testcases" : [
+        ["{+uuid}", ["df5bc9f5-eed5-45fb-ac80-04c512f42928", "DF5BC9F5-EED5-45FB-AC80-04C512F42928"]],
+        ["{uuid}", ["df5bc9f5-eed5-45fb-ac80-04c512f42928", "DF5BC9F5-EED5-45FB-AC80-04C512F42928"]]
+     ]
+  },
   "Nested primitives" :
   {
     "variables" : {

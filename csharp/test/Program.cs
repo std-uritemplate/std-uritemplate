@@ -3,6 +3,7 @@ namespace test;
 
 using System;
 using System.IO;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -31,6 +32,10 @@ class Program
             if (data.ContainsKey("nativedatetwo"))
             {
                 data["nativedatetwo"] = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMilliseconds((long)data["nativedatetwo"]);
+            }
+            if (data.ContainsKey("uuid"))
+            {
+                data["uuid"] = Guid.Parse((string)data["uuid"]);
             }
 
             string template = File.ReadAllText(templateFile).Trim();
