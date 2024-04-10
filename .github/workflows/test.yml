@@ -107,7 +107,9 @@ jobs:
           php-version: ${{ matrix.php-version }}
 
       # Swift setup
-      - uses: swift-actions/setup-swift@v2
+      # WORKAROUND for: https://github.com/swift-actions/setup-swift/issues/591
+      # - uses: swift-actions/setup-swift@v2
+      - uses: redsun82/setup-swift@b2b6f77ab14f6a9b136b520dc53ec8eca27d2b99
         if: matrix.language == 'swift'
         with:
           swift-version: "5.8"
