@@ -21,7 +21,6 @@ jobs:
           - typescript
           - typescript-mjs
           - go
-          - csharp
           - ruby
           - php
           - swift
