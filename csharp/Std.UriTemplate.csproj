@@ -19,7 +19,7 @@
     <RepositoryUrl>https://github.com/std-uritemplate/std-uritemplate</RepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Std.UriTemplate.snk</AssemblyOriginatorKeyFile>
