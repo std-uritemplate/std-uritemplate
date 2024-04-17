@@ -22,7 +22,6 @@ jobs:
           - typescript
           - typescript-mjs
           - go
-          - csharp
           - ruby
           - php
           - swift
@@ -41,10 +40,6 @@ jobs:
       - name: Common - Checkout
         uses: actions/checkout@v4
         with:
-          # TODO: fixme to std-uritemplate/std-uritemplate
-          repository: andreaTP/std-uritemplate
-          # TODO: fixme to main
-          ref: extract-csharp
           submodules: 'true'
       # Language specific setup
 
