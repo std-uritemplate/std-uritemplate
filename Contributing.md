@@ -49,6 +49,7 @@ A full release of all of the implementations is performed with:
 ```bash
 git checkout main
 git pull
+git submodule update --recursive --remote
 git tag <version>
 git push origin <version>
 ```
