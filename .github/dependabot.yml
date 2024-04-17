@@ -24,10 +24,6 @@ updates:
     directory: "/go"
     schedule:
       interval: "daily"
-  - package-ecosystem: "nuget"
-    directory: "/csharp"
-    schedule:
-      interval: "daily"
   - package-ecosystem: "bundler"
     directory: "/ruby"
     schedule:
