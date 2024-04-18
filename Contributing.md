@@ -47,14 +47,7 @@ Please contact the repository owners to setup the required Secrets.
 A full release of all of the implementations is performed with:
 
 ```bash
-git checkout main
-git reset --hard origin/main
-git pull
-git submodule update --recursive --remote
-git add .
-git commit -m "update submodules"
-git tag <version>
-git push origin <version>
+./release.sh <version>
 ```
 
 ### Go / Swift
