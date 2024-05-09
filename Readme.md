@@ -13,7 +13,10 @@
 [![Pub Version](https://img.shields.io/pub/v/std_uritemplate)](https://pub.dev/packages/std_uritemplate)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
-This is intended to become a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
+This is a complete and maintained cross-language implementation of the [Uri Template specification RFC 6570](https://github.com/uri-templates/uritemplate-spec) Level 4.
+
+> [!NOTE]  
+> Low activity is this repository is **expected** as long as there are no outstanding bug reports the implementations are considered **stable** and **mature**.
 
 ## Available implementations
 
@@ -220,12 +223,9 @@ and use it:
 ```dart
 import 'package:std_uritemplate/std_uritemplate.dart';
 
-void main() {
-  final template = 'https://example.com/{var}';
-  final substitutions = {'var': 'value'};
+...
 
-  print(StdUriTemplate.expand(template, substitutions));
-}
+print(StdUriTemplate.expand(template, substitutions));
 ```
 
 ## Design decisions
