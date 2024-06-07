@@ -113,8 +113,9 @@ jobs:
           dotnet-version: 8
       - name: Package the release
         working-directory: csharp
+        shell: pwsh
         run: |
-          dotnet pack -p:PackageVersion=${GITHUB_REF_NAME} -p:FileVersion=${GITHUB_REF_NAME} -p:Version=${GITHUB_REF_NAME} -o dist -c release
+          dotnet pack -p:PackageVersion="${{ github.ref_name }}" -p:FileVersion="${{ github.ref_name }}" -p:Version="${{ github.ref_name }}" -o dist -c release
       # Code signigng from dotnet foundation:
       # Adapted from: https://github.com/dotnet-foundation/wg-maintainers/issues/90#issuecomment-1677872414
       # and: https://github.com/dotnet/sign/blob/main/docs/gh-build-and-sign.yml
@@ -128,6 +129,7 @@ jobs:
           ./sign code azure-key-vault
           **/*.nupkg
           --publisher-name "std-uritemplate"
+          --base-directory "${{ github.workspace }}\csharp\dist"
           --description "Std.Uritemplate for .NET - Implementation of RFC 6570 (Level 4)"
           --description-url "https://github.com/std-uritemplate/std-uritemplate"
           --azure-key-vault-tenant-id "${{ secrets.DOTNET_TENANT_ID }}"
@@ -136,12 +138,12 @@ jobs:
           --azure-key-vault-certificate "${{ secrets.DOTNET_CERTIFICATE_NAME }}"
           --azure-key-vault-url "${{ secrets.DOTNET_VAULT_URL }}"
           --timestamp-url http://timestamp.digicert.com
+          --verbosity Debug
       - name: Release to NuGet
         working-directory: csharp
+        shell: pwsh
         run: |
-          dotnet nuget push dist/Std.UriTemplate.${GITHUB_REF_NAME}.nupkg --api-key ${NUGET_TOKEN} --source https://api.nuget.org/v3/index.json
-        env:
-          NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+          dotnet nuget push "${{ github.workspace }}\csharp\dist\Std.UriTemplate.${{ github.ref_name }}.nupkg" --api-key "${{ secrets.NUGET_TOKEN }}" --source https://api.nuget.org/v3/index.json
 
   publish-ruby:
     runs-on: ubuntu-latest
