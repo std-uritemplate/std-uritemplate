@@ -102,7 +102,7 @@ jobs:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   publish-csharp:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,10 +111,34 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8
-      - name: Release to NuGet
+      - name: Package the release
         working-directory: csharp
         run: |
           dotnet pack -p:PackageVersion=${GITHUB_REF_NAME} -p:FileVersion=${GITHUB_REF_NAME} -p:Version=${GITHUB_REF_NAME} -o dist -c release
+      # Code signigng from dotnet foundation:
+      # Adapted from: https://github.com/dotnet-foundation/wg-maintainers/issues/90#issuecomment-1677872414
+      # and: https://github.com/dotnet/sign/blob/main/docs/gh-build-and-sign.yml
+      - name: Install Sign CLI tool
+        working-directory: csharp
+        run: dotnet tool install --tool-path . sign --version 0.9.1-beta.23356.1
+      - name: Sign artifacts
+        working-directory: csharp
+        shell: pwsh
+        run: >
+          ./sign code azure-key-vault
+          **/*.nupkg
+          --publisher-name "std-uritemplate"
+          --description "Std.Uritemplate for .NET - Implementation of RFC 6570 (Level 4)"
+          --description-url "https://github.com/std-uritemplate/std-uritemplate"
+          --azure-key-vault-tenant-id "${{ secrets.DOTNET_TENANT_ID }}"
+          --azure-key-vault-client-id "${{ secrets.DOTNET_APPLICATION_ID }}"
+          --azure-key-vault-client-secret "${{ secrets.DOTNET_CLIENT_SECRET }}"
+          --azure-key-vault-certificate "${{ secrets.DOTNET_CERTIFICATE_NAME }}"
+          --azure-key-vault-url "${{ secrets.DOTNET_VAULT_URL }}"
+          --timestamp-url http://timestamp.digicert.com
+      - name: Release to NuGet
+        working-directory: csharp
+        run: |
           dotnet nuget push dist/Std.UriTemplate.${GITHUB_REF_NAME}.nupkg --api-key ${NUGET_TOKEN} --source https://api.nuget.org/v3/index.json
         env:
           NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
