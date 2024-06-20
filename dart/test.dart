@@ -15,7 +15,7 @@ Future<void> main(List<String> args) async {
   final dataFile = args[1];
 
   final Map<String, Object?> data;
-  
+
   try {
     data =
         jsonDecode(File(dataFile).readAsStringSync()) as Map<String, Object?>;

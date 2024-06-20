@@ -8,7 +8,7 @@ void main() {
     'lat': -122.427,
     'nullable': null,
   };
-  
+
   // prints: /person
   print(StdUriTemplate.expand('{/id*}', substitutes));
 

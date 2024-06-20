@@ -1,5 +1,5 @@
 /// A URI Template implementation based on the [RFC 6570](https://datatracker.ietf.org/doc/html/rfc6570).
-/// 
+///
 /// The main method to use is [StdUriTemplate.expand].
 library;
 
