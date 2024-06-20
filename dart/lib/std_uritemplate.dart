@@ -1,3 +1,6 @@
+/// A library for checking 
+library;
+
 // ignore_for_file: constant_identifier_names
 
 import 'dart:math';
@@ -9,48 +12,66 @@ enum _Operator { PLUS, HASH, DOT, SLASH, SEMICOLON, QUESTION_MARK, AMP, NO_OP }
 extension on DateTime {
   /// This is the same as [toIso8601String] but without milli- and microseconds.
   String toIso8601StringWithoutMilliseconds() {
-    String y =
+    final y =
         (year >= -9999 && year <= 9999) ? _fourDigits(year) : _sixDigits(year);
-    String m = _twoDigits(month);
-    String d = _twoDigits(day);
-    String h = _twoDigits(hour);
-    String min = _twoDigits(minute);
-    String sec = _twoDigits(second);
+    final m = _twoDigits(month);
+    final d = _twoDigits(day);
+    final h = _twoDigits(hour);
+    final min = _twoDigits(minute);
+    final sec = _twoDigits(second);
     if (isUtc) {
-      return "$y-$m-${d}T$h:$min:${sec}Z";
+      return '$y-$m-${d}T$h:$min:${sec}Z';
     } else {
-      return "$y-$m-${d}T$h:$min:$sec";
+      return '$y-$m-${d}T$h:$min:$sec';
     }
   }
 
   // Function below are copied from dart:core DateTime
 
   static String _fourDigits(int n) {
-    int absN = n.abs();
-    String sign = n < 0 ? "-" : "";
-    if (absN >= 1000) return "$n";
-    if (absN >= 100) return "${sign}0$absN";
-    if (absN >= 10) return "${sign}00$absN";
-    return "${sign}000$absN";
+    final absN = n.abs();
+    final sign = n < 0 ? '-' : '';
+    if (absN >= 1000) {
+      return '$n';
+    }
+    if (absN >= 100) {
+      return '${sign}0$absN';
+    }
+    if (absN >= 10) {
+      return '${sign}00$absN';
+    }
+    return '${sign}000$absN';
   }
 
   static String _sixDigits(int n) {
     assert(n < -9999 || n > 9999);
-    int absN = n.abs();
-    String sign = n < 0 ? "-" : "+";
-    if (absN >= 100000) return "$sign$absN";
-    return "${sign}0$absN";
+    final absN = n.abs();
+    final sign = n < 0 ? '-' : '+';
+    if (absN >= 100000) {
+      return '$sign$absN';
+    }
+    return '${sign}0$absN';
   }
 
   static String _twoDigits(int n) {
-    if (n >= 10) return "$n";
-    return "0$n";
+    if (n >= 10) {
+      return '$n';
+    }
+    return '0$n';
   }
 }
 
+/// A URI Template implementation based on the [RFC 6570](https://datatracker.ietf.org/doc/html/rfc6570).
+///
+/// This class CAN NOT be instantiated, instead call the static [expand] method.
 class StdUriTemplate {
   const StdUriTemplate._();
 
+  /// A URI Template implementation based on the [RFC 6570](https://datatracker.ietf.org/doc/html/rfc6570).
+  ///
+  /// * [template] - The URI Template to expand.
+  /// * [substitutions] - A map of substitutions to apply to the template, the
+  /// values can only be of type.
   static String expand(String template, Map<String, Object?> substitutions) {
     return _expandImpl(template, substitutions);
   }
@@ -66,14 +87,15 @@ class StdUriTemplate {
       case ' ':
       case '!':
       case '=':
-      case '\$':
+      case r'$':
       case '|':
       case '*':
       case ':':
       case '~':
       case '-':
         throw ArgumentError(
-            "Illegal character identified in the token at col: $col ($c)");
+          'Illegal character identified in the token at col: $col ($c)',
+        );
       default:
         break;
     }
@@ -84,7 +106,7 @@ class StdUriTemplate {
       return -1;
     } else {
       return int.tryParse(buffer.toString()) ??
-          (throw ArgumentError("Cannot parse max chars at col: $col"));
+          (throw ArgumentError('Cannot parse max chars at col: $col'));
     }
   }
 
@@ -131,10 +153,9 @@ class StdUriTemplate {
           toToken = true;
           token.clear();
           firstToken = true;
-          break;
         case '}':
           if (toToken) {
-            assert(operator != null, "Operator cannot be null");
+            assert(operator != null, 'Operator cannot be null');
 
             final expanded = _expandToken(
               operator!,
@@ -156,12 +177,11 @@ class StdUriTemplate {
             toMaxCharBuffer = false;
             maxCharBuffer.clear();
           } else {
-            throw ArgumentError("Failed to expand token, invalid at col: $i");
+            throw ArgumentError('Failed to expand token, invalid at col: $i');
           }
-          break;
         case ',':
           if (toToken) {
-            assert(operator != null, "Operator cannot be null");
+            assert(operator != null, 'Operator cannot be null');
 
             final expanded = _expandToken(
               operator!,
@@ -193,7 +213,7 @@ class StdUriTemplate {
                 maxCharBuffer.write(character);
               } else {
                 throw ArgumentError(
-                  "Illegal character identified in the token at col: $i",
+                  'Illegal character identified in the token at col: $i',
                 );
               }
             } else {
@@ -217,7 +237,7 @@ class StdUriTemplate {
     if (!toToken) {
       return result.toString();
     } else {
-      throw ArgumentError("Unterminated token");
+      throw ArgumentError('Unterminated token');
     }
   }
 
@@ -225,22 +245,16 @@ class StdUriTemplate {
     switch (op) {
       case _Operator.HASH:
         result.write('#');
-        break;
       case _Operator.DOT:
         result.write('.');
-        break;
       case _Operator.SLASH:
         result.write('/');
-        break;
       case _Operator.SEMICOLON:
         result.write(';');
-        break;
       case _Operator.QUESTION_MARK:
         result.write('?');
-        break;
       case _Operator.AMP:
         result.write('&');
-        break;
       default:
         return;
     }
@@ -250,39 +264,37 @@ class StdUriTemplate {
     switch (op) {
       case _Operator.DOT:
         result.write('.');
-        break;
       case _Operator.SLASH:
         result.write('/');
-        break;
       case _Operator.SEMICOLON:
         result.write(';');
-        break;
       case _Operator.QUESTION_MARK:
       case _Operator.AMP:
         result.write('&');
-        break;
       default:
         result.write(',');
         return;
     }
   }
 
-  static void _addValue(_Operator op, String token, Object? value,
-      StringBuffer result, int maxChar) {
+  static void _addValue(
+    _Operator op,
+    String token,
+    Object? value,
+    StringBuffer result,
+    int maxChar,
+  ) {
     switch (op) {
       case _Operator.PLUS:
       case _Operator.HASH:
         _addExpandedValue(null, value, result, maxChar, false);
-        break;
       case _Operator.QUESTION_MARK:
       case _Operator.AMP:
         result.write('$token=');
         _addExpandedValue(null, value, result, maxChar, true);
-        break;
       case _Operator.SEMICOLON:
         result.write(token);
         _addExpandedValue('=', value, result, maxChar, true);
-        break;
       case _Operator.DOT:
       case _Operator.SLASH:
       case _Operator.NO_OP:
@@ -290,13 +302,17 @@ class StdUriTemplate {
     }
   }
 
-  static void _addValueElement(_Operator op, String token, Object? value,
-      StringBuffer result, int maxChar) {
+  static void _addValueElement(
+    _Operator op,
+    String token,
+    Object? value,
+    StringBuffer result,
+    int maxChar,
+  ) {
     switch (op) {
       case _Operator.PLUS:
       case _Operator.HASH:
         _addExpandedValue(null, value, result, maxChar, false);
-        break;
       case _Operator.QUESTION_MARK:
       case _Operator.AMP:
       case _Operator.SEMICOLON:
@@ -310,13 +326,13 @@ class StdUriTemplate {
   static bool _isSurrogate(String cp) {
     assert(cp.isNotEmpty);
     final codePoint = cp.codeUnitAt(0);
-    return (codePoint >= 0xD800 && codePoint <= 0xDFFF);
+    return codePoint >= 0xD800 && codePoint <= 0xDFFF;
   }
 
   static bool _isIprivate(String cp) {
     assert(cp.isNotEmpty);
     final codePoint = cp.codeUnitAt(0);
-    return (0xE000 <= codePoint && codePoint <= 0xF8FF);
+    return 0xE000 <= codePoint && codePoint <= 0xF8FF;
   }
 
   static bool _isUcschar(String cp) {
@@ -376,18 +392,19 @@ class StdUriTemplate {
           if (isEncoded) {
             result.write(reservedBuffer);
           } else {
-            result.write("%25");
-            // only if !replaceReserved
-            result.write(reservedBuffer.toString().substring(1));
+            result
+              ..write('%25')
+              // only if !replaceReserved
+              ..write(reservedBuffer.toString().substring(1));
           }
           toReserved = false;
           reservedBuffer.clear();
         }
       } else {
         if (character == ' ') {
-          result.write("%20");
+          result.write('%20');
         } else if (character == '%') {
-          result.write("%25");
+          result.write('%25');
         } else {
           result.write(toAppend);
         }
@@ -395,8 +412,9 @@ class StdUriTemplate {
     }
 
     if (toReserved) {
-      result.write("%25");
-      result.write(reservedBuffer.toString().substring(1));
+      result
+        ..write('%25')
+        ..write(reservedBuffer.toString().substring(1));
     }
   }
 
@@ -419,8 +437,8 @@ class StdUriTemplate {
       return _SubstitutionType.LIST;
     } else {
       throw ArgumentError(
-        "Illegal class passed as substitution, found ${value.runtimeType}"
-        " at col: $col",
+        'Illegal class passed as substitution, found ${value.runtimeType}'
+        ' at col: $col',
       );
     }
   }
@@ -431,28 +449,18 @@ class StdUriTemplate {
     } else {
       return switch (substType) {
         _SubstitutionType.STRING => false,
-        _SubstitutionType.LIST => value is Iterable
-            ? value.isEmpty
-            : throw UnimplementedError(
-                'Impossible case of _SubstitutionType being list'
-                ' and value not being an Iterable.',
-              ),
-        _SubstitutionType.MAP => value is Map
-            ? value.isEmpty
-            : throw UnimplementedError(
-                'Impossible case of _SubstitutionType being Map'
-                ' and value not being a Map.',
-              ),
-        _ => true
+        _SubstitutionType.LIST => (value as Iterable).isEmpty,
+        _SubstitutionType.MAP => (value as Map).isEmpty,
+        _SubstitutionType.EMPTY => true,
       };
     }
   }
 
   static bool _isNativeType(Object? value) {
-    if (value is String || value is bool || value is num || value is DateTime) {
-      return true;
-    }
-    return false;
+    return value is String ||
+        value is bool ||
+        value is num ||
+        value is DateTime;
   }
 
   static String _convertNativeTypes(Object? value) {
@@ -476,7 +484,7 @@ class StdUriTemplate {
     int col,
   ) {
     if (token.isEmpty) {
-      throw ArgumentError("Found an empty token at col: $col");
+      throw ArgumentError('Found an empty token at col: $col');
     }
 
     final value = substitutions[token];
@@ -494,28 +502,25 @@ class StdUriTemplate {
     switch (substType) {
       case _SubstitutionType.STRING:
         _addStringValue(operator, token, value, result, maxChar);
-        break;
       case _SubstitutionType.LIST:
         _addListValue(
           operator,
           token,
-          value as Iterable,
+          value! as Iterable,
           result,
           maxChar,
           composite,
         );
-        break;
       case _SubstitutionType.MAP:
         _addMapValue(
           operator,
           token,
-          (value as Map).cast<String, Object?>(),
+          (value! as Map).cast<String, Object?>(),
           result,
           maxChar,
           composite,
         );
-        break;
-      default:
+      case _SubstitutionType.EMPTY:
         // do nothing
         break;
     }
@@ -569,9 +574,9 @@ class StdUriTemplate {
   ) {
     var first = true;
     if (maxChar != -1) {
-      throw ArgumentError("Value trimming is not allowed on Maps");
+      throw ArgumentError('Value trimming is not allowed on Maps');
     }
-    for (var MapEntry(key: k, value: v) in value.entries) {
+    for (final MapEntry(key: k, value: v) in value.entries) {
       if (composite) {
         if (!first) {
           _addSeparator(operator, result);
