@@ -339,9 +339,8 @@ class StdUriTemplate {
     bool replaceReserved,
   ) {
     final stringValue = _convertNativeTypes(value);
-
-    final max =
-        (maxChar != -1) ? min(maxChar, stringValue.length) : stringValue.length;
+    final runes = stringValue.runes;
+    final max = (maxChar != -1) ? min(maxChar, runes.length) : runes.length;
 
     var toReserved = false;
     final reservedBuffer = StringBuffer();
@@ -351,7 +350,7 @@ class StdUriTemplate {
     }
 
     for (var i = 0; i < max; i++) {
-      final character = stringValue[i];
+      final character = String.fromCharCode(runes.elementAt(i));
 
       if (character == '%' && !replaceReserved) {
         toReserved = true;
