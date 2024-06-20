@@ -440,8 +440,8 @@ class StdUriTemplate {
         _SubstitutionType.MAP => value is Map
             ? value.isEmpty
             : throw UnimplementedError(
-                'Impossible case of _SubstitutionType being list'
-                ' and value not being an Iterable.',
+                'Impossible case of _SubstitutionType being Map'
+                ' and value not being a Map.',
               ),
         _ => true
       };
