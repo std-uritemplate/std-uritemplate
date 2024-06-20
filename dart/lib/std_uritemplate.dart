@@ -83,12 +83,8 @@ class StdUriTemplate {
     if (buffer.isEmpty) {
       return -1;
     } else {
-      if (buffer.isEmpty) {
-        return -1;
-      } else {
-        return int.tryParse(buffer.toString()) ??
-            (throw ArgumentError("Cannot parse max chars at col: $col"));
-      }
+      return int.tryParse(buffer.toString()) ??
+          (throw ArgumentError("Cannot parse max chars at col: $col"));
     }
   }
 
