@@ -157,10 +157,11 @@ class StdUriTemplate {
           firstToken = true;
         case '}':
           if (toToken) {
-            assert(operator != null, 'Operator cannot be null');
-
+            if (operator == null) {
+              throw ArgumentError('Operator cannot be null');
+            }
             final expanded = _expandToken(
-              operator!,
+              operator,
               token.toString(),
               composite,
               _getMaxChar(maxCharBuffer, i),
@@ -183,10 +184,12 @@ class StdUriTemplate {
           }
         case ',':
           if (toToken) {
-            assert(operator != null, 'Operator cannot be null');
+            if (operator == null) {
+              throw ArgumentError('Operator cannot be null');
+            }
 
             final expanded = _expandToken(
-              operator!,
+              operator,
               token.toString(),
               composite,
               _getMaxChar(maxCharBuffer, i),
@@ -326,19 +329,16 @@ class StdUriTemplate {
   }
 
   static bool _isSurrogate(String cp) {
-    assert(cp.isNotEmpty);
     final codePoint = cp.codeUnitAt(0);
     return codePoint >= 0xD800 && codePoint <= 0xDFFF;
   }
 
   static bool _isIprivate(String cp) {
-    assert(cp.isNotEmpty);
     final codePoint = cp.codeUnitAt(0);
     return 0xE000 <= codePoint && codePoint <= 0xF8FF;
   }
 
   static bool _isUcschar(String cp) {
-    assert(cp.isNotEmpty);
     final codePoint = cp.codeUnitAt(0);
     return (0xA0 <= codePoint && codePoint <= 0xD7FF) ||
         (0xF900 <= codePoint && codePoint <= 0xFDCF) ||

@@ -3,7 +3,7 @@ version: 0.0.1
 description: A Dart implementation of URI Templates defined in (RFC 6570).
 issue_tracker: https://github.com/std-uritemplate/std-uritemplate/issues
 repository: https://github.com/std-uritemplate/std-uritemplate/tree/main/dart
-
+homepage: https://github.com/std-uritemplate/std-uritemplate
 topics:
   - uri
   - template

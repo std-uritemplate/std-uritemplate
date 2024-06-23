@@ -30,7 +30,7 @@ This is a complete and maintained cross-language implementation of the [Uri Temp
 | Ruby | ✅ | ❌ | ✅ |
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
-| Dart | ✅ | ❌ | ✅ |
+| Dart | ✅ | ✅ | ✅ |
 
 ## Usage
 
