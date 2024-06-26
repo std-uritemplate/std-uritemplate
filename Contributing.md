@@ -54,3 +54,10 @@ A full release of all of the implementations is performed with:
 
 In Go and Swift is not possible to deserialize JSON into a Map preserving the order of the elements ([reference](https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982)).
 For the moment, we decided to sort the keys to have predictable results.
+
+
+### Dart
+
+Make sure to [format the code](https://dart.dev/tools/dart-format) using `dart format .`.
+
+You can also [view errors](https://dart.dev/tools/dart-analyze) using `dart analyze`.

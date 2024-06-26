@@ -9,7 +9,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/std-uritemplate.svg?style=flat&color=green)](https://pypi.python.org/pypi/std-uritemplate)
 [![NuGet Version](https://img.shields.io/nuget/v/Std.UriTemplate.svg?style=flat&color=green)](https://www.nuget.org/packages/Std.UriTemplate/)
 [![Gem Version](https://badge.fury.io/rb/stduritemplate.svg?style=flat&color=green)](https://badge.fury.io/rb/stduritemplate)
-[![Packagist Version](http://poser.pugx.org/stduritemplate/stduritemplate/v?style=flat)](https://packagist.org/packages/stduritemplate/stduritemplate)
+[![Packagist Version](https://poser.pugx.org/stduritemplate/stduritemplate/v?style=flat)](https://packagist.org/packages/stduritemplate/stduritemplate)
 [![Pub Version](https://img.shields.io/pub/v/std_uritemplate)](https://pub.dev/packages/std_uritemplate)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/Contributing.md)
 
@@ -30,7 +30,7 @@ This is a complete and maintained cross-language implementation of the [Uri Temp
 | Ruby | ✅ | ❌ | ✅ |
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
-| Dart | ✅ | ❌ | ✅ |
+| Dart | ✅ | ✅ | ✅ |
 
 ## Usage
 

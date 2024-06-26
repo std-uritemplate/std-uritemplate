@@ -1,0 +1,7 @@
+include: package:strict/analysis_options.yaml
+analyzer:
+  errors:
+    avoid_print: ignore
+linter:
+  rules:
+    avoid_catches_without_on_clauses: false
