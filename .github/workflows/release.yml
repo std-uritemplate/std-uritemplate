@@ -240,8 +240,9 @@ jobs:
         run: |
           cp ../Readme.md ./README.md
           cp ../LICENSE .
-          echo "${GITHUB_REF_NAME}" > CHANGELOG.md
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
+      - name: Generate Changelog
+        uses: ricardoboss/changelog-from-github-releases@v1
       - name: Release dry run
         working-directory: dart
         run: dart pub publish --dry-run

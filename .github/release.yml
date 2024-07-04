@@ -1,0 +1,33 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - wontfix
+      - invalid
+      - question
+      - duplicate
+      - github-actions
+  categories:
+    - title: Breaking Changes 🛠
+      labels:
+        - breaking-change
+    - title: New Features 🎉
+      labels:
+        - enhancement
+    - title: New Language Support ✨
+      labels:
+        - new-lang
+    - title: Bug Fixes 🐛
+      labels:
+        - bug
+    - title: Other Changes
+      labels:
+        - "*"
+      exclude:
+        labels:
+          - dependencies
+          - submodules
+    - title: Dependencies 📦
+      labels:
+        - dependencies
+        - submodules
