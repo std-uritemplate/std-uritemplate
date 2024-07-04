@@ -111,6 +111,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8
+      - name: Generate Changelog
+        uses: ricardoboss/changelog-from-github-releases@v1
+        with:
+          file: csharp/CHANGELOG.md
       - name: Package the release
         working-directory: csharp
         shell: pwsh
