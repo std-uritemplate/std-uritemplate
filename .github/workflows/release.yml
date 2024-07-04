@@ -243,6 +243,8 @@ jobs:
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
       - name: Generate Changelog
         uses: ricardoboss/changelog-from-github-releases@v1
+        with:
+          file: dart/CHANGELOG.md
       - name: Release dry run
         working-directory: dart
         run: dart pub publish --dry-run
