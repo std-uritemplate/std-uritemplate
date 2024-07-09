@@ -35,7 +35,7 @@
   "homepage": "https://github.com/std-uritemplate/std-uritemplate#readme",
   "devDependencies": {
     "puppeteer": "^22.4.0",
-    "rimraf": "^5.0.5",
+    "rimraf": "^6.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
     "unbuild": "^2.0.0"
