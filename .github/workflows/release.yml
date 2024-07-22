@@ -114,7 +114,6 @@ jobs:
       - name: Generate Changelog
         uses: rhysd/changelog-from-release/action@v3
         with:
-          args: -d=false
           file: csharp/CHANGELOG.md
           commit: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -251,7 +250,6 @@ jobs:
       - name: Generate Changelog
         uses: rhysd/changelog-from-release/action@v3
         with:
-          args: -d=false
           file: dart/CHANGELOG.md
           commit: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
