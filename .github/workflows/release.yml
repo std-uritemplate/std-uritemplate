@@ -112,7 +112,7 @@ jobs:
         with:
           dotnet-version: 8
       - name: Generate Changelog
-        uses: ricardoboss/changelog-from-github-releases@v1
+        uses: ricardoboss/changelog-from-github-releases@v1.0.0
         with:
           file: csharp/CHANGELOG.md
       - name: Package the release
