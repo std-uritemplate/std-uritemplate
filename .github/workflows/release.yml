@@ -246,7 +246,7 @@ jobs:
           cp ../LICENSE .
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
       - name: Generate Changelog
-        uses: ricardoboss/changelog-from-github-releases@v1
+        uses: ricardoboss/changelog-from-github-releases@v1.0.0
         with:
           file: dart/CHANGELOG.md
       - name: Release dry run
