@@ -116,6 +116,7 @@ jobs:
         with:
           args: -d=false
           file: csharp/CHANGELOG.md
+          commit: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Package the release
         working-directory: csharp
@@ -252,6 +253,7 @@ jobs:
         with:
           args: -d=false
           file: dart/CHANGELOG.md
+          commit: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release dry run
         working-directory: dart
