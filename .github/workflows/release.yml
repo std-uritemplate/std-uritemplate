@@ -44,6 +44,12 @@ jobs:
         with:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: typescript/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set the version
         working-directory: typescript
         run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
@@ -87,6 +93,12 @@ jobs:
         uses: snok/install-poetry@v1
       - name: Python - Add Poetry to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: python/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Copy Readme and set version
         working-directory: python
         run: |
@@ -159,6 +171,12 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: ruby/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release to RubyGems
         working-directory: ruby
         run: |
@@ -173,6 +191,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: php/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release to std-uritemplate-php repo
         working-directory: php
         run: |
@@ -208,6 +232,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: swift/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release to std-uritemplate-swift repo
         working-directory: swift
         run: |
