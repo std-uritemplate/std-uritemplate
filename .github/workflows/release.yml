@@ -111,6 +111,12 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: csharp/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Package the release
         working-directory: csharp
         shell: pwsh
@@ -240,8 +246,13 @@ jobs:
         run: |
           cp ../Readme.md ./README.md
           cp ../LICENSE .
-          echo "${GITHUB_REF_NAME}" > CHANGELOG.md
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: dart/CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release dry run
         working-directory: dart
         run: dart pub publish --dry-run
