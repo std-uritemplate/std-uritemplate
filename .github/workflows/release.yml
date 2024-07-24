@@ -227,6 +227,7 @@ jobs:
           git clone https://github.com/std-uritemplate/std-uritemplate-php
           # Fill the content of this release
           rm -rf std-uritemplate-php/*
+          cp -f CHANGELOG.md std-uritemplate-php
           cp -f composer.json std-uritemplate-php
           cp -rf src std-uritemplate-php
           echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-php/Readme.md
@@ -268,6 +269,7 @@ jobs:
           git clone https://github.com/std-uritemplate/std-uritemplate-swift
           # Fill the content of this release
           rm -rf std-uritemplate-swift/*
+          cp -f CHANGELOG.md std-uritemplate-swift
           cp -rf stduritemplate/* std-uritemplate-swift
           echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-swift/Readme.md
           # Push everything
