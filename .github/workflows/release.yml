@@ -12,6 +12,26 @@ permissions:
 
 jobs:
 
+  publish-gh-releases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      # Changelog is generated from GH releases
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
+          commit: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: CHANGELOG.md
+
   publish-java:
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +57,7 @@ jobs:
 
   publish-typescript:
     runs-on: ubuntu-latest
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -44,12 +65,11 @@ jobs:
         with:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
         with:
-          file: typescript/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog
+          path: typescript
       - name: Set the version
         working-directory: typescript
         run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
@@ -87,18 +107,18 @@ jobs:
 
   publish-python:
     runs-on: ubuntu-latest
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
       - name: Python - Install Poetry
         uses: snok/install-poetry@v1
       - name: Python - Add Poetry to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
         with:
-          file: python/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog
+          path: python
       - name: Copy Readme and set version
         working-directory: python
         run: |
@@ -115,6 +135,7 @@ jobs:
 
   publish-csharp:
     runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
         with:
@@ -123,12 +144,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
         with:
-          file: csharp/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog
+          path: csharp
       - name: Package the release
         working-directory: csharp
         shell: pwsh
@@ -165,18 +185,18 @@ jobs:
 
   publish-ruby:
     runs-on: ubuntu-latest
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
       - name: Ruby - Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
         with:
-          file: ruby/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog
+          path: ruby
       - name: Release to RubyGems
         working-directory: ruby
         run: |
@@ -189,14 +209,14 @@ jobs:
 
   publish-php:
     runs-on: ubuntu-latest
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
         with:
-          file: php/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog
+          path: php
       - name: Release to std-uritemplate-php repo
         working-directory: php
         run: |
@@ -230,14 +250,14 @@ jobs:
 
   publish-swift:
     runs-on: ubuntu-latest
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
         with:
-          file: swift/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog
+          path: swift
       - name: Release to std-uritemplate-swift repo
         working-directory: swift
         run: |
@@ -265,24 +285,24 @@ jobs:
     permissions:
       id-token: write # Required for authentication using OIDC
     runs-on: ubuntu-latest
+    needs: publish-gh-releases
     steps:
       - uses: actions/checkout@v4
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Download Changelog
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog
+          path: dart
       - name: Prepare Release Files
         working-directory: dart
         run: |
           cp ../Readme.md ./README.md
           cp ../LICENSE .
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
-        with:
-          file: dart/CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release dry run
         working-directory: dart
         run: dart pub publish --dry-run
