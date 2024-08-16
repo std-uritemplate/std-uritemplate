@@ -60,6 +60,18 @@ fn add_prefix(operator: Operator, token: &mut String)
     }
 }
 
+fn add_separator(operator: Operator, token: &mut String)
+{
+    match operator {
+        Operator::Dot => token.push('.'),
+        Operator::Slash => token.push('/'),
+        Operator::Semicolon => token.push(';'),
+        Operator::Hash => token.push('#'),
+        Operator::QuestionMark | Operator::Amp => token.push('&'),
+        _ => token.push(','),
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -123,5 +135,29 @@ mod tests {
         token = String::from("");
         add_prefix(Operator::Amp, &mut token);
         assert_eq!(token, "&");
+    }
+    #[test]
+    fn adds_separator() {
+        let mut token = String::from("");
+        add_separator(Operator::Dot, &mut token);
+        assert_eq!(token, ".");
+        token = String::from("");
+        add_separator(Operator::Slash, &mut token);
+        assert_eq!(token, "/");
+        token = String::from("");
+        add_separator(Operator::Semicolon, &mut token);
+        assert_eq!(token, ";");
+        token = String::from("");
+        add_separator(Operator::Hash, &mut token);
+        assert_eq!(token, "#");
+        token = String::from("");
+        add_separator(Operator::QuestionMark, &mut token);
+        assert_eq!(token, "&");
+        token = String::from("");
+        add_separator(Operator::Amp, &mut token);
+        assert_eq!(token, "&");
+        token = String::from("");
+        add_separator(Operator::NoOp, &mut token);
+        assert_eq!(token, ",");
     }
 }
