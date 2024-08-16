@@ -72,6 +72,35 @@ fn add_separator(operator: Operator, token: &mut String)
     }
 }
 
+fn is_surrogate(cp: char) -> bool {
+    let cp_option = cp.to_digit(16);
+    if cp_option.is_none() {
+        return false;
+    }
+    let cp_id = cp_option.unwrap();
+    return cp_id >= 0xD800 && cp_id <= 0xDFFF;
+}
+
+fn is_iprivate(cp: char) -> bool {
+    let cp_option = cp.to_digit(16);
+    if cp_option.is_none() {
+        return false;
+    }
+    let cp_id = cp_option.unwrap();
+    return 0xE000 <= cp_id && cp_id <= 0xF8FF;
+}
+
+fn is_ucschar(cp: char) -> bool {
+    let cp_option = cp.to_digit(16);
+    if cp_option.is_none() {
+        return false;
+    }
+    let cp_id = cp_option.unwrap();
+    return (0xA0 <= cp_id && cp_id <= 0xD7FF)
+            || (0xF900 <= cp_id && cp_id <= 0xFDCF)
+            || (0xFDF0 <= cp_id && cp_id <= 0xFFEF);
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -160,4 +189,41 @@ mod tests {
         add_separator(Operator::NoOp, &mut token);
         assert_eq!(token, ",");
     }
+    #[test]
+    fn is_surrogate_char() {
+        assert_eq!(is_surrogate('a'), false);
+        assert_eq!(is_surrogate('A'), false);
+        assert_eq!(is_surrogate('1'), false);
+        assert_eq!(is_surrogate(' '), false);
+        assert_eq!(is_surrogate('!'), false);
+        assert_eq!(is_surrogate('+'), false);
+        assert_eq!(is_surrogate('-'), false);
+        assert_eq!(is_surrogate('👍'), false);
+        assert_eq!(is_surrogate('👎'), false);
+    }
+    #[test]
+    fn is_iprivate_char() {
+        assert_eq!(is_iprivate('a'), false);
+        assert_eq!(is_iprivate('A'), false);
+        assert_eq!(is_iprivate('1'), false);
+        assert_eq!(is_iprivate(' '), false);
+        assert_eq!(is_iprivate('!'), false);
+        assert_eq!(is_iprivate('+'), false);
+        assert_eq!(is_iprivate('-'), false);
+        assert_eq!(is_iprivate('👍'), false);
+        assert_eq!(is_iprivate('👎'), false);
+    }
+    #[test]
+    fn is_ucschar_char() {
+        assert_eq!(is_ucschar('a'), false);
+        assert_eq!(is_ucschar('A'), false);
+        assert_eq!(is_ucschar('1'), false);
+        assert_eq!(is_ucschar(' '), false);
+        assert_eq!(is_ucschar('!'), false);
+        assert_eq!(is_ucschar('+'), false);
+        assert_eq!(is_ucschar('-'), false);
+        assert_eq!(is_ucschar('👍'), false);
+        assert_eq!(is_ucschar('👎'), false);
+    }
+
 }
