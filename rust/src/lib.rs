@@ -25,7 +25,7 @@ enum Operator {
     Amp
 }
 
-fn get_operator(c: char, mut token: String, col: u32) -> Result<Operator, String>
+fn get_operator(c: char, token: &mut String, col: u32) -> Result<Operator, String>
 {
     match c {
         '+' => Ok(Operator::Plus),
@@ -37,7 +37,7 @@ fn get_operator(c: char, mut token: String, col: u32) -> Result<Operator, String
         '&' => Ok(Operator::Amp),
         _ => match validate_literal(c, col) {
                 Ok(()) => {
-                    token += &c.to_string();
+                    token.push(c);
                     Ok(Operator::NoOp)
                 },
                 Err(e) => {
@@ -47,9 +47,19 @@ fn get_operator(c: char, mut token: String, col: u32) -> Result<Operator, String
     }
 }
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+fn add_prefix(operator: Operator, token: &mut String)
+{    
+    match operator {
+        Operator::Hash => token.push('#'),
+        Operator::Dot => token.push('.'),
+        Operator::Slash => token.push('/'),
+        Operator::Semicolon => token.push(';'),
+        Operator::QuestionMark => token.push('?'),
+        Operator::Amp => token.push('&'),
+        _ => (),
+    }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -75,21 +85,43 @@ mod tests {
     }
     #[test]
     fn gets_operator() {
-        assert_eq!(get_operator('+', String::from(""), 1).unwrap(), Operator::Plus);
-        assert_eq!(get_operator('#', String::from(""), 1).unwrap(), Operator::Hash);
-        assert_eq!(get_operator('.', String::from(""), 1).unwrap(), Operator::Dot);
-        assert_eq!(get_operator('/', String::from(""), 1).unwrap(), Operator::Slash);
-        assert_eq!(get_operator(';', String::from(""), 1).unwrap(), Operator::Semicolon);
-        assert_eq!(get_operator('?', String::from(""), 1).unwrap(), Operator::QuestionMark);
-        assert_eq!(get_operator('&', String::from(""), 1).unwrap(), Operator::Amp);
-        assert_eq!(get_operator(' ', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('!', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('=', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('$', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('|', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('*', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator(':', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('~', String::from(""), 1).unwrap(), Operator::NoOp);
-        assert_eq!(get_operator('-', String::from(""), 1).unwrap_err(), "Invalid character '-' at column 1");
+        let mut token = "".to_string();
+        assert_eq!(get_operator('+', &mut token, 1).unwrap(), Operator::Plus);
+        assert_eq!(get_operator('#', &mut token, 1).unwrap(), Operator::Hash);
+        assert_eq!(get_operator('.', &mut token, 1).unwrap(), Operator::Dot);
+        assert_eq!(get_operator('/', &mut token, 1).unwrap(), Operator::Slash);
+        assert_eq!(get_operator(';', &mut token, 1).unwrap(), Operator::Semicolon);
+        assert_eq!(get_operator('?', &mut token, 1).unwrap(), Operator::QuestionMark);
+        assert_eq!(get_operator('&', &mut token, 1).unwrap(), Operator::Amp);
+        assert_eq!(get_operator(' ', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('!', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('=', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('$', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('|', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('*', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator(':', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('~', &mut token, 1).unwrap(), Operator::NoOp);
+        assert_eq!(get_operator('-', &mut token, 1).unwrap_err(), "Invalid character '-' at column 1");
+    }
+    #[test]
+    fn adds_prefix() {
+        let mut token = String::from("");
+        add_prefix(Operator::Hash, &mut token);
+        assert_eq!(token, "#");
+        token = String::from("");
+        add_prefix(Operator::Dot, &mut token);
+        assert_eq!(token, ".");
+        token = String::from("");
+        add_prefix(Operator::Slash, &mut token);
+        assert_eq!(token, "/");
+        token = String::from("");
+        add_prefix(Operator::Semicolon, &mut token);
+        assert_eq!(token, ";");
+        token = String::from("");
+        add_prefix(Operator::QuestionMark, &mut token);
+        assert_eq!(token, "?");
+        token = String::from("");
+        add_prefix(Operator::Amp, &mut token);
+        assert_eq!(token, "&");
     }
 }
