@@ -50,6 +50,8 @@ A full release of all of the implementations is performed with:
 ./release.sh <version>
 ```
 
+> Note: only include the version number e.g. 1.0.6, additional tags with the v prefix will be created automatically.
+
 ### Go / Swift
 
 In Go and Swift is not possible to deserialize JSON into a Map preserving the order of the elements ([reference](https://github.com/uri-templates/uritemplate-test/pull/58#issuecomment-1640029982)).
