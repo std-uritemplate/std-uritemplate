@@ -12,7 +12,7 @@
     "std-uritemplate"
   ],
   "author": "Andrea Peruffo <andrea.peruffo1982@gmail.com>",
-  "license": "APACHE2",
+  "license": "Apache-2.0",
   "type": "module",
   "exports": {
     ".": {
