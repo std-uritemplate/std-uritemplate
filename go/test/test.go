@@ -32,6 +32,18 @@ func main() {
 			data["nativedatetwo"] = time.UnixMilli(int64(f2))
 		}
 	}
+	val3, ok := data["nativedatethree"]
+	if ok {
+		if f3, ok := val3.(float64); ok {
+			data["nativedatethree"] = time.UnixMilli(int64(f3) - 3600000).In(time.FixedZone("plus1", +1*60*60))
+		}
+	}
+	val4, ok := data["nativedatefour"]
+	if ok {
+		if f4, ok := val4.(float64); ok {
+			data["nativedatefour"] = time.UnixMilli(int64(f4) - 3600000).In(time.FixedZone("plus1", +1*60*60))
+		}
+	}
 
 	template, err := readFile(templateFile)
 	if err != nil {

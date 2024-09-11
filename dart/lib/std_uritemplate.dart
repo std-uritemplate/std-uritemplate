@@ -469,7 +469,7 @@ class StdUriTemplate {
     if (value is bool || value is String || value is num) {
       return value.toString();
     } else if (value is DateTime) {
-      return value.toUtc().toIso8601StringWithoutMilliseconds();
+      return value.toIso8601StringWithoutMilliseconds();
     } else {
       return '';
     }

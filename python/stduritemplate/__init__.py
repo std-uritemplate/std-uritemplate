@@ -349,7 +349,10 @@ class StdUriTemplate:
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, datetime):
-            return value.isoformat("T") + "Z"
+            if value.tzinfo is None:
+                return value.isoformat("T") + "Z"
+            else:
+                return value.isoformat("T")
 
     @staticmethod
     def __expand_token(

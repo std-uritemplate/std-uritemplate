@@ -25,11 +25,19 @@ Future<void> main(List<String> args) async {
   }
 
   if (data['nativedate'] case final int nativeDate) {
-    data['nativedate'] = DateTime.fromMillisecondsSinceEpoch(nativeDate);
+    data['nativedate'] = DateTime.fromMillisecondsSinceEpoch(nativeDate, isUtc:true);
   }
 
   if (data['nativedatetwo'] case final int nativeDateTwo) {
-    data['nativedatetwo'] = DateTime.fromMillisecondsSinceEpoch(nativeDateTwo);
+    data['nativedatetwo'] = DateTime.fromMillisecondsSinceEpoch(nativeDateTwo, isUtc:true);
+  }
+
+  if (data['nativedatethree'] case final int nativeDateThree) {
+    data['nativedatethree'] = DateTime.fromMillisecondsSinceEpoch(nativeDateThree, isUtc:false);
+  }
+
+  if (data['nativedatefour'] case final int nativeDateFour) {
+    data['nativedatefour'] = DateTime.fromMillisecondsSinceEpoch(nativeDateFour, isUtc:false);
   }
 
   final String template;
