@@ -32,14 +32,6 @@ Future<void> main(List<String> args) async {
     data['nativedatetwo'] = DateTime.fromMillisecondsSinceEpoch(nativeDateTwo, isUtc:true);
   }
 
-  if (data['nativedatethree'] case final int nativeDateThree) {
-    data['nativedatethree'] = DateTime.fromMillisecondsSinceEpoch(nativeDateThree, isUtc:false);
-  }
-
-  if (data['nativedatefour'] case final int nativeDateFour) {
-    data['nativedatefour'] = DateTime.fromMillisecondsSinceEpoch(nativeDateFour, isUtc:false);
-  }
-
   final String template;
   try {
     template = File(templateFile).readAsStringSync().trim();

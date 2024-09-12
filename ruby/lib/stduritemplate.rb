@@ -316,11 +316,8 @@ module StdUriTemplate
     if ([Integer, Float, String].any? { |type| value.is_a?(type) }) || ([true, false].include? value)
       value.to_s
     elsif ([DateTime].any? { |type| value.is_a?(type) })
-      if (value.zone.to_i == 0)
-        value.strftime("%Y-%m-%dT%H:%M:%SZ")
-      else
-        value.strftime("%Y-%m-%dT%H:%M:%S%:z")
-      end
+      value.new_offset(0.0)
+      value.strftime("%Y-%m-%dT%H:%M:%SZ")
     else
       raise ArgumentError, "Illegal class passed as substitution, found #{value.class}"
     end

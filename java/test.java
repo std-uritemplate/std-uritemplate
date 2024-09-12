@@ -35,10 +35,6 @@ public class test {
                 new Date(Long.valueOf(v.toString())));
             substs.computeIfPresent("nativedatetwo", (k, v) ->
                 new Date(Long.valueOf(v.toString())).toInstant().atOffset(ZoneOffset.UTC));
-            substs.computeIfPresent("nativedatethree", (k, v) ->
-                new Date(Long.valueOf(v.toString()) - 3600000L).toInstant().atOffset(ZoneOffset.ofHours(1)));
-            substs.computeIfPresent("nativedatefour", (k, v) ->
-                new Date(Long.valueOf(v.toString()) - 3600000L).toInstant().atOffset(ZoneOffset.ofHours(1)));
 
             out.println(StdUriTemplate.expand(template, substs));
         } catch (FileNotFoundException e) {

@@ -21,11 +21,7 @@ extension on DateTime {
     final h = _twoDigits(hour);
     final min = _twoDigits(minute);
     final sec = _twoDigits(second);
-    if (isUtc) {
-      return '$y-$m-${d}T$h:$min:${sec}Z';
-    } else {
-      return '$y-$m-${d}T$h:$min:$sec';
-    }
+    return '$y-$m-${d}T$h:$min:${sec}Z';
   }
 
   // Function below are copied from dart:core DateTime
@@ -469,7 +465,7 @@ class StdUriTemplate {
     if (value is bool || value is String || value is num) {
       return value.toString();
     } else if (value is DateTime) {
-      return value.toIso8601StringWithoutMilliseconds();
+      return value.toUtc().toIso8601StringWithoutMilliseconds();
     } else {
       return '';
     }

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import urllib.parse
 from typing import Any, Dict, List
 from enum import Enum
@@ -349,10 +349,8 @@ class StdUriTemplate:
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, datetime):
-            if value.tzinfo is None:
-                return value.isoformat("T") + "Z"
-            else:
-                return value.isoformat("T")
+            value.replace(tzinfo=timezone(timedelta(0)))
+            return value.isoformat("T") + "Z"
 
     @staticmethod
     def __expand_token(

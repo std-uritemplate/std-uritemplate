@@ -23,14 +23,6 @@ if "nativedate" in data:
     data["nativedate"] = datetime.fromtimestamp(data["nativedate"] / 1000)
 if "nativedatetwo" in data:
     data["nativedatetwo"] = datetime.fromtimestamp(data["nativedatetwo"] / 1000)
-if "nativedatethree" in data:
-    data["nativedatethree"] = (
-        datetime.fromtimestamp(data["nativedatethree"] / 1000)
-    ).replace(tzinfo=timezone(timedelta(hours=1)))
-if "nativedatefour" in data:
-    data["nativedatefour"] = (
-        datetime.fromtimestamp(data["nativedatefour"] / 1000)
-    ).replace(tzinfo=timezone(timedelta(hours=1)))
 
 try:
     with open(template_file, "r") as file:

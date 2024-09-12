@@ -29,14 +29,6 @@ if (array_key_exists("nativedatetwo", $data)) {
     $data["nativedatetwo"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedatetwo"]/1000.0));
     $data["nativedatetwo"]->setTimezone(new \DateTimeZone("UTC"));
 }
-if (array_key_exists("nativedatethree", $data)) {
-    $data["nativedatethree"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedatethree"]/1000.0 - 3600));
-    $data["nativedatethree"]->setTimezone(new \DateTimeZone("Europe/Rome"));
-}
-if (array_key_exists("nativedatefour", $data)) {
-    $data["nativedatefour"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedatefour"]/1000.0 - 3600));
-    $data["nativedatefour"]->setTimezone(new \DateTimeZone("Europe/Rome"));
-}
 
 try {
     $template = file_get_contents($template_file);
