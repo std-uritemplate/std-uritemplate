@@ -478,7 +478,13 @@ class StdUriTemplate {
         } else if (is_string($value) || is_int($value) || is_float($value) || is_double($value)) {
             return (string)$value;
         } else if ($value instanceof \DateTime) {
-            return $value->format('Y-m-d\TH:i:s\Z');
+            $tz = $value->getTimezone();
+            $offset = $tz->getOffset(new \DateTime("now", new \DateTimeZone("UTC")));
+            if ($offset === 0) {
+                return $value->format('Y-m-d\TH:i:s\Z'); 
+            } else {
+                return $value->format('Y-m-d\TH:i:sP');
+            }
         }
     }
 
