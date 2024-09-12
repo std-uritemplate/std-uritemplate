@@ -2,7 +2,7 @@
 import sys
 import json
 import traceback
-from datetime import datetime, tzinfo, timedelta, timezone
+from datetime import datetime
 
 from stduritemplate import StdUriTemplate
 
