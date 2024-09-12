@@ -24,6 +24,14 @@ end
 if data.key?("nativedatetwo")
   data["nativedatetwo"] = DateTime.strptime(data["nativedatetwo"].to_s, '%Q')
 end
+if data.key?("nativedatethree")
+  data["nativedatethree"] = DateTime.strptime((data["nativedatethree"] - 3600000).to_s, '%Q')
+  data["nativedatethree"] = data["nativedatethree"].new_offset(1.0/24)
+end
+if data.key?("nativedatefour")
+  data["nativedatefour"] = DateTime.strptime((data["nativedatefour"] - 3600000).to_s, '%Q')
+  data["nativedatefour"] = data["nativedatefour"].new_offset(1.0/24)
+end
 
 begin
   template = File.read(template_file).strip
