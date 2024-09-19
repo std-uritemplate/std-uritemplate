@@ -34,12 +34,6 @@ try {
       })
 
       const result = await page.evaluate((template, data) => {
-        if (data["nativedate"] !== undefined) {
-          data["nativedate"] = new Date(data["nativedate"]);
-        }
-        if (data["nativedatetwo"] !== undefined) {
-          data["nativedatetwo"] = new Date(data["nativedatetwo"]);
-        }
         const expansion = window.StdUriTemplate.expand(template, data)
         return expansion
       }, template, data)

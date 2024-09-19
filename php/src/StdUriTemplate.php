@@ -457,8 +457,7 @@ class StdUriTemplate {
             is_bool($value) ||
             is_int($value) ||
             is_float($value) ||
-            is_double($value) ||
-            $value instanceof \DateTime) {
+            is_double($value)) {
             return true;
         }
         return false;
@@ -477,8 +476,8 @@ class StdUriTemplate {
             }
         } else if (is_string($value) || is_int($value) || is_float($value) || is_double($value)) {
             return (string)$value;
-        } else if ($value instanceof \DateTime) {
-            return $value->format('Y-m-d\TH:i:s\Z');
+        } else {
+            throw new InvalidArgumentException("Illegal class passed as substitution: $value");
         }
     }
 

@@ -2,7 +2,6 @@
 import sys
 import json
 import traceback
-from datetime import datetime
 
 from stduritemplate import StdUriTemplate
 
@@ -18,11 +17,6 @@ except FileNotFoundError:
 except json.JSONDecodeError as e:
     sys.stderr.write(f"Error parsing JSON data: {str(e)}\n")
     sys.exit(1)
-
-if "nativedate" in data:
-    data["nativedate"] = datetime.fromtimestamp(data["nativedate"] / 1000)
-if "nativedatetwo" in data:
-    data["nativedatetwo"] = datetime.fromtimestamp(data["nativedatetwo"] / 1000)
 
 try:
     with open(template_file, "r") as file:

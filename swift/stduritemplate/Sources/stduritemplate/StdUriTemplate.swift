@@ -198,14 +198,6 @@ public class StdUriTemplate {
       return upperAlpha.union(lowerAlpha).union(digits).union(unreservedSymbols)
     }()
 
-    private static let RFC3339DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter
-    }()
-
     private static func isSurrogate(_ cp: Character) -> Bool {
         let utf16CodeUnit = cp.utf16.first!
         return 0xD800 <= utf16CodeUnit && utf16CodeUnit <= 0xDBFF
@@ -342,8 +334,7 @@ public class StdUriTemplate {
             value is Int ||
             value is Int64 ||
             value is Float ||
-            value is Double ||
-            value is Date {
+            value is Double {
             return true
         } else {
             return false
@@ -368,10 +359,8 @@ public class StdUriTemplate {
             return String(floatValue)
         } else if let doubleValue = value as? Double {
             return String(doubleValue)
-        } else if let dateValue = value as? Date {
-            return RFC3339DateFormatter.string(from: dateValue)
         } else {
-            return (value as? String)!
+            fatalError("Illegal class passed as substitution, found: \(value)")
         }
     }
     
