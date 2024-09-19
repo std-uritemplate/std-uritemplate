@@ -416,7 +416,7 @@ class StdUriTemplate {
     if (value is bool || value is String || value is num) {
       return value.toString();
     } else {
-      throw ArgumentError('Illegal class passed as substitution: $value');
+      throw ArgumentError('Illegal class passed as substitution: ', value.runtimeType.toString());
     }
   }
 
