@@ -11,58 +11,6 @@ enum _SubstitutionType { EMPTY, STRING, LIST, MAP }
 
 enum _Operator { PLUS, HASH, DOT, SLASH, SEMICOLON, QUESTION_MARK, AMP, NO_OP }
 
-extension on DateTime {
-  /// This is the same as [toIso8601String] but without milli- and microseconds.
-  String toIso8601StringWithoutMilliseconds() {
-    final y =
-        (year >= -9999 && year <= 9999) ? _fourDigits(year) : _sixDigits(year);
-    final m = _twoDigits(month);
-    final d = _twoDigits(day);
-    final h = _twoDigits(hour);
-    final min = _twoDigits(minute);
-    final sec = _twoDigits(second);
-    if (isUtc) {
-      return '$y-$m-${d}T$h:$min:${sec}Z';
-    } else {
-      return '$y-$m-${d}T$h:$min:$sec';
-    }
-  }
-
-  // Function below are copied from dart:core DateTime
-
-  static String _fourDigits(int n) {
-    final absN = n.abs();
-    final sign = n < 0 ? '-' : '';
-    if (absN >= 1000) {
-      return '$n';
-    }
-    if (absN >= 100) {
-      return '${sign}0$absN';
-    }
-    if (absN >= 10) {
-      return '${sign}00$absN';
-    }
-    return '${sign}000$absN';
-  }
-
-  static String _sixDigits(int n) {
-    assert(n < -9999 || n > 9999);
-    final absN = n.abs();
-    final sign = n < 0 ? '-' : '+';
-    if (absN >= 100000) {
-      return '$sign$absN';
-    }
-    return '${sign}0$absN';
-  }
-
-  static String _twoDigits(int n) {
-    if (n >= 10) {
-      return '$n';
-    }
-    return '0$n';
-  }
-}
-
 /// A URI Template implementation based on the [RFC 6570](https://datatracker.ietf.org/doc/html/rfc6570).
 ///
 /// This class CAN NOT be instantiated, instead call the static [expand] method.
@@ -461,17 +409,14 @@ class StdUriTemplate {
   static bool _isNativeType(Object? value) {
     return value is String ||
         value is bool ||
-        value is num ||
-        value is DateTime;
+        value is num;
   }
 
   static String _convertNativeTypes(Object? value) {
     if (value is bool || value is String || value is num) {
       return value.toString();
-    } else if (value is DateTime) {
-      return value.toUtc().toIso8601StringWithoutMilliseconds();
     } else {
-      return '';
+      throw ArgumentError('Illegal class passed as substitution: ${value.runtimeType.toString()}', 'value');
     }
   }
 
