@@ -4,11 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -392,9 +388,7 @@ public class StdUriTemplate {
             value instanceof Integer ||
             value instanceof Long ||
             value instanceof Float ||
-            value instanceof Double ||
-            value instanceof Date ||
-            value instanceof OffsetDateTime) {
+            value instanceof Double) {
             return true;
         }
         return false;
@@ -409,15 +403,9 @@ public class StdUriTemplate {
             value instanceof Float ||
             value instanceof Double) {
             return value.toString();
-        } else if (value instanceof Date) {
-            return ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(RFC3339);
-        } else if (value instanceof OffsetDateTime) {
-            return ((OffsetDateTime) value).format(RFC3339);
         }
         throw new IllegalArgumentException("Illegal class passed as substitution, found " + value.getClass());
     }
-
-    private static final DateTimeFormatter RFC3339 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[XXX][VV]");
 
     // returns true if expansion happened
     private static boolean expandToken(
