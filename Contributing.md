@@ -16,7 +16,7 @@ This section explains the steps that are currently used to add a new language im
     - `./tests/test.sh <lang> spec-examples-by-section.json`
     - `./tests/test.sh <lang> extended-tests.json`
     - `./tests/test.sh <lang> negative-tests.json`
-6. There are extended tests to cover edge cases and the correct handling of dates, in case the substitutions map contains a key "nativedate" convert it to the language native date format and run the extended tests:
+6. There are extended tests to cover edge cases, make sure they pass running:
     - `./tests/test.sh <lang> edge-cases.json`
 7. If a test doesn't pass you can easily re-run just the latest invocation by running: `./tests/re-test.sh <lang>`
 8. Verify one last time that everything works by running `./tests/test.sh <lang>`
