@@ -243,7 +243,7 @@ We have a set of design decisions to guide:
 - favor maintenance and readability
 - performance until they compromise readability
 - one implementation per ecosystem/runtime (e.g. 1 implementation in Java and no Kotlin/Scala/Closure, 1 in TS that will serve JS as well etc.)
-- substitutions will be performed for primitive types and date-time
+- substitutions will be performed only for primitive types
 
 ## API
 
