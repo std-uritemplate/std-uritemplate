@@ -304,6 +304,7 @@ jobs:
         run: |
           cp ../Readme.md ./README.md
           cp ../LICENSE .
+          echo "Release version: ${GITHUB_REF_NAME}" >> CHANGELOG.md
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
       - name: Release dry run
         working-directory: dart
