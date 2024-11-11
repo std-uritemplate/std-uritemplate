@@ -20,6 +20,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
+      # We faced problem like: https://github.com/cli/cli/issues/6599
+      - name: Sleep for 60 seconds
+        run: sleep 60
       # Changelog is generated from GH releases
       - name: Generate Changelog
         uses: rhysd/changelog-from-release/action@v3
