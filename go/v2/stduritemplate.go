@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 	"unicode/utf8"
 )
 
@@ -326,11 +325,11 @@ func getSubstitutionType(value any, col int) string {
 	switch value.(type) {
 	case nil:
 		return SubstitutionTypeEmpty
-	case string, float32, float64, int, int8, int16, int32, int64, bool, time.Time:
+	case string, float32, float64, int, int8, int16, int32, int64, bool:
 		return SubstitutionTypeString
-	case []string, []float32, []float64, []int, []int8, []int16, []int32, []int64, []bool, []time.Time, []any:
+	case []string, []float32, []float64, []int, []int8, []int16, []int32, []int64, []bool, []any:
 		return SubstitutionTypeList
-	case map[string]string, map[string]float32, map[string]float64, map[string]int, map[string]int8, map[string]int16, map[string]int32, map[string]int64, map[string]bool, map[string]time.Time, map[string]any:
+	case map[string]string, map[string]float32, map[string]float64, map[string]int, map[string]int8, map[string]int16, map[string]int32, map[string]int64, map[string]bool, map[string]any:
 		return SubstitutionTypeMap
 	default:
 		return fmt.Sprintf("illegal class passed as substitution, found %T at col: %d", value, col)
@@ -375,8 +374,6 @@ func getListLength(value any) int {
 		return len(value.([]int64))
 	case []bool:
 		return len(value.([]bool))
-	case []time.Time:
-		return len(value.([]time.Time))
 	case []any:
 		return len(value.([]any))
 	}
@@ -403,8 +400,6 @@ func getMapLength(value any) int {
 		return len(value.(map[string]int64))
 	case map[string]bool:
 		return len(value.(map[string]bool))
-	case map[string]time.Time:
-		return len(value.(map[string]time.Time))
 	case map[string]any:
 		return len(value.(map[string]any))
 	}
@@ -480,14 +475,6 @@ func convertNativeList(value any) ([]string, error) {
 		}
 	case []bool:
 		for index, val := range value.([]bool) {
-			str, err := convertNativeTypes(val)
-			if err != nil {
-				return nil, err
-			}
-			stringList[index] = str
-		}
-	case []time.Time:
-		for index, val := range value.([]time.Time) {
 			str, err := convertNativeTypes(val)
 			if err != nil {
 				return nil, err
@@ -583,14 +570,6 @@ func convertNativeMap(value any) (map[string]string, error) {
 			}
 			stringMap[key] = str
 		}
-	case map[string]time.Time:
-		for key, val := range value.(map[string]time.Time) {
-			str, err := convertNativeTypes(val)
-			if err != nil {
-				return nil, err
-			}
-			stringMap[key] = str
-		}
 	case map[string]any:
 		for key, val := range value.(map[string]any) {
 			str, err := convertNativeTypes(val)
@@ -609,8 +588,6 @@ func convertNativeTypes(value any) (string, error) {
 	switch value.(type) {
 	case string, float32, float64, int, int8, int16, int32, int64, bool:
 		return fmt.Sprintf("%v", value), nil
-	case time.Time:
-		return value.(time.Time).Format(time.RFC3339), nil
 	default:
 		return "", fmt.Errorf("unrecognized type: %s", value)
 	}

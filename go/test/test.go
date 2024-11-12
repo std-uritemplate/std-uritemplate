@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	stduritemplate "github.com/std-uritemplate/std-uritemplate/go"
+	stduritemplate "github.com/std-uritemplate/std-uritemplate/go/v2"
 )
 
 func main() {

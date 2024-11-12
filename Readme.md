@@ -103,13 +103,13 @@ StdUriTemplate.expand(template, substitutions);
 Install the package:
 
 ```bash
-go get github.com/std-uritemplate/std-uritemplate/go
+go get github.com/std-uritemplate/std-uritemplate/go/v2
 ```
 
 and use it:
 
 ```go
-import stduritemplate "github.com/std-uritemplate/std-uritemplate/go"
+import stduritemplate "github.com/std-uritemplate/std-uritemplate/go/v2"
 
 ...
 
