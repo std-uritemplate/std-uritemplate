@@ -90,7 +90,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         if: matrix.language == 'csharp'
         with:
-          dotnet-version: 8
+          dotnet-version: 9
 
       # Ruby setup
       - name: Ruby - Setup Ruby
