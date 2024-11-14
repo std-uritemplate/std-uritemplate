@@ -146,7 +146,7 @@ jobs:
       - name: C# - Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8
+          dotnet-version: 9
       - name: Download Changelog
         uses: actions/download-artifact@v4
         with:
