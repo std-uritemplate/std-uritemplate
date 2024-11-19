@@ -99,12 +99,12 @@ jobs:
       - name: Release the tag
         working-directory: go
         run: |
-          go mod tidy
+          go mod tidy -x
           git tag "v${GITHUB_REF_NAME}"
           git tag "go/v${GITHUB_REF_NAME}"
           git push origin "v${GITHUB_REF_NAME}"
           git push origin "go/v${GITHUB_REF_NAME}"
-          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate@v$GITHUB_REF_NAME"
+          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate/go/v2@v$GITHUB_REF_NAME"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
