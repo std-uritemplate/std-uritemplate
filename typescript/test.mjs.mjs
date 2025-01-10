@@ -22,7 +22,10 @@ const template = fs.readFileSync(templateFile, 'utf8').trim();
 
 try {
   (async ()=>{
-    const browser = await puppeteer.launch({headless: true});
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox'],
+      headless: true,
+    });
 
     try {
       const page = await browser.newPage();
