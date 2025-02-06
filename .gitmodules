@@ -1,6 +1,6 @@
 [submodule "uritemplate-test"]
 	path = uritemplate-test
-	url = git@github.com:uri-templates/uritemplate-test.git
+	url = https://github.com/uri-templates/uritemplate-test.git
 [submodule "csharp"]
 	path = csharp
-	url = git@github.com:std-uritemplate/std-uritemplate-csharp.git
+	url = https://github.com/std-uritemplate/std-uritemplate-csharp.git
