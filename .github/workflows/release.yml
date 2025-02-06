@@ -309,6 +309,11 @@ jobs:
           cp ../LICENSE .
           echo "Release version: ${GITHUB_REF_NAME}" >> CHANGELOG.md
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
+          # files need to be committed for pub publish to succeed, but we don't need to push the changes
+          git add .
+          git config user.email "noreply@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "chore: version bump"
       - name: Release dry run
         working-directory: dart
         run: dart pub publish --dry-run
