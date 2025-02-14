@@ -24,14 +24,6 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
 
-  if (data['nativedate'] case final int nativeDate) {
-    data['nativedate'] = DateTime.fromMillisecondsSinceEpoch(nativeDate);
-  }
-
-  if (data['nativedatetwo'] case final int nativeDateTwo) {
-    data['nativedatetwo'] = DateTime.fromMillisecondsSinceEpoch(nativeDateTwo);
-  }
-
   final String template;
   try {
     template = File(templateFile).readAsStringSync().trim();

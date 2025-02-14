@@ -7,7 +7,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
   cd ${SCRIPT_DIR}/test && \
   rm -f go.mod stduritemplate && \
   go mod init stduritemplate && \
-  go mod edit -replace github.com/std-uritemplate/std-uritemplate/go=../ && \
+  go mod edit -replace github.com/std-uritemplate/std-uritemplate/go/v2=../v2 && \
   go mod tidy && \
   go build
 )

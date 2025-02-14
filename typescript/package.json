@@ -12,7 +12,7 @@
     "std-uritemplate"
   ],
   "author": "Andrea Peruffo <andrea.peruffo1982@gmail.com>",
-  "license": "APACHE2",
+  "license": "Apache-2.0",
   "type": "module",
   "exports": {
     ".": {
@@ -34,10 +34,10 @@
   },
   "homepage": "https://github.com/std-uritemplate/std-uritemplate#readme",
   "devDependencies": {
-    "puppeteer": "^23.0.1",
+    "puppeteer": "^24.0.0",
     "rimraf": "^6.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
-    "unbuild": "^2.0.0"
+    "unbuild": "^3.0.1"
   }
 }

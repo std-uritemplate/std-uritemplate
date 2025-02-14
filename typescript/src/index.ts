@@ -391,8 +391,7 @@ export class StdUriTemplate {
   private static isNativeType(value: any): boolean {
     return (typeof value === 'string' ||
       typeof value === 'number' ||
-      typeof value === 'boolean' ||
-      value instanceof Date);
+      typeof value === 'boolean');
   }
 
   private static convertNativeTypes(value: any): string {
@@ -400,8 +399,6 @@ export class StdUriTemplate {
       return value;
     } else if (typeof value === 'number' || typeof value === 'boolean') {
       return value.toString();
-    } else if (value instanceof Date) {
-      return value.toISOString().split('.')[0] + "Z";
     } else {
       throw new Error(`Illegal class passed as substitution, found ${typeof value}`);
     }

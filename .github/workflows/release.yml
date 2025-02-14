@@ -20,6 +20,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
+      # We faced problem like: https://github.com/cli/cli/issues/6599
+      - name: Sleep for 60 seconds
+        run: sleep 60
       # Changelog is generated from GH releases
       - name: Generate Changelog
         uses: rhysd/changelog-from-release/action@v3
@@ -96,12 +99,12 @@ jobs:
       - name: Release the tag
         working-directory: go
         run: |
-          go mod tidy
+          go mod tidy -x
           git tag "v${GITHUB_REF_NAME}"
           git tag "go/v${GITHUB_REF_NAME}"
           git push origin "v${GITHUB_REF_NAME}"
           git push origin "go/v${GITHUB_REF_NAME}"
-          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate@v$GITHUB_REF_NAME"
+          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate/go/v2@v$GITHUB_REF_NAME"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -143,7 +146,7 @@ jobs:
       - name: C# - Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8
+          dotnet-version: 9
       - name: Download Changelog
         uses: actions/download-artifact@v4
         with:
@@ -304,7 +307,13 @@ jobs:
         run: |
           cp ../Readme.md ./README.md
           cp ../LICENSE .
+          echo "Release version: ${GITHUB_REF_NAME}" >> CHANGELOG.md
           cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
+          # files need to be committed for pub publish to succeed, but we don't need to push the changes
+          git add .
+          git config user.email "noreply@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "chore: version bump"
       - name: Release dry run
         working-directory: dart
         run: dart pub publish --dry-run

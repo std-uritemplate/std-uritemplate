@@ -1,6 +1,6 @@
 # std-uritemplate
 
-[![GitHub license](https://img.shields.io/badge/license-APACHE-blue.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/std-uritemplate/std-uritemplate.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
 [![Build Status](https://github.com/std-uritemplate/std-uritemplate/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/std-uritemplate/std-uritemplate/blob/main/.github/workflows/test.yml)
 [![GitHub Release](https://img.shields.io/github/tag/std-uritemplate/std-uritemplate.svg?style=flat&color=green)](https://github.com/std-uritemplate/std-uritemplate/tags)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat&color=green)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
@@ -103,13 +103,13 @@ StdUriTemplate.expand(template, substitutions);
 Install the package:
 
 ```bash
-go get github.com/std-uritemplate/std-uritemplate/go
+go get github.com/std-uritemplate/std-uritemplate/go/v2
 ```
 
 and use it:
 
 ```go
-import stduritemplate "github.com/std-uritemplate/std-uritemplate/go"
+import stduritemplate "github.com/std-uritemplate/std-uritemplate/go/v2"
 
 ...
 
@@ -243,7 +243,7 @@ We have a set of design decisions to guide:
 - favor maintenance and readability
 - performance until they compromise readability
 - one implementation per ecosystem/runtime (e.g. 1 implementation in Java and no Kotlin/Scala/Closure, 1 in TS that will serve JS as well etc.)
-- substitutions will be performed for primitive types and date-time
+- substitutions will be performed only for primitive types
 
 ## API
 

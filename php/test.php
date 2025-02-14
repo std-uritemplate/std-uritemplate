@@ -22,13 +22,6 @@ try {
     exit(1);
 }
 
-if (array_key_exists("nativedate", $data)) {
-    $data["nativedate"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedate"]/1000.0));
-}
-if (array_key_exists("nativedatetwo", $data)) {
-    $data["nativedatetwo"] = \DateTime::createFromFormat("U\.u", sprintf('%1.6F', $data["nativedatetwo"]/1000.0));
-}
-
 try {
     $template = file_get_contents($template_file);
     $template = trim($template);

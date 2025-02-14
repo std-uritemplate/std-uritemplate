@@ -22,7 +22,10 @@ const template = fs.readFileSync(templateFile, 'utf8').trim();
 
 try {
   (async ()=>{
-    const browser = await puppeteer.launch({headless: true});
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox'],
+      headless: true,
+    });
 
     try {
       const page = await browser.newPage();
@@ -34,12 +37,6 @@ try {
       })
 
       const result = await page.evaluate((template, data) => {
-        if (data["nativedate"] !== undefined) {
-          data["nativedate"] = new Date(data["nativedate"]);
-        }
-        if (data["nativedatetwo"] !== undefined) {
-          data["nativedatetwo"] = new Date(data["nativedatetwo"]);
-        }
         const expansion = window.StdUriTemplate.expand(template, data)
         return expansion
       }, template, data)

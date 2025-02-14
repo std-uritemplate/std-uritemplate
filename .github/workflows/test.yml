@@ -11,7 +11,8 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    # TODO: Waiting for Swift to update the tooling for ubuntu 24
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -90,7 +91,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         if: matrix.language == 'csharp'
         with:
-          dotnet-version: 8
+          dotnet-version: 9
 
       # Ruby setup
       - name: Ruby - Setup Ruby

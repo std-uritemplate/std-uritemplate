@@ -303,9 +303,7 @@ module StdUriTemplate
   end
 
   def self.is_native_type(value)
-    if (
-      ([Integer, Float, String].any? { |type| value.is_a?(type) }) || ([true, false].include? value) ||
-      ([DateTime].any? { |type| value.is_a?(type) }))
+    if (([Integer, Float, String].any? { |type| value.is_a?(type) }) || ([true, false].include? value))
       true
     else
       false

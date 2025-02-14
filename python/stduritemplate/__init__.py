@@ -1,4 +1,3 @@
-from datetime import datetime
 import urllib.parse
 from typing import Any, Dict, List
 from enum import Enum
@@ -336,7 +335,6 @@ class StdUriTemplate:
             isinstance(value, (str))
             or isinstance(value, (bool))
             or isinstance(value, (int, float))
-            or isinstance(value, datetime)
         ):
             return True
 
@@ -348,8 +346,8 @@ class StdUriTemplate:
             return str(value).lower()
         elif isinstance(value, (int, float)):
             return str(value)
-        elif isinstance(value, datetime):
-            return value.isoformat("T") + "Z"
+        else:
+            raise ValueError(f"Illegal class passed as substitution: {value}")
 
     @staticmethod
     def __expand_token(
