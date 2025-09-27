@@ -139,6 +139,8 @@ jobs:
   publish-csharp:
     runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
     needs: publish-gh-releases
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -180,11 +182,16 @@ jobs:
           --azure-key-vault-url "${{ secrets.DOTNET_VAULT_URL }}"
           --timestamp-url http://timestamp.digicert.com
           --verbosity Debug
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: Release to NuGet
         working-directory: csharp
         shell: pwsh
         run: |
-          dotnet nuget push "${{ github.workspace }}\csharp\dist\Std.UriTemplate.${{ github.ref_name }}.nupkg" --api-key "${{ secrets.NUGET_TOKEN }}" --source https://api.nuget.org/v3/index.json
+          dotnet nuget push "${{ github.workspace }}\csharp\dist\Std.UriTemplate.${{ github.ref_name }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
 
   publish-ruby:
     runs-on: ubuntu-latest
