@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - '*'
+    # tags:
+    #   - '*'
 
 permissions:
   contents: write
@@ -12,28 +12,28 @@ permissions:
 
 jobs:
 
-  publish-gh-releases:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-      # We faced problem like: https://github.com/cli/cli/issues/6599
-      - name: Sleep for 60 seconds
-        run: sleep 60
-      # Changelog is generated from GH releases
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
-        with:
-          file: CHANGELOG.md
-          commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: changelog
-          path: CHANGELOG.md
+  # publish-gh-releases:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         token: ${{ secrets.GH_TOKEN }}
+  #     # We faced problem like: https://github.com/cli/cli/issues/6599
+  #     - name: Sleep for 60 seconds
+  #       run: sleep 60
+  #     # Changelog is generated from GH releases
+  #     - name: Generate Changelog
+  #       uses: rhysd/changelog-from-release/action@v3
+  #       with:
+  #         file: CHANGELOG.md
+  #         commit: false
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: CHANGELOG.md
 
   publish-java:
     runs-on: ubuntu-latest
@@ -51,279 +51,279 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - name: Publish package
-        run: mvn --batch-mode -Prelease -Djgitver.use-version="$GITHUB_REF_NAME" deploy
+        run: mvn --batch-mode -Prelease -Djgitver.use-version="2.0.6" deploy
         working-directory: java
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-  publish-typescript:
-    runs-on: ubuntu-latest
-    needs: publish-gh-releases
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          registry-url: 'https://registry.npmjs.org'
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: typescript
-      - name: Set the version
-        working-directory: typescript
-        run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
-      - name: Add the readme file
-        working-directory: typescript
-        run: cp ../Readme.md .
-      - name: Install dependencies and build
-        working-directory: typescript
-        run: npm ci && npm run clean && npm run build
-      - name: Publish package on NPM
-        working-directory: typescript
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  # publish-typescript:
+  #   runs-on: ubuntu-latest
+  #   needs: publish-gh-releases
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 18
+  #         registry-url: 'https://registry.npmjs.org'
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: typescript
+  #     - name: Set the version
+  #       working-directory: typescript
+  #       run: cat <<< $(jq -r ".version = \"${GITHUB_REF_NAME}\"" package.json) > package.json
+  #     - name: Add the readme file
+  #       working-directory: typescript
+  #       run: cp ../Readme.md .
+  #     - name: Install dependencies and build
+  #       working-directory: typescript
+  #       run: npm ci && npm run clean && npm run build
+  #     - name: Publish package on NPM
+  #       working-directory: typescript
+  #       run: npm publish --access public
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publish-go:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '^1.20'
-      - name: Release the tag
-        working-directory: go
-        run: |
-          go mod tidy -x
-          git tag "v${GITHUB_REF_NAME}"
-          git tag "go/v${GITHUB_REF_NAME}"
-          git push origin "v${GITHUB_REF_NAME}"
-          git push origin "go/v${GITHUB_REF_NAME}"
-          GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate/go/v2@v$GITHUB_REF_NAME"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  # publish-go:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: '^1.20'
+  #     - name: Release the tag
+  #       working-directory: go
+  #       run: |
+  #         go mod tidy -x
+  #         git tag "v${GITHUB_REF_NAME}"
+  #         git tag "go/v${GITHUB_REF_NAME}"
+  #         git push origin "v${GITHUB_REF_NAME}"
+  #         git push origin "go/v${GITHUB_REF_NAME}"
+  #         GOPROXY=proxy.golang.org go list -m "github.com/std-uritemplate/std-uritemplate/go/v2@v$GITHUB_REF_NAME"
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  publish-python:
-    runs-on: ubuntu-latest
-    needs: publish-gh-releases
-    steps:
-      - uses: actions/checkout@v4
-      - name: Python - Install Poetry
-        uses: snok/install-poetry@v1
-      - name: Python - Add Poetry to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: python
-      - name: Copy Readme and set version
-        working-directory: python
-        run: |
-          cp ../Readme.md .
-          poetry version "${GITHUB_REF_NAME}"
-      - name: Release to PyPi
-        working-directory: python
-        run: |
-          poetry install
-          poetry build
-          poetry publish --username __token__ --password "${PYPI_TOKEN}"
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+  # publish-python:
+  #   runs-on: ubuntu-latest
+  #   needs: publish-gh-releases
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Python - Install Poetry
+  #       uses: snok/install-poetry@v1
+  #     - name: Python - Add Poetry to PATH
+  #       run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: python
+  #     - name: Copy Readme and set version
+  #       working-directory: python
+  #       run: |
+  #         cp ../Readme.md .
+  #         poetry version "${GITHUB_REF_NAME}"
+  #     - name: Release to PyPi
+  #       working-directory: python
+  #       run: |
+  #         poetry install
+  #         poetry build
+  #         poetry publish --username __token__ --password "${PYPI_TOKEN}"
+  #       env:
+  #         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
-  publish-csharp:
-    runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
-    needs: publish-gh-releases
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - name: C# - Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: csharp
-      - name: Package the release
-        working-directory: csharp
-        shell: pwsh
-        run: |
-          dotnet pack -p:PackageVersion="${{ github.ref_name }}" -p:FileVersion="${{ github.ref_name }}" -p:Version="${{ github.ref_name }}" -o dist -c release
-      # Code signigng from dotnet foundation:
-      # Adapted from: https://github.com/dotnet-foundation/wg-maintainers/issues/90#issuecomment-1677872414
-      # and: https://github.com/dotnet/sign/blob/main/docs/gh-build-and-sign.yml
-      - name: Install Sign CLI tool
-        working-directory: csharp
-        run: dotnet tool install --tool-path . sign --version 0.9.1-beta.23356.1
-      - name: Sign artifacts
-        working-directory: csharp
-        shell: pwsh
-        run: >
-          ./sign code azure-key-vault
-          **/*.nupkg
-          --publisher-name "std-uritemplate"
-          --base-directory "${{ github.workspace }}\csharp\dist"
-          --description "Std.Uritemplate for .NET - Implementation of RFC 6570 (Level 4)"
-          --description-url "https://github.com/std-uritemplate/std-uritemplate"
-          --azure-key-vault-tenant-id "${{ secrets.DOTNET_TENANT_ID }}"
-          --azure-key-vault-client-id "${{ secrets.DOTNET_APPLICATION_ID }}"
-          --azure-key-vault-client-secret "${{ secrets.DOTNET_CLIENT_SECRET }}"
-          --azure-key-vault-certificate "${{ secrets.DOTNET_CERTIFICATE_NAME }}"
-          --azure-key-vault-url "${{ secrets.DOTNET_VAULT_URL }}"
-          --timestamp-url http://timestamp.digicert.com
-          --verbosity Debug
-      - name: NuGet login
-        uses: NuGet/login@v1
-        id: nuget-login
-        with:
-          user: ${{ secrets.NUGET_USER }}
-      - name: Release to NuGet
-        working-directory: csharp
-        shell: pwsh
-        run: |
-          dotnet nuget push "${{ github.workspace }}\csharp\dist\Std.UriTemplate.${{ github.ref_name }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
+  # publish-csharp:
+  #   runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
+  #   needs: publish-gh-releases
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: 'true'
+  #     - name: C# - Setup .NET
+  #       uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: 9
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: csharp
+  #     - name: Package the release
+  #       working-directory: csharp
+  #       shell: pwsh
+  #       run: |
+  #         dotnet pack -p:PackageVersion="${{ github.ref_name }}" -p:FileVersion="${{ github.ref_name }}" -p:Version="${{ github.ref_name }}" -o dist -c release
+  #     # Code signigng from dotnet foundation:
+  #     # Adapted from: https://github.com/dotnet-foundation/wg-maintainers/issues/90#issuecomment-1677872414
+  #     # and: https://github.com/dotnet/sign/blob/main/docs/gh-build-and-sign.yml
+  #     - name: Install Sign CLI tool
+  #       working-directory: csharp
+  #       run: dotnet tool install --tool-path . sign --version 0.9.1-beta.23356.1
+  #     - name: Sign artifacts
+  #       working-directory: csharp
+  #       shell: pwsh
+  #       run: >
+  #         ./sign code azure-key-vault
+  #         **/*.nupkg
+  #         --publisher-name "std-uritemplate"
+  #         --base-directory "${{ github.workspace }}\csharp\dist"
+  #         --description "Std.Uritemplate for .NET - Implementation of RFC 6570 (Level 4)"
+  #         --description-url "https://github.com/std-uritemplate/std-uritemplate"
+  #         --azure-key-vault-tenant-id "${{ secrets.DOTNET_TENANT_ID }}"
+  #         --azure-key-vault-client-id "${{ secrets.DOTNET_APPLICATION_ID }}"
+  #         --azure-key-vault-client-secret "${{ secrets.DOTNET_CLIENT_SECRET }}"
+  #         --azure-key-vault-certificate "${{ secrets.DOTNET_CERTIFICATE_NAME }}"
+  #         --azure-key-vault-url "${{ secrets.DOTNET_VAULT_URL }}"
+  #         --timestamp-url http://timestamp.digicert.com
+  #         --verbosity Debug
+  #     - name: NuGet login
+  #       uses: NuGet/login@v1
+  #       id: nuget-login
+  #       with:
+  #         user: ${{ secrets.NUGET_USER }}
+  #     - name: Release to NuGet
+  #       working-directory: csharp
+  #       shell: pwsh
+  #       run: |
+  #         dotnet nuget push "${{ github.workspace }}\csharp\dist\Std.UriTemplate.${{ github.ref_name }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
 
-  publish-ruby:
-    runs-on: ubuntu-latest
-    needs: publish-gh-releases
-    steps:
-      - uses: actions/checkout@v4
-      - name: Ruby - Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.0'
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: ruby
-      - name: Release to RubyGems
-        working-directory: ruby
-        run: |
-          export VERSION="${GITHUB_REF_NAME}"
-          gem build stduritemplate.gemspec
-          export GEM_HOST_API_KEY=${RUBYGEMS_TOKEN}
-          gem push "stduritemplate-${GITHUB_REF_NAME}.gem"
-        env:
-          RUBYGEMS_TOKEN: ${{ secrets.RUBYGEMS_TOKEN }}
+  # publish-ruby:
+  #   runs-on: ubuntu-latest
+  #   needs: publish-gh-releases
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Ruby - Setup Ruby
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: '3.0'
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: ruby
+  #     - name: Release to RubyGems
+  #       working-directory: ruby
+  #       run: |
+  #         export VERSION="${GITHUB_REF_NAME}"
+  #         gem build stduritemplate.gemspec
+  #         export GEM_HOST_API_KEY=${RUBYGEMS_TOKEN}
+  #         gem push "stduritemplate-${GITHUB_REF_NAME}.gem"
+  #       env:
+  #         RUBYGEMS_TOKEN: ${{ secrets.RUBYGEMS_TOKEN }}
 
-  publish-php:
-    runs-on: ubuntu-latest
-    needs: publish-gh-releases
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: php
-      - name: Release to std-uritemplate-php repo
-        working-directory: php
-        run: |
-          # Setup git
-          git config --global user.email "bot@stduritamplate.io"
-          git config --global user.name "StdUriTemplate BOT"
-          # Clone repo
-          git clone https://github.com/std-uritemplate/std-uritemplate-php
-          # Fill the content of this release
-          rm -rf std-uritemplate-php/*
-          cp -f CHANGELOG.md std-uritemplate-php
-          cp -f composer.json std-uritemplate-php
-          cp -rf src std-uritemplate-php
-          echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-php/Readme.md
-          # Push everything
-          cd std-uritemplate-php
-          git add .
-          git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
-          git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-php.git"
-          git push origin main
-          git tag ${GITHUB_REF_NAME}
-          git push origin ${GITHUB_REF_NAME}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Sync Packagist
-        run: |
-          curl -v --fail -XPOST -H'content-type:application/json' \
-            "https://packagist.org/api/update-package?username=andreaTP&apiToken=${PACKAGIST_TOKEN}" \
-            -d'{"repository":{"url":"https://github.com/std-uritemplate/std-uritemplate-php"}}'
-        env:
-          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+  # publish-php:
+  #   runs-on: ubuntu-latest
+  #   needs: publish-gh-releases
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: php
+  #     - name: Release to std-uritemplate-php repo
+  #       working-directory: php
+  #       run: |
+  #         # Setup git
+  #         git config --global user.email "bot@stduritamplate.io"
+  #         git config --global user.name "StdUriTemplate BOT"
+  #         # Clone repo
+  #         git clone https://github.com/std-uritemplate/std-uritemplate-php
+  #         # Fill the content of this release
+  #         rm -rf std-uritemplate-php/*
+  #         cp -f CHANGELOG.md std-uritemplate-php
+  #         cp -f composer.json std-uritemplate-php
+  #         cp -rf src std-uritemplate-php
+  #         echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-php/Readme.md
+  #         # Push everything
+  #         cd std-uritemplate-php
+  #         git add .
+  #         git commit --allow-empty -m "PHP Release ${GITHUB_REF_NAME}"
+  #         git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-php.git"
+  #         git push origin main
+  #         git tag ${GITHUB_REF_NAME}
+  #         git push origin ${GITHUB_REF_NAME}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  #     - name: Sync Packagist
+  #       run: |
+  #         curl -v --fail -XPOST -H'content-type:application/json' \
+  #           "https://packagist.org/api/update-package?username=andreaTP&apiToken=${PACKAGIST_TOKEN}" \
+  #           -d'{"repository":{"url":"https://github.com/std-uritemplate/std-uritemplate-php"}}'
+  #       env:
+  #         PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
 
-  publish-swift:
-    runs-on: ubuntu-latest
-    needs: publish-gh-releases
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: swift
-      - name: Release to std-uritemplate-swift repo
-        working-directory: swift
-        run: |
-          # Setup git
-          git config --global user.email "bot@stduritamplate.io"
-          git config --global user.name "StdUriTemplate BOT"
-          # Clone repo
-          git clone https://github.com/std-uritemplate/std-uritemplate-swift
-          # Fill the content of this release
-          rm -rf std-uritemplate-swift/*
-          cp -f CHANGELOG.md std-uritemplate-swift
-          cp -rf stduritemplate/* std-uritemplate-swift
-          echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-swift/Readme.md
-          # Push everything
-          cd std-uritemplate-swift
-          git add .
-          git commit --allow-empty -m "Swift Release ${GITHUB_REF_NAME}"
-          git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-swift.git"
-          git push origin main
-          git tag ${GITHUB_REF_NAME}
-          git push origin ${GITHUB_REF_NAME}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  # publish-swift:
+  #   runs-on: ubuntu-latest
+  #   needs: publish-gh-releases
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: swift
+  #     - name: Release to std-uritemplate-swift repo
+  #       working-directory: swift
+  #       run: |
+  #         # Setup git
+  #         git config --global user.email "bot@stduritamplate.io"
+  #         git config --global user.name "StdUriTemplate BOT"
+  #         # Clone repo
+  #         git clone https://github.com/std-uritemplate/std-uritemplate-swift
+  #         # Fill the content of this release
+  #         rm -rf std-uritemplate-swift/*
+  #         cp -f CHANGELOG.md std-uritemplate-swift
+  #         cp -rf stduritemplate/* std-uritemplate-swift
+  #         echo "This repository is fully automated for issues and PRs please refer to https://github.com/std-uritemplate/std-uritemplate" > std-uritemplate-swift/Readme.md
+  #         # Push everything
+  #         cd std-uritemplate-swift
+  #         git add .
+  #         git commit --allow-empty -m "Swift Release ${GITHUB_REF_NAME}"
+  #         git remote set-url origin "https://andreaTP:${GITHUB_TOKEN}@github.com/std-uritemplate/std-uritemplate-swift.git"
+  #         git push origin main
+  #         git tag ${GITHUB_REF_NAME}
+  #         git push origin ${GITHUB_REF_NAME}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  publish-dart:
-    permissions:
-      id-token: write # Required for authentication using OIDC
-    runs-on: ubuntu-latest
-    needs: publish-gh-releases
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-      - name: Download Changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: dart
-      - name: Prepare Release Files
-        working-directory: dart
-        run: |
-          cp ../Readme.md ./README.md
-          cp ../LICENSE .
-          echo "Release version: ${GITHUB_REF_NAME}" >> CHANGELOG.md
-          cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
-          # files need to be committed for pub publish to succeed, but we don't need to push the changes
-          git add .
-          git config user.email "noreply@github.com"
-          git config user.name "GitHub Actions"
-          git commit -m "chore: version bump"
-      - name: Release dry run
-        working-directory: dart
-        run: dart pub publish --dry-run
-      - name: Release to pub.dev
-        working-directory: dart
-        run: dart pub publish --force
+  # publish-dart:
+  #   permissions:
+  #     id-token: write # Required for authentication using OIDC
+  #   runs-on: ubuntu-latest
+  #   needs: publish-gh-releases
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Setup Dart
+  #       uses: dart-lang/setup-dart@v1
+  #       with:
+  #         sdk: stable
+  #     - name: Download Changelog
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: changelog
+  #         path: dart
+  #     - name: Prepare Release Files
+  #       working-directory: dart
+  #       run: |
+  #         cp ../Readme.md ./README.md
+  #         cp ../LICENSE .
+  #         echo "Release version: ${GITHUB_REF_NAME}" >> CHANGELOG.md
+  #         cat <<< $(yq e -M ".version = \"${GITHUB_REF_NAME}\"" pubspec.yaml) > pubspec.yaml
+  #         # files need to be committed for pub publish to succeed, but we don't need to push the changes
+  #         git add .
+  #         git config user.email "noreply@github.com"
+  #         git config user.name "GitHub Actions"
+  #         git commit -m "chore: version bump"
+  #     - name: Release dry run
+  #       working-directory: dart
+  #       run: dart pub publish --dry-run
+  #     - name: Release to pub.dev
+  #       working-directory: dart
+  #       run: dart pub publish --force
