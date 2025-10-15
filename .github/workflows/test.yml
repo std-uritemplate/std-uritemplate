@@ -70,14 +70,14 @@ jobs:
         uses: actions/setup-node@v4
         if: matrix.language == 'typescript'
         with:
-          node-version: 18
+          node-version: 22
 
       # Typescript mjs setup
       - name: Typescript mjs - Setup Node
         uses: actions/setup-node@v4
         if: matrix.language == 'typescript-mjs'
         with:
-          node-version: 18
+          node-version: 22
 
       # Go setup
       - name: Go - Setup Go
