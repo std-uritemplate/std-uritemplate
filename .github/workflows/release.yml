@@ -61,6 +61,8 @@ jobs:
   publish-typescript:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -82,9 +84,10 @@ jobs:
       - name: Install dependencies and build
         working-directory: typescript
         run: npm ci && npm run clean && npm run build
+      
       - name: Publish package on NPM
         working-directory: typescript
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
