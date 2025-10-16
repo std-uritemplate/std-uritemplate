@@ -89,8 +89,6 @@ jobs:
       - name: Publish package on NPM
         working-directory: typescript
         run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-go:
     runs-on: ubuntu-latest
