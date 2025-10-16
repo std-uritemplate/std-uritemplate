@@ -88,7 +88,7 @@ jobs:
 
       # C# setup
       - name: C# - Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         if: matrix.language == 'csharp'
         with:
           dotnet-version: 9
