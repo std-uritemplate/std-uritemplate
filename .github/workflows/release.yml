@@ -15,7 +15,7 @@ jobs:
   publish-gh-releases:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -38,7 +38,7 @@ jobs:
   publish-java:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Maven Central Repository
         uses: actions/setup-java@v4
         with:
@@ -61,15 +61,18 @@ jobs:
   publish-typescript:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: typescript
@@ -82,16 +85,15 @@ jobs:
       - name: Install dependencies and build
         working-directory: typescript
         run: npm ci && npm run clean && npm run build
+      
       - name: Publish package on NPM
         working-directory: typescript
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
 
   publish-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -112,13 +114,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Python - Install Poetry
         uses: snok/install-poetry@v1
       - name: Python - Add Poetry to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: python
@@ -141,8 +143,9 @@ jobs:
     needs: publish-gh-releases
     permissions:
       id-token: write
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: 'true'
       - name: C# - Setup .NET
@@ -150,7 +153,7 @@ jobs:
         with:
           dotnet-version: 9
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: csharp
@@ -197,13 +200,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Ruby - Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: ruby
@@ -221,9 +224,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: php
@@ -263,9 +266,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: swift
@@ -296,16 +299,17 @@ jobs:
   publish-dart:
     permissions:
       id-token: write # Required for authentication using OIDC
+      contents: read
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
       - name: Download Changelog
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: changelog
           path: dart
