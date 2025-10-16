@@ -86,6 +86,7 @@ jobs:
         working-directory: typescript
         run: npm ci && npm run clean && npm run build
       
+      - run: npm install npm@11 -g # Use npm@11 to publish with OIDC
       - name: Publish package on NPM
         working-directory: typescript
         run: npm publish --access public --provenance
