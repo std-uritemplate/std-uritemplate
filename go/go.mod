@@ -3,7 +3,7 @@ module github.com/std-uritemplate/std-uritemplate/go
 go 1.20
 
 require (
-	github.com/std-uritemplate/std-uritemplate/go/v2 v2.0.6
+	github.com/std-uritemplate/std-uritemplate/go/v2 v2.0.8
 	github.com/stretchr/testify v1.11.1
 )
 
