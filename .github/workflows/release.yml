@@ -72,7 +72,7 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: typescript
@@ -121,7 +121,7 @@ jobs:
       - name: Python - Add Poetry to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: python
@@ -154,7 +154,7 @@ jobs:
         with:
           dotnet-version: 9
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: csharp
@@ -207,7 +207,7 @@ jobs:
         with:
           ruby-version: '3.0'
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: ruby
@@ -227,7 +227,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: php
@@ -269,7 +269,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: swift
@@ -310,7 +310,7 @@ jobs:
         with:
           sdk: stable
       - name: Download Changelog
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: changelog
           path: dart
