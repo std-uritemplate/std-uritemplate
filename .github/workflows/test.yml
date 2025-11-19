@@ -53,9 +53,7 @@ jobs:
           distribution: "temurin"
       - name: Java - Install jbang
         if: matrix.language == 'java'
-        run: |
-          curl -Ls https://sh.jbang.dev | bash -s - app setup
-          echo "$HOME/.jbang/bin" >> $GITHUB_PATH
+        uses: jbangdev/setup-jbang@v0.1.1
 
       # Python setup
       - name: Python - Install Poetry
