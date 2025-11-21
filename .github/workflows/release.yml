@@ -15,7 +15,7 @@ jobs:
   publish-gh-releases:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -38,7 +38,7 @@ jobs:
   publish-java:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up Maven Central Repository
         uses: actions/setup-java@v5
         with:
@@ -65,7 +65,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -94,7 +94,7 @@ jobs:
   publish-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Python - Install Poetry
         uses: snok/install-poetry@v1
       - name: Python - Add Poetry to PATH
@@ -146,7 +146,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'true'
       - name: C# - Setup .NET
@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Ruby - Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -225,7 +225,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Download Changelog
         uses: actions/download-artifact@v6
         with:
@@ -267,7 +267,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Download Changelog
         uses: actions/download-artifact@v6
         with:
@@ -304,7 +304,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
