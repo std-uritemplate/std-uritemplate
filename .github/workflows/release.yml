@@ -30,7 +30,7 @@ jobs:
           file: CHANGELOG.md
           commit: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: changelog
           path: CHANGELOG.md
