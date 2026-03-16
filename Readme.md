@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/std-uritemplate/std-uritemplate.svg)](https://github.com/std-uritemplate/std-uritemplate/blob/main/LICENSE)
 [![Build Status](https://github.com/std-uritemplate/std-uritemplate/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/std-uritemplate/std-uritemplate/blob/main/.github/workflows/test.yml)
 [![GitHub Release](https://img.shields.io/github/tag/std-uritemplate/std-uritemplate.svg?style=flat&color=green)](https://github.com/std-uritemplate/std-uritemplate/tags)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat&color=green)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
+[![Maven Central](https://maven-badges.sml.io/sonatype-central/io.github.std-uritemplate/std-uritemplate/badge.svg?style=flat&color=green)](https://central.sonatype.com/artifact/io.github.std-uritemplate/std-uritemplate)
 [![NPM version](https://img.shields.io/npm/v/%40std-uritemplate%2Fstd-uritemplate.svg?style=flat&color=green)](https://www.npmjs.com/package/@std-uritemplate/std-uritemplate)
 [![Go Reference](https://pkg.go.dev/badge/github.com/std-uritemplate/std-uritemplate/go.svg?style=flat&color=green)](https://pkg.go.dev/github.com/std-uritemplate/std-uritemplate/go)
 [![PyPI Version](https://img.shields.io/pypi/v/std-uritemplate.svg?style=flat&color=green)](https://pypi.python.org/pypi/std-uritemplate)
