@@ -19,6 +19,3 @@ python = "^3.8"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.group.dev.dependencies]
-black = ">=23.3,<25.0"
