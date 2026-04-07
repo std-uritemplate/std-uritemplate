@@ -1,0 +1,18 @@
+[package]
+name = "std-uritemplate"
+version = "0.0.1"
+edition = "2021"
+description = "std-uritemplate implementation for Rust"
+license = "Apache-2.0"
+repository = "https://github.com/std-uritemplate/std-uritemplate"
+
+[lib]
+name = "stduritemplate"
+path = "src/lib.rs"
+
+[[bin]]
+name = "stduritemplate-test"
+path = "test/main.rs"
+
+[dependencies]
+serde_json = "1"
