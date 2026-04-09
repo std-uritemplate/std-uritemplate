@@ -27,6 +27,7 @@ jobs:
           - php
           - swift
           - dart
+          - rust
         php-version:
           - '7.4'
           - '8.2'
@@ -118,6 +119,11 @@ jobs:
         if: matrix.language == 'dart'
         with:
           sdk: "stable"
+
+      # Rust setup
+      - name: Rust - Setup Rust
+        if: matrix.language == 'rust'
+        uses: dtolnay/rust-toolchain@stable
 
       # Common testing
       - name: Common - Run Tests for ${{ matrix.language }}
