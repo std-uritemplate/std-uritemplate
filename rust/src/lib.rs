@@ -8,7 +8,6 @@ pub fn expand(
     expand_impl(template, substitutions)
 }
 
-// value type for substitutions
 #[derive(Debug, Clone)]
 pub enum Value {
     String(String),
@@ -271,6 +270,18 @@ fn add_value_element(op: Operator, _token: &str, value: &str, result: &mut Strin
     }
 }
 
+fn is_iprivate(cp: char) -> bool {
+    let code = cp as u32;
+    0xE000 <= code && code <= 0xF8FF
+}
+
+fn is_ucschar(cp: char) -> bool {
+    let code = cp as u32;
+    (0xA0 <= code && code <= 0xD7FF)
+        || (0xF900 <= code && code <= 0xFDCF)
+        || (0xFDF0 <= code && code <= 0xFFEF)
+}
+
 fn is_unreserved(c: char) -> bool {
     c.is_ascii_alphanumeric() || c == '-' || c == '.' || c == '_' || c == '~'
 }
@@ -299,10 +310,6 @@ fn to_hex_digit(nibble: u8) -> char {
         10..=15 => (b'A' + nibble - 10) as char,
         _ => unreachable!(),
     }
-}
-
-fn is_hex_digit(c: char) -> bool {
-    c.is_ascii_hexdigit()
 }
 
 fn add_expanded_value(
@@ -338,8 +345,10 @@ fn add_expanded_value(
         }
 
         let mut to_append = String::new();
-        if replace_reserved || !character.is_ascii() {
+        if replace_reserved || is_ucschar(character) || is_iprivate(character) {
             url_encode_char(character, &mut to_append);
+        } else if !character.is_ascii() {
+            percent_encode_char(character, &mut to_append);
         } else {
             to_append.push(character);
         }
@@ -354,7 +363,6 @@ fn add_expanded_value(
                     result.push_str(&reserved_buffer);
                 } else {
                     result.push_str("%25");
-                    // only if !replace_reserved
                     result.push_str(&reserved_buffer[1..]);
                 }
                 to_reserved = false;
@@ -378,14 +386,8 @@ fn add_expanded_value(
 }
 
 fn is_valid_percent_encoded(s: &str) -> bool {
-    let bytes: Vec<char> = s.chars().collect();
-    if bytes.len() != 3 {
-        return false;
-    }
-    if bytes[0] != '%' {
-        return false;
-    }
-    is_hex_digit(bytes[1]) && is_hex_digit(bytes[2])
+    let b = s.as_bytes();
+    b.len() == 3 && b[0] == b'%' && b[1].is_ascii_hexdigit() && b[2].is_ascii_hexdigit()
 }
 
 fn get_substitution_type(
@@ -425,19 +427,22 @@ fn is_empty(subst_type: SubstitutionType, value: &Value) -> bool {
     }
 }
 
-fn convert_native_types(value: &Value) -> String {
+fn convert_native_types(value: &Value) -> Result<String, StdUriTemplateError> {
     match value {
-        Value::String(s) => s.clone(),
-        Value::Bool(b) => b.to_string(),
-        Value::Integer(i) => i.to_string(),
+        Value::String(s) => Ok(s.clone()),
+        Value::Bool(b) => Ok(b.to_string()),
+        Value::Integer(i) => Ok(i.to_string()),
         Value::Float(f) => {
             if *f == (*f as i64) as f64 && f.is_finite() {
-                (*f as i64).to_string()
+                Ok((*f as i64).to_string())
             } else {
-                f.to_string()
+                Ok(f.to_string())
             }
         }
-        Value::List(_) | Value::Map(_) => String::new(),
+        Value::List(_) | Value::Map(_) => Err(StdUriTemplateError::new(format!(
+            "Illegal class passed as substitution, found {:?}",
+            value
+        ))),
     }
 }
 
@@ -477,10 +482,10 @@ fn expand_token(
 
     match subst_type {
         SubstitutionType::String => {
-            add_string_value(operator, token, value, result, max_char);
+            add_string_value(operator, token, value, result, max_char)?;
         }
         SubstitutionType::List => {
-            add_list_value(operator, token, value, result, max_char, composite);
+            add_list_value(operator, token, value, result, max_char, composite)?;
         }
         SubstitutionType::Map => {
             add_map_value(operator, token, value, result, max_char, composite)?;
@@ -497,9 +502,10 @@ fn add_string_value(
     value: &Value,
     result: &mut String,
     max_char: i32,
-) {
-    let s = convert_native_types(value);
+) -> Result<(), StdUriTemplateError> {
+    let s = convert_native_types(value)?;
     add_value(operator, token, &s, result, max_char);
+    Ok(())
 }
 
 fn add_list_value(
@@ -509,11 +515,11 @@ fn add_list_value(
     result: &mut String,
     max_char: i32,
     composite: bool,
-) {
+) -> Result<(), StdUriTemplateError> {
     if let Value::List(list) = value {
         let mut first = true;
         for v in list {
-            let s = convert_native_types(v);
+            let s = convert_native_types(v)?;
             if first {
                 add_value(operator, token, &s, result, max_char);
                 first = false;
@@ -526,6 +532,7 @@ fn add_list_value(
             }
         }
     }
+    Ok(())
 }
 
 fn add_map_value(
@@ -543,12 +550,9 @@ fn add_map_value(
     }
 
     if let Value::Map(map) = value {
-        let mut entries: Vec<(&String, &Value)> = map.iter().map(|(k, v)| (k, v)).collect();
-        entries.sort_by(|a, b| a.0.cmp(b.0));
-
         let mut first = true;
-        for (key, val) in entries {
-            let v = convert_native_types(val);
+        for (key, val) in map {
+            let v = convert_native_types(val)?;
             if composite {
                 if !first {
                     add_separator(operator, result);

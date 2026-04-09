@@ -31,6 +31,7 @@ This is a complete and maintained cross-language implementation of the [Uri Temp
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
 | Dart | ✅ | ✅ | ✅ |
+| Rust | ✅ | ❌ | ❌ |
 
 ## Usage
 
@@ -226,6 +227,28 @@ import 'package:std_uritemplate/std_uritemplate.dart';
 ...
 
 print(StdUriTemplate.expand(template, substitutions));
+```
+
+### Rust
+
+Add the dependency to your `Cargo.toml`:
+
+```toml
+[dependencies]
+std-uritemplate = "REPLACE-ME"
+```
+
+and use it:
+
+```rust
+use stduritemplate::{expand, Value};
+use std::collections::HashMap;
+
+...
+
+let mut substitutions = HashMap::new();
+substitutions.insert("var".to_string(), Value::String("value".to_string()));
+let result = expand(template, &substitutions).unwrap();
 ```
 
 ## Design decisions
