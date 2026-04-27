@@ -297,6 +297,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
+  publish-rust:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    needs: publish-gh-releases
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Download Changelog
+        uses: actions/download-artifact@v8
+        with:
+          name: changelog
+          path: rust
+      - name: Prepare release files
+        working-directory: rust
+        run: |
+          cp ../Readme.md .
+          cp ../LICENSE .
+          sed -i "s/^version = \".*\"/version = \"${GITHUB_REF_NAME}\"/" Cargo.toml
+      - name: Publish to crates.io
+        working-directory: rust
+        run: cargo publish
+
   publish-dart:
     permissions:
       id-token: write # Required for authentication using OIDC
