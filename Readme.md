@@ -31,7 +31,7 @@ This is a complete and maintained cross-language implementation of the [Uri Temp
 | PHP | ✅ | ✅ | ✅ |
 | Swift | ✅ | ❌ | ✅ |
 | Dart | ✅ | ✅ | ✅ |
-| Rust | ✅ | ❌ | ❌ |
+| Rust | ✅ | ❌ | ✅ |
 
 ## Usage
 
