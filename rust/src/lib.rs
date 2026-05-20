@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -271,15 +272,14 @@ fn add_value_element(op: Operator, _token: &str, value: &str, result: &mut Strin
 }
 
 fn is_iprivate(cp: char) -> bool {
-    let code = cp as u32;
-    0xE000 <= code && code <= 0xF8FF
+    (0xE000..=0xF8FF).contains(&(cp as u32))
 }
 
 fn is_ucschar(cp: char) -> bool {
     let code = cp as u32;
-    (0xA0 <= code && code <= 0xD7FF)
-        || (0xF900 <= code && code <= 0xFDCF)
-        || (0xFDF0 <= code && code <= 0xFFEF)
+    (0xA0..=0xD7FF).contains(&code)
+        || (0xF900..=0xFDCF).contains(&code)
+        || (0xFDF0..=0xFFEF).contains(&code)
 }
 
 fn is_unreserved(c: char) -> bool {
@@ -319,32 +319,28 @@ fn add_expanded_value(
     max_char: i32,
     replace_reserved: bool,
 ) {
-    let chars: Vec<char> = value.chars().collect();
     let max = if max_char != -1 {
-        std::cmp::min(max_char as usize, chars.len())
+        max_char as usize
     } else {
-        chars.len()
+        usize::MAX
     };
 
     let mut to_reserved = false;
     let mut reserved_buffer = String::with_capacity(3);
+    let mut to_append = String::with_capacity(12);
+    let mut prefix_pending = prefix;
 
-    if max > 0 {
-        if let Some(p) = prefix {
+    for character in value.chars().take(max) {
+        if let Some(p) = prefix_pending.take() {
             result.push_str(p);
         }
-    }
-
-    let mut i = 0;
-    while i < max {
-        let character = chars[i];
 
         if character == '%' && !replace_reserved {
             to_reserved = true;
             reserved_buffer.clear();
         }
 
-        let mut to_append = String::new();
+        to_append.clear();
         if replace_reserved || is_ucschar(character) || is_iprivate(character) {
             url_encode_char(character, &mut to_append);
         } else if !character.is_ascii() {
@@ -375,8 +371,6 @@ fn add_expanded_value(
         } else {
             result.push_str(&to_append);
         }
-
-        i += 1;
     }
 
     if to_reserved {
@@ -427,16 +421,16 @@ fn is_empty(subst_type: SubstitutionType, value: &Value) -> bool {
     }
 }
 
-fn convert_native_types(value: &Value) -> Result<String, StdUriTemplateError> {
+fn convert_native_types(value: &Value) -> Result<Cow<'_, str>, StdUriTemplateError> {
     match value {
-        Value::String(s) => Ok(s.clone()),
-        Value::Bool(b) => Ok(b.to_string()),
-        Value::Integer(i) => Ok(i.to_string()),
+        Value::String(s) => Ok(Cow::Borrowed(s)),
+        Value::Bool(b) => Ok(Cow::Owned(b.to_string())),
+        Value::Integer(i) => Ok(Cow::Owned(i.to_string())),
         Value::Float(f) => {
             if *f == (*f as i64) as f64 && f.is_finite() {
-                Ok((*f as i64).to_string())
+                Ok(Cow::Owned((*f as i64).to_string()))
             } else {
-                Ok(f.to_string())
+                Ok(Cow::Owned(f.to_string()))
             }
         }
         Value::List(_) | Value::Map(_) => Err(StdUriTemplateError::new(format!(
@@ -446,6 +440,7 @@ fn convert_native_types(value: &Value) -> Result<String, StdUriTemplateError> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn expand_token(
     operator: Operator,
     token: &str,

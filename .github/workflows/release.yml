@@ -318,9 +318,14 @@ jobs:
           cp ../Readme.md .
           cp ../LICENSE .
           sed -i "s/^version = \".*\"/version = \"${GITHUB_REF_NAME}\"/" Cargo.toml
+      - name: Authenticate with crates.io
+        uses: rust-lang/crates-io-auth-action@v1
+        id: crates-io-auth
       - name: Publish to crates.io
         working-directory: rust
         run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates-io-auth.outputs.token }}
 
   publish-dart:
     permissions:

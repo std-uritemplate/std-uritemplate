@@ -5,6 +5,13 @@ edition = "2021"
 description = "std-uritemplate implementation for Rust"
 license = "Apache-2.0"
 repository = "https://github.com/std-uritemplate/std-uritemplate"
+readme = "Readme.md"
+documentation = "https://docs.rs/std-uritemplate"
+homepage = "https://github.com/std-uritemplate/std-uritemplate"
+keywords = ["uri", "url", "template", "rfc6570", "uritemplate"]
+categories = ["parsing", "web-programming"]
+rust-version = "1.70"
+exclude = ["test/", "init.sh", "test.sh"]
 
 [lib]
 name = "stduritemplate"
