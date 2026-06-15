@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "target": "ES2020",
+    "lib": [
+      "ES2020"
+    ],
+    "ignoreDeprecations": "6.0",
+    "moduleResolution": "node",
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}

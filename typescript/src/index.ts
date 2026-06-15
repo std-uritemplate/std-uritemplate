@@ -1,6 +1,6 @@
 type Substitutions = { [key: string]: any };
 
-enum Operator {
+const enum Operator {
   NO_OP,
   PLUS,
   HASH,
@@ -11,7 +11,7 @@ enum Operator {
   AMP,
 }
 
-enum SubstitutionType {
+const enum SubstitutionType {
   EMPTY,
   STRING,
   LIST,
