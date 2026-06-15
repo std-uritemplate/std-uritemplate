@@ -1,4 +1,4 @@
-import { rename, rm } from 'node:fs/promises';
+import { rename, rm, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -11,3 +11,6 @@ await rename(path.join(distDir, 'cjs', 'index.js'), path.join(distDir, 'index.cj
 
 await rm(path.join(distDir, 'esm'), { recursive: true, force: true });
 await rm(path.join(distDir, 'cjs'), { recursive: true, force: true });
+
+await copyFile(path.join(distDir, 'index.d.ts'), path.join(distDir, 'index.d.cts'));
+await copyFile(path.join(distDir, 'index.d.ts'), path.join(distDir, 'index.d.mts'));
