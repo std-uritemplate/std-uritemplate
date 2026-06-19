@@ -40,7 +40,7 @@ jobs:
             php-version: '8.2'
     steps:
       - name: Common - Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: 'true'
       # Language specific setup
