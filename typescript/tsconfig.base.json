@@ -5,8 +5,7 @@
     "lib": [
       "ES2020"
     ],
-    "ignoreDeprecations": "6.0",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "skipLibCheck": true
   },
   "include": [
