@@ -160,7 +160,7 @@ export class StdUriTemplate {
             if (operator === null) {
               operator = StdUriTemplate.getOperator(character, token, i);
             } else if (maxCharBuffer !== null) {
-              if (character.match(/^\d$/)) {
+              if (character >= '0' && character <= '9') {
                 maxCharBuffer.push(character);
               } else {
                 throw new Error(`Illegal character identified in the token at col: ${i}`);
@@ -176,8 +176,15 @@ export class StdUriTemplate {
               }
             }
           } else {
-            if (character.codePointAt(0)! > 0x7F) {
-              result.push(encodeURIComponent(character));
+            const cp = character.codePointAt(0)!;
+            if (cp > 0x7F || (cp >= 0xD800 && cp <= 0xDBFF)) {
+              let toEncode: string;
+              if (cp >= 0xD800 && cp <= 0xDBFF && i + 1 < str.length) {
+                toEncode = character + str.charAt(++i);
+              } else {
+                toEncode = character;
+              }
+              result.push(encodeURIComponent(toEncode));
             } else {
               result.push(character);
             }

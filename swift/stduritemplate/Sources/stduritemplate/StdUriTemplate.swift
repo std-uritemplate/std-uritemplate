@@ -232,17 +232,17 @@ public class StdUriTemplate {
     
     private static func addExpandedValue(_ prefixStr: String, _ value: Any, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
         let stringValue = convertNativeTypes(value)
-        let max = (maxChar != -1) ? min(maxChar, stringValue.count) : stringValue.count
+        let scalars = Array(stringValue.unicodeScalars)
+        let max = (maxChar != -1) ? min(maxChar, scalars.count) : scalars.count
         result.reserveCapacity(max * 2)
         var reservedBuffer: String?
 
         if max > 0 && !prefixStr.isEmpty {
             result.append(prefixStr)
         }
-        
-        var index = stringValue.startIndex
-        for _ in 0..<max {
-            let character = stringValue[index]
+
+        for scalarIdx in 0..<max {
+            let character = Character(scalars[scalarIdx])
             if character == "%" && !replaceReserved {
                 reservedBuffer = String()
             }
@@ -251,8 +251,6 @@ public class StdUriTemplate {
             if isSurrogate(character) || replaceReserved || isUcschar(character) || isIprivate(character) {
                 toAppend = toAppend.addingPercentEncoding(withAllowedCharacters: unreserved) ?? ""
             }
-            index = stringValue.index(after: index)
-            
             if let _ = reservedBuffer {
                 reservedBuffer!.append(toAppend)
                 

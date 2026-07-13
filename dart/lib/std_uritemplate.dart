@@ -446,6 +446,12 @@ class StdUriTemplate {
     }
   }
 
+  static bool _isHexDigit(String c) {
+    return (c.codeUnitAt(0) >= 0x30 && c.codeUnitAt(0) <= 0x39) ||
+        (c.codeUnitAt(0) >= 0x41 && c.codeUnitAt(0) <= 0x46) ||
+        (c.codeUnitAt(0) >= 0x61 && c.codeUnitAt(0) <= 0x66);
+  }
+
   static void _checkVarname(String token, int col) {
     if (token.endsWith('.')) {
       throw ArgumentError(
@@ -460,7 +466,8 @@ class StdUriTemplate {
     for (var i = 0; i < token.length; i++) {
       if (token[i] == '%') {
         if (i + 2 >= token.length ||
-            !RegExp(r'^[0-9A-Fa-f]{2}$').hasMatch(token.substring(i + 1, i + 3))) {
+            !_isHexDigit(token[i + 1]) ||
+            !_isHexDigit(token[i + 2])) {
           throw ArgumentError(
             'Invalid variable name at col: $col',
           );

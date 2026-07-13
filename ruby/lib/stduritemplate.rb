@@ -120,7 +120,7 @@ module StdUriTemplate
           if operator.nil?
             operator = get_operator(character, token, i)
           elsif max_char_buffer
-            if character =~ /\d/
+            if character >= '0' && character <= '9'
               max_char_buffer << character
             else
               raise ArgumentError, "Illegal character identified in the token at col:#{i}"
@@ -340,6 +340,10 @@ module StdUriTemplate
     end
   end
 
+  def self.hex_digit?(c)
+    (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')
+  end
+
   def self.check_varname(token, col)
     if token.end_with?('.')
       raise ArgumentError, "Variable name cannot end with a dot at col:#{col}"
@@ -352,7 +356,7 @@ module StdUriTemplate
     i = 0
     while i < token.length
       if token[i] == '%'
-        if i + 2 >= token.length || !token[i + 1].match?(/[0-9A-Fa-f]/) || !token[i + 2].match?(/[0-9A-Fa-f]/)
+        if i + 2 >= token.length || !hex_digit?(token[i + 1]) || !hex_digit?(token[i + 2])
           raise ArgumentError, "Invalid percent encoding in variable name at col:#{col}"
         end
         i += 3
