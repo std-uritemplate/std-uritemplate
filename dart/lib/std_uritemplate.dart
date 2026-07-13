@@ -51,13 +51,49 @@ class StdUriTemplate {
     }
   }
 
-  static int _getMaxChar(StringBuffer buffer, int col) {
-    if (buffer.isEmpty) {
-      return -1;
-    } else {
-      return int.tryParse(buffer.toString()) ??
-          (throw ArgumentError('Cannot parse max chars at col: $col'));
+  static bool _isHexDigit(String c) {
+    final code = c.codeUnitAt(0);
+    return (code >= 0x30 && code <= 0x39) ||
+        (code >= 0x41 && code <= 0x46) ||
+        (code >= 0x61 && code <= 0x66);
+  }
+
+  static void _validateVarname(String token, int col) {
+    final chars = token.split('');
+    final len = chars.length;
+    for (var i = 0; i < len; i++) {
+      final r = chars[i];
+      if (r == '.') {
+        if (i == 0 || i == len - 1 || chars[i - 1] == '.') {
+          throw ArgumentError(
+            'Illegal character identified in the token at col: $col',
+          );
+        }
+      } else if (r == '%') {
+        if (i + 2 >= len ||
+            !_isHexDigit(chars[i + 1]) ||
+            !_isHexDigit(chars[i + 2])) {
+          throw ArgumentError(
+            'Illegal character identified in the token at col: $col',
+          );
+        }
+      }
     }
+  }
+
+  static int _getMaxChar(StringBuffer buffer, bool toMaxCharBuffer, int col) {
+    if (!toMaxCharBuffer) {
+      return -1;
+    }
+    if (buffer.isEmpty) {
+      throw ArgumentError('Empty prefix length at col: $col');
+    }
+    final value = buffer.toString();
+    if (value[0] == '0' || value.length > 4) {
+      throw ArgumentError('Invalid prefix length at col: $col');
+    }
+    return int.tryParse(value) ??
+        (throw ArgumentError('Cannot parse max chars at col: $col'));
   }
 
   static _Operator _getOperator(String c, StringBuffer token, int col) {
@@ -103,16 +139,18 @@ class StdUriTemplate {
           toToken = true;
           token.clear();
           firstToken = true;
+          toMaxCharBuffer = false;
         case '}':
           if (toToken) {
             if (operator == null) {
               throw ArgumentError('Operator cannot be null');
             }
+            _validateVarname(token.toString(), i);
             final expanded = _expandToken(
               operator,
               token.toString(),
               composite,
-              _getMaxChar(maxCharBuffer, i),
+              _getMaxChar(maxCharBuffer, toMaxCharBuffer, i),
               firstToken,
               substitutions,
               result,
@@ -135,12 +173,12 @@ class StdUriTemplate {
             if (operator == null) {
               throw ArgumentError('Operator cannot be null');
             }
-
+            _validateVarname(token.toString(), i);
             final expanded = _expandToken(
               operator,
               token.toString(),
               composite,
-              _getMaxChar(maxCharBuffer, i),
+              _getMaxChar(maxCharBuffer, toMaxCharBuffer, i),
               firstToken,
               substitutions,
               result,
@@ -181,7 +219,12 @@ class StdUriTemplate {
               }
             }
           } else {
-            result.write(character);
+            final cp = character.codeUnitAt(0);
+            if (cp > 0x7F) {
+              result.write(Uri.encodeComponent(character));
+            } else {
+              result.write(character);
+            }
           }
           break;
       }

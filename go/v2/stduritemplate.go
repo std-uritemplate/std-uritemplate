@@ -47,16 +47,39 @@ func validateLiteral(c rune, col int) error {
 	}
 }
 
-func getMaxChar(buffer *strings.Builder, col int) (int, error) {
-	if buffer == nil || buffer.Len() == 0 {
+func isHexDigit(c rune) bool {
+	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')
+}
+
+func validateVarname(token string, col int) error {
+	runes := []rune(token)
+	for i, r := range runes {
+		switch r {
+		case '.':
+			if i == 0 || i == len(runes)-1 || runes[i-1] == '.' {
+				return fmt.Errorf("illegal character identified in the token at col: %d", col)
+			}
+		case '%':
+			if i+2 >= len(runes) || !isHexDigit(runes[i+1]) || !isHexDigit(runes[i+2]) {
+				return fmt.Errorf("illegal character identified in the token at col: %d", col)
+			}
+		}
+	}
+	return nil
+}
+
+func getMaxChar(buffer *strings.Builder, toMaxCharBuffer bool, col int) (int, error) {
+	if !toMaxCharBuffer {
 		return -1, nil
+	}
+	if buffer == nil || buffer.Len() == 0 {
+		return 0, fmt.Errorf("empty prefix length at col: %d", col)
 	}
 	value := buffer.String()
-
-	if value == "" {
-		return -1, nil
+	// RFC 6570: max-length = %x31-39 *3DIGIT (1-9999, no leading zeros)
+	if value[0] == '0' || len(value) > 4 {
+		return 0, fmt.Errorf("invalid prefix length at col: %d", col)
 	}
-
 	maxChar, err := strconv.Atoi(value)
 	if err != nil {
 		return 0, fmt.Errorf("cannot parse max chars at col: %d", col)
@@ -109,7 +132,10 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			firstToken = true
 		case '}':
 			if toToken {
-				maxChar, err := getMaxChar(maxCharBuffer, i)
+				if err := validateVarname(token.String(), i); err != nil {
+					return "", err
+				}
+				maxChar, err := getMaxChar(maxCharBuffer, toMaxCharBuffer, i)
 				if err != nil {
 					return "", err
 				}
@@ -131,7 +157,10 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			}
 		case ',':
 			if toToken {
-				maxChar, err := getMaxChar(maxCharBuffer, i)
+				if err := validateVarname(token.String(), i); err != nil {
+					return "", err
+				}
+				maxChar, err := getMaxChar(maxCharBuffer, toMaxCharBuffer, i)
 				if err != nil {
 					return "", err
 				}
@@ -180,7 +209,17 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					}
 				}
 			} else {
-				result.WriteRune(character)
+				if character > 0x7F {
+					var buf [4]byte
+					n := utf8.EncodeRune(buf[:], character)
+					for _, b := range buf[:n] {
+						result.WriteByte('%')
+						result.WriteByte("0123456789ABCDEF"[b>>4])
+						result.WriteByte("0123456789ABCDEF"[b&0x0F])
+					}
+				} else {
+					result.WriteRune(character)
+				}
 			}
 		}
 	}
@@ -256,9 +295,10 @@ func isUcschar(cp rune) bool {
 }
 
 func addExpandedValue(prefix string, value string, result *strings.Builder, maxChar int, replaceReserved bool) {
+	runeCount := utf8.RuneCountInString(value)
 	max := maxChar
-	if maxChar == -1 || maxChar > len(value) {
-		max = len(value)
+	if maxChar == -1 || maxChar > runeCount {
+		max = runeCount
 	}
 	reservedBuffer := &strings.Builder{}
 	toReserved := false
@@ -267,10 +307,12 @@ func addExpandedValue(prefix string, value string, result *strings.Builder, maxC
 		result.WriteString(prefix)
 	}
 
-	for i, character := range value {
-		if i >= max {
+	runeIdx := 0
+	for _, character := range value {
+		if runeIdx >= max {
 			break
 		}
+		runeIdx++
 
 		if character == '%' && !replaceReserved {
 			reservedBuffer.Reset()

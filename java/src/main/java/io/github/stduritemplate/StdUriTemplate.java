@@ -51,21 +51,41 @@ public class StdUriTemplate {
         }
     }
 
-    private static int getMaxChar(StringBuilder buffer, int col) {
-        if (buffer == null || buffer.length() == 0) {
-            return -1;
-        } else {
-            String value = buffer.toString();
+    private static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+    }
 
-            if (value.isEmpty()) {
-                return -1;
-            } else {
-                try {
-                    return Integer.parseInt(value);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Cannot parse max chars at col:" + col);
+    private static void validateVarname(String token, int col) {
+        for (int i = 0; i < token.length(); i++) {
+            char r = token.charAt(i);
+            if (r == '.') {
+                if (i == 0 || i == token.length() - 1 || token.charAt(i - 1) == '.') {
+                    throw new IllegalArgumentException("Illegal character identified in the token at col:" + col);
+                }
+            } else if (r == '%') {
+                if (i + 2 >= token.length() || !isHexDigit(token.charAt(i + 1)) || !isHexDigit(token.charAt(i + 2))) {
+                    throw new IllegalArgumentException("Illegal character identified in the token at col:" + col);
                 }
             }
+        }
+    }
+
+    private static int getMaxChar(StringBuilder buffer, boolean toMaxCharBuffer, int col) {
+        if (!toMaxCharBuffer) {
+            return -1;
+        }
+        if (buffer == null || buffer.length() == 0) {
+            throw new IllegalArgumentException("Empty prefix length at col:" + col);
+        }
+        String value = buffer.toString();
+        // RFC 6570: max-length = %x31-39 *3DIGIT (1-9999, no leading zeros)
+        if (value.charAt(0) == '0' || value.length() > 4) {
+            throw new IllegalArgumentException("Invalid prefix length at col:" + col);
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Cannot parse max chars at col:" + col);
         }
     }
 
@@ -107,7 +127,8 @@ public class StdUriTemplate {
                     break;
                 case '}':
                     if (toToken) {
-                        boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        validateVarname(token.toString(), i);
+                        boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, toMaxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
@@ -123,7 +144,8 @@ public class StdUriTemplate {
                     break;
                 case ',':
                     if (toToken) {
-                        boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
+                        validateVarname(token.toString(), i);
+                        boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, toMaxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
                         }
@@ -156,7 +178,14 @@ public class StdUriTemplate {
                             }
                         }
                     } else {
-                        result.append(character);
+                        if (character > 0x7F) {
+                            byte[] bytes = Character.toString(character).getBytes(StandardCharsets.UTF_8);
+                            for (byte b : bytes) {
+                                result.append(String.format("%%%02X", b & 0xFF));
+                            }
+                        } else {
+                            result.append(character);
+                        }
                     }
                     break;
             }

@@ -50,14 +50,33 @@ class StdUriTemplate:
             raise ValueError(f"Illegal character identified in the token at col: {col}")
 
     @staticmethod
-    def __get_max_char(buffer: str, col: int) -> int:
-        if buffer is None or len(buffer) == 0:
+    def __is_hex_digit(c: str) -> bool:
+        return c in "0123456789ABCDEFabcdef"
+
+    @staticmethod
+    def __validate_varname(token: str, col: int) -> None:
+        for i, r in enumerate(token):
+            if r == ".":
+                if i == 0 or i == len(token) - 1 or token[i - 1] == ".":
+                    raise ValueError(f"Illegal character identified in the token at col: {col}")
+            elif r == "%":
+                if i + 2 >= len(token) or not StdUriTemplate.__is_hex_digit(token[i + 1]) or not StdUriTemplate.__is_hex_digit(token[i + 2]):
+                    raise ValueError(f"Illegal character identified in the token at col: {col}")
+
+    @staticmethod
+    def __get_max_char(buffer: str, to_max_char_buffer: bool, col: int) -> int:
+        if not to_max_char_buffer:
             return -1
-        else:
-            try:
-                return int("".join(buffer))
-            except ValueError:
-                raise ValueError(f"Cannot parse max chars at col: {col}")
+        if buffer is None or len(buffer) == 0:
+            raise ValueError(f"Empty prefix length at col: {col}")
+        value = "".join(buffer)
+        # RFC 6570: max-length = %x31-39 *3DIGIT (1-9999, no leading zeros)
+        if value[0] == "0" or len(value) > 4:
+            raise ValueError(f"Invalid prefix length at col: {col}")
+        try:
+            return int(value)
+        except ValueError:
+            raise ValueError(f"Cannot parse max chars at col: {col}")
 
     @staticmethod
     def __get_operator(character: str, token: List[str], col: int) -> str:
@@ -87,6 +106,7 @@ class StdUriTemplate:
         operator = None
         composite = False
         max_char_buffer = None
+        to_max_char_buffer = False
         first_token = True
 
         for i in range(len(string)):
@@ -94,13 +114,15 @@ class StdUriTemplate:
             if character == "{":
                 token = []
                 first_token = True
+                to_max_char_buffer = False
             elif character == "}":
                 if token is not None:
+                    StdUriTemplate.__validate_varname("".join(token), i)
                     expanded = StdUriTemplate.__expand_token(
                         operator,
                         "".join(token),
                         composite,
-                        StdUriTemplate.__get_max_char(max_char_buffer, i),
+                        StdUriTemplate.__get_max_char(max_char_buffer, to_max_char_buffer, i),
                         first_token,
                         substitutions,
                         result,
@@ -112,15 +134,17 @@ class StdUriTemplate:
                     operator = None
                     composite = False
                     max_char_buffer = None
+                    to_max_char_buffer = False
                 else:
                     raise ValueError(f"Failed to expand token, invalid at col: {i}")
             elif character == ",":
                 if token is not None:
+                    StdUriTemplate.__validate_varname("".join(token), i)
                     expanded = StdUriTemplate.__expand_token(
                         operator,
                         "".join(token),
                         composite,
-                        StdUriTemplate.__get_max_char(max_char_buffer, i),
+                        StdUriTemplate.__get_max_char(max_char_buffer, to_max_char_buffer, i),
                         first_token,
                         substitutions,
                         result,
@@ -131,6 +155,7 @@ class StdUriTemplate:
                     token = []
                     composite = False
                     max_char_buffer = None
+                    to_max_char_buffer = False
                     continue
             else:
                 if token is not None:
@@ -145,6 +170,7 @@ class StdUriTemplate:
                             )
                     else:
                         if character == ":":
+                            to_max_char_buffer = True
                             max_char_buffer = []
                         elif character == "*":
                             composite = True
@@ -152,7 +178,10 @@ class StdUriTemplate:
                             StdUriTemplate.__validate_literal(character, i)
                             token.append(character)
                 else:
-                    result.append(character)
+                    if ord(character) > 0x7F:
+                        result.append(urllib.parse.quote(character, encoding="utf-8", safe=""))
+                    else:
+                        result.append(character)
 
         if token is None:
             return "".join(result)

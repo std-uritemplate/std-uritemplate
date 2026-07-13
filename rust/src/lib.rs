@@ -69,9 +69,51 @@ fn validate_literal(c: char, col: usize) -> Result<(), StdUriTemplateError> {
     }
 }
 
-fn get_max_char(buffer: &str, col: usize) -> Result<i32, StdUriTemplateError> {
-    if buffer.is_empty() {
+fn is_hex_digit(c: char) -> bool {
+    c.is_ascii_hexdigit()
+}
+
+fn validate_varname(token: &str, col: usize) -> Result<(), StdUriTemplateError> {
+    let chars: Vec<char> = token.chars().collect();
+    let len = chars.len();
+    for (i, &c) in chars.iter().enumerate() {
+        if c == '.' {
+            if i == 0 || i == len - 1 || chars[i - 1] == '.' {
+                return Err(StdUriTemplateError::new(format!(
+                    "Illegal character identified in the token at col:{}",
+                    col
+                )));
+            }
+        } else if c == '%' {
+            if i + 2 >= len || !is_hex_digit(chars[i + 1]) || !is_hex_digit(chars[i + 2]) {
+                return Err(StdUriTemplateError::new(format!(
+                    "Illegal character identified in the token at col:{}",
+                    col
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn get_max_char(buffer: &str, to_max_char_buffer: bool, col: usize) -> Result<i32, StdUriTemplateError> {
+    if !to_max_char_buffer {
         return Ok(-1);
+    }
+
+    if buffer.is_empty() {
+        return Err(StdUriTemplateError::new(format!(
+            "Empty prefix length at col:{}",
+            col
+        )));
+    }
+
+    let first_char = buffer.chars().next().unwrap();
+    if first_char == '0' || buffer.len() > 4 {
+        return Err(StdUriTemplateError::new(format!(
+            "Invalid prefix length at col:{}",
+            col
+        )));
     }
 
     buffer.parse::<i32>().map_err(|_| {
@@ -124,7 +166,8 @@ fn expand_impl(
             }
             '}' => {
                 if to_token {
-                    let max_char = get_max_char(&max_char_buffer, i)?;
+                    validate_varname(&token, i)?;
+                    let max_char = get_max_char(&max_char_buffer, to_max_char_buffer, i)?;
                     let expanded = expand_token(
                         operator.unwrap_or(Operator::NoOp),
                         &token,
@@ -152,7 +195,8 @@ fn expand_impl(
                 }
             }
             ',' if to_token => {
-                let max_char = get_max_char(&max_char_buffer, i)?;
+                validate_varname(&token, i)?;
+                let max_char = get_max_char(&max_char_buffer, to_max_char_buffer, i)?;
                 let expanded = expand_token(
                     operator.unwrap_or(Operator::NoOp),
                     &token,
@@ -200,7 +244,11 @@ fn expand_impl(
                         }
                     }
                 } else {
-                    result.push(character);
+                    if (character as u32) > 0x7F {
+                        percent_encode_char(character, &mut result);
+                    } else {
+                        result.push(character);
+                    }
                 }
             }
         }

@@ -28,18 +28,37 @@ public class StdUriTemplate {
         }
     }
     
-    private static func getMaxChar(_ buffer: String?, _ col: Int) throws -> Int {
-        if buffer == nil {
-            return -1
-        } else {
-            guard let value = buffer, !value.isEmpty else {
-                return -1
+    private static func validateVarname(_ token: String, _ col: Int) throws {
+        let chars = Array(token)
+        let len = chars.count
+        for i in 0..<len {
+            let r = chars[i]
+            if r == "." {
+                if i == 0 || i == len - 1 || chars[i - 1] == "." {
+                    throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Illegal character identified in the token at col: \(col)"])
+                }
+            } else if r == "%" {
+                if i + 2 >= len || !chars[i + 1].isHexDigit || !chars[i + 2].isHexDigit {
+                    throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Illegal character identified in the token at col: \(col)"])
+                }
             }
-            guard let maxChar = Int(value) else {
-                throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Cannot parse max chars at col: \(col)"])
-            }
-            return maxChar
         }
+    }
+
+    private static func getMaxChar(_ buffer: String?, _ col: Int) throws -> Int {
+        guard let value = buffer else {
+            return -1
+        }
+        guard !value.isEmpty else {
+            throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Empty prefix length at col: \(col)"])
+        }
+        guard !value.hasPrefix("0") && value.count <= 4 else {
+            throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid prefix length at col: \(col)"])
+        }
+        guard let maxChar = Int(value) else {
+            throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Cannot parse max chars at col: \(col)"])
+        }
+        return maxChar
     }
     
     private static func getOperator(_ c: Character, _ token: inout String, _ col: Int) throws -> Operator {
@@ -74,6 +93,7 @@ public class StdUriTemplate {
                     firstToken = true
                 case "}":
                     if let tk = token {
+                        try validateVarname(tk, i)
                         let expanded = try expandToken(op, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
@@ -87,6 +107,7 @@ public class StdUriTemplate {
                     }
                 case ",":
                     if let tk = token {
+                        try validateVarname(tk, i)
                         let expanded = try expandToken(op, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
@@ -117,7 +138,13 @@ public class StdUriTemplate {
                             }
                         }
                     } else {
-                        result.append(character)
+                        if character.isASCII {
+                            result.append(character)
+                        } else {
+                            for byte in String(character).utf8 {
+                                result.append(contentsOf: String(format: "%%%02X", byte))
+                            }
+                        }
                     }
             }
         }

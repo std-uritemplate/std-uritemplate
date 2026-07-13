@@ -46,22 +46,41 @@ export class StdUriTemplate {
     }
   }
 
-  private static getMaxChar(buffer: string[] | null, col: number): number {
-    if (!buffer) {
-      return -1;
-    } else {
-      const value = buffer.join('');
+  private static isHexDigit(c: string): boolean {
+    return /^[0-9A-Fa-f]$/.test(c);
+  }
 
-      if (value.length === 0) {
-        return -1;
-      } else {
-        try {
-          return parseInt(value, 10);
-        } catch (e) {
-          throw new Error(`Cannot parse max chars at col: ${col}`);
+  private static validateVarname(token: string, col: number): void {
+    for (let i = 0; i < token.length; i++) {
+      const r = token[i];
+      if (r === '.') {
+        if (i === 0 || i === token.length - 1 || token[i - 1] === '.') {
+          throw new Error(`Illegal character identified in the token at col: ${col}`);
+        }
+      } else if (r === '%') {
+        if (i + 2 >= token.length || !StdUriTemplate.isHexDigit(token[i + 1]) || !StdUriTemplate.isHexDigit(token[i + 2])) {
+          throw new Error(`Illegal character identified in the token at col: ${col}`);
         }
       }
     }
+  }
+
+  private static getMaxChar(buffer: string[] | null, toMaxCharBuffer: boolean, col: number): number {
+    if (!toMaxCharBuffer) {
+      return -1;
+    }
+    if (!buffer || buffer.length === 0) {
+      throw new Error(`Empty prefix length at col: ${col}`);
+    }
+    const value = buffer.join('');
+    if (value.length === 0) {
+      throw new Error(`Empty prefix length at col: ${col}`);
+    }
+    // RFC 6570: max-length = %x31-39 *3DIGIT (1-9999, no leading zeros)
+    if (value[0] === '0' || value.length > 4) {
+      throw new Error(`Invalid prefix length at col: ${col}`);
+    }
+    return parseInt(value, 10);
   }
 
   private static getOperator(c: string, token: string[], col: number): Operator {
@@ -93,6 +112,7 @@ export class StdUriTemplate {
     let operator: Operator | null = null;
     let composite = false;
     let maxCharBuffer: string[] | null = null;
+    let toMaxCharBuffer = false;
     let firstToken = true;
 
     for (let i = 0; i < str.length; i++) {
@@ -101,14 +121,16 @@ export class StdUriTemplate {
         case '{':
           token = [];
           firstToken = true;
+          toMaxCharBuffer = false;
           break;
         case '}':
           if (token !== null) {
+            StdUriTemplate.validateVarname(token.join(''), i);
             const expanded = StdUriTemplate.expandToken(
               operator,
               token.join(''),
               composite,
-              StdUriTemplate.getMaxChar(maxCharBuffer, i),
+              StdUriTemplate.getMaxChar(maxCharBuffer, toMaxCharBuffer, i),
               firstToken,
               substitutions,
               result,
@@ -121,17 +143,19 @@ export class StdUriTemplate {
             operator = null;
             composite = false;
             maxCharBuffer = null;
+            toMaxCharBuffer = false;
           } else {
             throw new Error(`Failed to expand token, invalid at col: ${i}`);
           }
           break;
         case ',':
           if (token !== null) {
+            StdUriTemplate.validateVarname(token.join(''), i);
             const expanded = StdUriTemplate.expandToken(
               operator,
               token.join(''),
               composite,
-              StdUriTemplate.getMaxChar(maxCharBuffer, i),
+              StdUriTemplate.getMaxChar(maxCharBuffer, toMaxCharBuffer, i),
               firstToken,
               substitutions,
               result,
@@ -143,6 +167,7 @@ export class StdUriTemplate {
             token = [];
             composite = false;
             maxCharBuffer = null;
+            toMaxCharBuffer = false;
             break;
           }
           // Intentional fall-through for commas outside the {}
@@ -158,6 +183,7 @@ export class StdUriTemplate {
               }
             } else {
               if (character === ':') {
+                toMaxCharBuffer = true;
                 maxCharBuffer = [];
               } else if (character === '*') {
                 composite = true;
@@ -167,7 +193,13 @@ export class StdUriTemplate {
               }
             }
           } else {
-            result.push(character);
+            const cp = str.codePointAt(i) ?? 0;
+            if (cp > 0x7F) {
+              result.push(encodeURIComponent(String.fromCodePoint(cp)));
+              if (cp > 0xFFFF) i++; // skip low surrogate
+            } else {
+              result.push(character);
+            }
           }
           break;
       }

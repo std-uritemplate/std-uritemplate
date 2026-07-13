@@ -28,19 +28,46 @@ module StdUriTemplate
     end
   end
 
-  def self.get_max_char(buffer, col)
-    return -1 if buffer.nil?
+  def self.is_hex_digit(c)
+    ('0'..'9').include?(c) || ('a'..'f').include?(c) || ('A'..'F').include?(c)
+  end
+
+  def self.validate_varname(token, col)
+    chars = token.chars
+    chars.each_with_index do |r, i|
+      if r == '.'
+        if i == 0 || i == chars.length - 1 || chars[i - 1] == '.'
+          raise ArgumentError, "Illegal character identified in the token at col:#{col}"
+        end
+      elsif r == '%'
+        if i + 2 >= chars.length || !is_hex_digit(chars[i + 1]) || !is_hex_digit(chars[i + 2])
+          raise ArgumentError, "Illegal character identified in the token at col:#{col}"
+        end
+      end
+    end
+  end
+
+  def self.get_max_char(buffer, to_max_char_buffer, col)
+    return -1 unless to_max_char_buffer
+
+    if buffer.nil? || buffer.empty?
+      raise ArgumentError, "Empty prefix length at col:#{col}"
+    end
 
     value = buffer.to_s
 
     if value.empty?
-      -1
-    else
-      begin
-        Integer(value)
-      rescue ArgumentError
-        raise ArgumentError, "Cannot parse max chars at col:#{col}"
-      end
+      raise ArgumentError, "Empty prefix length at col:#{col}"
+    end
+
+    if value[0] == '0' || value.length > 4
+      raise ArgumentError, "Invalid prefix length at col:#{col}"
+    end
+
+    begin
+      Integer(value)
+    rescue ArgumentError
+      raise ArgumentError, "Cannot parse max chars at col:#{col}"
     end
   end
 
@@ -73,6 +100,7 @@ module StdUriTemplate
     operator = nil
     composite = false
     max_char_buffer = nil
+    to_max_char_buffer = false
     first_token = true
 
     str.chars.each_with_index do |character, i|
@@ -80,24 +108,29 @@ module StdUriTemplate
       when '{'
         token = ''
         first_token = true
+        to_max_char_buffer = false
       when '}'
         if token
-          expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
+          validate_varname(token, i)
+          expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, to_max_char_buffer, i), first_token, substitutions, result, i)
           first_token = false if expanded && first_token
           token = nil
           operator = nil
           composite = false
           max_char_buffer = nil
+          to_max_char_buffer = false
         else
           raise ArgumentError, "Failed to expand token, invalid at col:#{i}"
         end
       when ','
         if token
-          expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
+          validate_varname(token, i)
+          expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, to_max_char_buffer, i), first_token, substitutions, result, i)
           first_token = false if expanded && first_token
           token = ''
           composite = false
           max_char_buffer = nil
+          to_max_char_buffer = false
         end
       else
         if token
@@ -111,6 +144,7 @@ module StdUriTemplate
             end
           else
             if character == ':'
+              to_max_char_buffer = true
               max_char_buffer = ''
             elsif character == '*'
               composite = true
@@ -120,7 +154,11 @@ module StdUriTemplate
             end
           end
         else
-          result << character
+          if character.ord > 0x7F
+            result << character.bytes.map { |b| format('%%%02X', b) }.join
+          else
+            result << character
+          end
         end
       end
     end

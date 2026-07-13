@@ -46,27 +46,59 @@ class StdUriTemplate {
     }
 
     /**
+     * @param string $c
+     * @return bool
+     */
+    private static function isHexDigit(string $c): bool {
+        return ($c >= '0' && $c <= '9') || ($c >= 'a' && $c <= 'f') || ($c >= 'A' && $c <= 'F');
+    }
+
+    /**
+     * @param string $token
+     * @param int $col
+     * @throws InvalidArgumentException
+     */
+    private static function validateVarname(string $token, int $col): void {
+        $chars = mb_str_split($token, 1, 'UTF-8');
+        $len = count($chars);
+        for ($i = 0; $i < $len; $i++) {
+            $r = $chars[$i];
+            if ($r === '.') {
+                if ($i === 0 || $i === $len - 1 || $chars[$i - 1] === '.') {
+                    throw new InvalidArgumentException("Illegal character identified in the token at col: $col");
+                }
+            } elseif ($r === '%') {
+                if ($i + 2 >= $len || !self::isHexDigit($chars[$i + 1]) || !self::isHexDigit($chars[$i + 2])) {
+                    throw new InvalidArgumentException("Illegal character identified in the token at col: $col");
+                }
+            }
+        }
+    }
+
+    /**
      * @param string|null $buffer
+     * @param bool $toMaxCharBuffer
      * @param int $col
      * @return int
      * @throws InvalidArgumentException
      */
-    private static function getMaxChar(?string $buffer, int $col): int {
-        if ($buffer === null) {
+    private static function getMaxChar(?string $buffer, bool $toMaxCharBuffer, int $col): int {
+        if (!$toMaxCharBuffer) {
             return -1;
-        } else {
-            $value = $buffer;
-
-            if (empty($value)) {
-                return -1;
-            } else {
-                $intValue = (int)$value;
-                if (!is_int($intValue)) {
-                    throw new InvalidArgumentException("Cannot parse max chars at col: $col");
-                }
-                return $intValue;
-            }
         }
+
+        if ($buffer === null || $buffer === '') {
+            throw new InvalidArgumentException("Empty prefix length at col: $col");
+        }
+
+        $value = $buffer;
+
+        if ($value[0] === '0' || strlen($value) > 4) {
+            throw new InvalidArgumentException("Invalid prefix length at col: $col");
+        }
+
+        $intValue = (int)$value;
+        return $intValue;
     }
 
     /**
@@ -104,18 +136,22 @@ class StdUriTemplate {
         $operator = null;
         $composite = false;
         $maxCharBuffer = null;
+        $toMaxCharBuffer = false;
         $firstToken = true;
 
-        for ($i = 0; $i < strlen($str); $i++) {
-            $character = $str[$i];
+        $characters = mb_str_split($str, 1, 'UTF-8');
+        for ($i = 0; $i < count($characters); $i++) {
+            $character = $characters[$i];
             switch ($character) {
                 case '{':
                     $token = '';
                     $firstToken = true;
+                    $toMaxCharBuffer = false;
                     break;
                 case '}':
                     if ($token !== null) {
-                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
+                        self::validateVarname($token, $i);
+                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $toMaxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
@@ -123,19 +159,22 @@ class StdUriTemplate {
                         $operator = null;
                         $composite = false;
                         $maxCharBuffer = null;
+                        $toMaxCharBuffer = false;
                     } else {
                         throw new InvalidArgumentException("Failed to expand token, invalid at col: $i");
                     }
                     break;
                 case ',':
                     if ($token !== null) {
-                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
+                        self::validateVarname($token, $i);
+                        $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $toMaxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
                         }
                         $token = '';
                         $composite = false;
                         $maxCharBuffer = null;
+                        $toMaxCharBuffer = false;
                         break;
                     }
                     // Intentional fall-through for commas outside the {}
@@ -144,13 +183,14 @@ class StdUriTemplate {
                         if ($operator === null) {
                             $operator = self::getOperator($character, $token, $i);
                         } elseif ($maxCharBuffer !== null) {
-                            if (is_numeric($character)) {
+                            if (ctype_digit($character)) {
                                 $maxCharBuffer .= $character;
                             } else {
                                 throw new InvalidArgumentException("Illegal character identified in the token at col: $i");
                             }
                         } else {
                             if ($character === ':') {
+                                $toMaxCharBuffer = true;
                                 $maxCharBuffer = '';
                             } elseif ($character === '*') {
                                 $composite = true;
@@ -160,7 +200,15 @@ class StdUriTemplate {
                             }
                         }
                     } else {
-                        $result .= $character;
+                        $cp = mb_ord($character, 'UTF-8');
+                        if ($cp !== false && $cp > 0x7F) {
+                            $bytes = unpack('C*', $character);
+                            foreach ($bytes as $byte) {
+                                $result .= sprintf('%%%02X', $byte);
+                            }
+                        } else {
+                            $result .= $character;
+                        }
                     }
                     break;
             }
@@ -288,7 +336,9 @@ class StdUriTemplate {
             return true;
         }
         $codePoint = mb_ord($cp, 'UTF-8');
-        return ($codePoint >= 0xD800 && $codePoint <= 0xDFFF);
+        // Treat all non-ASCII characters (multi-byte UTF-8) as needing encoding,
+        // matching the behavior of other implementations.
+        return $codePoint !== false && $codePoint > 0x7F;
     }
     
     /**
@@ -324,7 +374,8 @@ class StdUriTemplate {
      */
     private static function addExpandedValue($prefix, $value, string &$result, int $maxChar, bool $replaceReserved): void {
         $stringValue = self::convertNativeTypes($value);
-        $max = ($maxChar !== -1) ? min($maxChar, strlen($stringValue)) : strlen($stringValue);
+        $strLen = mb_strlen($stringValue, 'UTF-8');
+        $max = ($maxChar !== -1) ? min($maxChar, $strLen) : $strLen;
         $result .= '';
         $reservedBuffer = null;
 
@@ -333,15 +384,15 @@ class StdUriTemplate {
         }
 
         for ($i = 0; $i < $max; $i++) {
-            $character = $stringValue[$i];
+            $character = mb_substr($stringValue, $i, 1, 'UTF-8');
 
             if ($character === '%' && !$replaceReserved) {
                 $reservedBuffer = '';
             }
 
             $toAppend = $character;
-            if (self::isSurrogate(mb_ord($character, 'UTF-8')) || $replaceReserved || self::isUcschar(mb_ord($character, 'UTF-8')) || self::isIprivate(mb_ord($character, 'UTF-8'))) {
-                $toAppend = urlencode($toAppend);
+            if (self::isSurrogate($character) || $replaceReserved || self::isUcschar($character) || self::isIprivate($character)) {
+                $toAppend = rawurlencode($toAppend);
             }
 
             if ($reservedBuffer !== null) {
