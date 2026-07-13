@@ -55,11 +55,14 @@ export class StdUriTemplate {
       if (value.length === 0) {
         return -1;
       } else {
-        try {
-          return parseInt(value, 10);
-        } catch (e) {
+        if (value.startsWith('0')) {
           throw new Error(`Cannot parse max chars at col: ${col}`);
         }
+        const parsed = parseInt(value, 10);
+        if (isNaN(parsed) || parsed < 1 || parsed > 9999) {
+          throw new Error(`Cannot parse max chars at col: ${col}`);
+        }
+        return parsed;
       }
     }
   }
@@ -104,6 +107,9 @@ export class StdUriTemplate {
           break;
         case '}':
           if (token !== null) {
+            if (maxCharBuffer !== null && maxCharBuffer.length === 0) {
+              throw new Error(`Found an empty prefix at col: ${i}`);
+            }
             const expanded = StdUriTemplate.expandToken(
               operator,
               token.join(''),
@@ -127,6 +133,9 @@ export class StdUriTemplate {
           break;
         case ',':
           if (token !== null) {
+            if (maxCharBuffer !== null && maxCharBuffer.length === 0) {
+              throw new Error(`Found an empty prefix at col: ${i}`);
+            }
             const expanded = StdUriTemplate.expandToken(
               operator,
               token.join(''),
@@ -167,7 +176,11 @@ export class StdUriTemplate {
               }
             }
           } else {
-            result.push(character);
+            if (character.codePointAt(0)! > 0x7F) {
+              result.push(encodeURIComponent(character));
+            } else {
+              result.push(character);
+            }
           }
           break;
       }
@@ -284,7 +297,8 @@ export class StdUriTemplate {
 
   private static addExpandedValue(prefix: string | null, value: any, result: string[], maxChar: number, replaceReserved: boolean): void {
     const stringValue = StdUriTemplate.convertNativeTypes(value);
-    const max = maxChar !== -1 ? Math.min(maxChar, stringValue.length) : stringValue.length;
+    const codePoints = Array.from(stringValue);
+    const max = maxChar !== -1 ? Math.min(maxChar, codePoints.length) : codePoints.length;
     let reservedBuffer: string[] | undefined = undefined;
 
     if (max > 0 && prefix != null) {
@@ -292,16 +306,16 @@ export class StdUriTemplate {
     }
 
     for (let i = 0; i < max; i++) {
-      const character = stringValue.charAt(i);
+      const character = codePoints[i];
 
       if (character === '%' && !replaceReserved) {
         reservedBuffer = [];
       }
 
       let toAppend: string = character;
-      if (StdUriTemplate.isSurrogate(character)) {
-          toAppend = encodeURIComponent(stringValue.charAt(i) + stringValue.charAt(i + 1));
-          i++; // Skip the next character
+      const cp = character.codePointAt(0) || 0;
+      if (cp > 0xFFFF) {
+          toAppend = encodeURIComponent(character);
       } else if (replaceReserved || StdUriTemplate.isUcschar(character) || StdUriTemplate.isIprivate(character)) {
         if (character === '!') { // Specific to JS/TS: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#description
           toAppend = '%21'
@@ -404,6 +418,26 @@ export class StdUriTemplate {
     }
   }
 
+  private static isHexDigit(c: string): boolean {
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+  }
+
+  private static checkVarname(token: string, col: number): void {
+    if (token.endsWith('.')) {
+      throw new Error(`Invalid variable name at col: ${col}`);
+    }
+    if (token.indexOf('..') !== -1) {
+      throw new Error(`Invalid variable name at col: ${col}`);
+    }
+    for (let i = 0; i < token.length; i++) {
+      if (token.charAt(i) === '%') {
+        if (i + 2 >= token.length || !StdUriTemplate.isHexDigit(token.charAt(i + 1)) || !StdUriTemplate.isHexDigit(token.charAt(i + 2))) {
+          throw new Error(`Invalid variable name at col: ${col}`);
+        }
+      }
+    }
+  }
+
   private static expandToken(
     operator: Operator | null,
     token: string,
@@ -417,6 +451,8 @@ export class StdUriTemplate {
     if (token.length === 0) {
       throw new Error(`Found an empty token at col: ${col}`);
     }
+
+    StdUriTemplate.checkVarname(token, col);
 
     const value = substitutions[token];
     const substType = StdUriTemplate.getSubstitutionType(value, col);

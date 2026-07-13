@@ -62,7 +62,34 @@ func getMaxChar(buffer *strings.Builder, col int) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("cannot parse max chars at col: %d", col)
 	}
+	if value[0] == '0' {
+		return 0, fmt.Errorf("invalid max chars at col: %d", col)
+	}
+	if maxChar < 1 || maxChar > 9999 {
+		return 0, fmt.Errorf("invalid max chars at col: %d", col)
+	}
 	return maxChar, nil
+}
+
+func isHexDigit(c byte) bool {
+	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')
+}
+
+func checkVarname(token string, col int) error {
+	if strings.HasSuffix(token, ".") {
+		return fmt.Errorf("invalid variable name at col: %d", col)
+	}
+	if strings.Contains(token, "..") {
+		return fmt.Errorf("invalid variable name at col: %d", col)
+	}
+	for i := 0; i < len(token); i++ {
+		if token[i] == '%' {
+			if i+2 >= len(token) || !isHexDigit(token[i+1]) || !isHexDigit(token[i+2]) {
+				return fmt.Errorf("invalid variable name at col: %d", col)
+			}
+		}
+	}
+	return nil
 }
 
 func getOperator(c rune, token *strings.Builder, col int) (Op, error) {
@@ -110,6 +137,9 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			firstToken = true
 		case '}':
 			if toToken {
+				if toMaxCharBuffer && maxCharBuffer.Len() == 0 {
+					return "", fmt.Errorf("after a prefix, the value is missing at col: %d", i)
+				}
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
 					return "", err
@@ -132,6 +162,9 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 			}
 		case ',':
 			if toToken {
+				if toMaxCharBuffer && maxCharBuffer.Len() == 0 {
+					return "", fmt.Errorf("after a prefix, the value is missing at col: %d", i)
+				}
 				maxChar, err := getMaxChar(maxCharBuffer, i)
 				if err != nil {
 					return "", err
@@ -181,7 +214,13 @@ func expandImpl(str string, substitutions Substitutions) (string, error) {
 					}
 				}
 			} else {
-				result.WriteRune(character)
+				if character > 0x7F {
+					for _, b := range []byte(string(character)) {
+						result.WriteString(fmt.Sprintf("%%%02X", b))
+					}
+				} else {
+					result.WriteRune(character)
+				}
 			}
 		}
 	}
@@ -257,9 +296,10 @@ func isUcschar(cp rune) bool {
 }
 
 func addExpandedValue(prefix string, value string, result *strings.Builder, maxChar int, replaceReserved bool) {
+	runeCount := utf8.RuneCountInString(value)
 	max := maxChar
-	if maxChar == -1 || maxChar > len(value) {
-		max = len(value)
+	if maxChar == -1 || maxChar > runeCount {
+		max = runeCount
 	}
 	reservedBuffer := &strings.Builder{}
 	toReserved := false
@@ -268,10 +308,12 @@ func addExpandedValue(prefix string, value string, result *strings.Builder, maxC
 		result.WriteString(prefix)
 	}
 
-	for i, character := range value {
-		if i >= max {
+	charCount := 0
+	for _, character := range value {
+		if charCount >= max {
 			break
 		}
+		charCount++
 
 		if character == '%' && !replaceReserved {
 			reservedBuffer.Reset()
@@ -628,6 +670,10 @@ func expandToken(
 ) (bool, error) {
 	if len(token) == 0 {
 		return false, fmt.Errorf("found an empty token at col: %d", col)
+	}
+
+	if err := checkVarname(token, col); err != nil {
+		return false, err
 	}
 
 	value, ok := substitutions[token]
