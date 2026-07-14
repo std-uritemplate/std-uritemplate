@@ -102,7 +102,7 @@ class StdUriTemplate:
             elif character == "}":
                 if token is not None:
                     if max_char_buffer is not None and len(max_char_buffer) == 0:
-                        raise ValueError("Empty prefix modifier")
+                        raise ValueError(f"Found an empty prefix at col: {i}")
                     expanded = StdUriTemplate.__expand_token(
                         operator,
                         "".join(token),
@@ -124,7 +124,7 @@ class StdUriTemplate:
             elif character == ",":
                 if token is not None:
                     if max_char_buffer is not None and len(max_char_buffer) == 0:
-                        raise ValueError("Empty prefix modifier")
+                        raise ValueError(f"Found an empty prefix at col: {i}")
                     expanded = StdUriTemplate.__expand_token(
                         operator,
                         "".join(token),

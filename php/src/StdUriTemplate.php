@@ -144,7 +144,7 @@ class StdUriTemplate {
                 case '}':
                     if ($token !== null) {
                         if ($maxCharBuffer !== null && $maxCharBuffer === '') {
-                            throw new InvalidArgumentException("Illegal character identified in the token at col: $i");
+                            throw new InvalidArgumentException("Found an empty prefix at col: $i");
                         }
                         $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
@@ -161,7 +161,7 @@ class StdUriTemplate {
                 case ',':
                     if ($token !== null) {
                         if ($maxCharBuffer !== null && $maxCharBuffer === '') {
-                            throw new InvalidArgumentException("Illegal character identified in the token at col: $i");
+                            throw new InvalidArgumentException("Found an empty prefix at col: $i");
                         }
                         $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {

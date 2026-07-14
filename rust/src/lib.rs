@@ -142,7 +142,7 @@ fn expand_impl(
                 if to_token {
                     if to_max_char_buffer && max_char_buffer.is_empty() {
                         return Err(StdUriTemplateError::new(format!(
-                            "Illegal character identified in the token at col:{}",
+                            "Found an empty prefix at col:{}",
                             i
                         )));
                     }

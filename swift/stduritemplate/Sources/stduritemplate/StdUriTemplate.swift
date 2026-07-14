@@ -126,7 +126,7 @@ public class StdUriTemplate {
                             }
                         }
                     } else {
-                        if let scalar = character.unicodeScalars.first, scalar.value > 0x7F {
+                        if character.unicodeScalars.contains(where: { $0.value > 0x7F }) {
                             String(character).utf8.forEach { result.append(String(format: "%%%02X", $0)) }
                         } else {
                             result.append(character)
