@@ -75,7 +75,7 @@ func isHexDigit(c byte) bool {
 }
 
 func checkVarname(token string, col int) error {
-	if strings.HasSuffix(token, ".") {
+	if strings.HasPrefix(token, ".") || strings.HasSuffix(token, ".") {
 		return fmt.Errorf("invalid variable name at col: %d", col)
 	}
 	if strings.Contains(token, "..") {

@@ -478,7 +478,7 @@ fn convert_native_types(value: &Value) -> Result<Cow<'_, str>, StdUriTemplateErr
 }
 
 fn check_varname(token: &str, col: usize) -> Result<(), StdUriTemplateError> {
-    if token.ends_with('.') {
+    if token.starts_with('.') || token.ends_with('.') {
         return Err(StdUriTemplateError::new(format!(
             "Illegal character identified in the token at col:{}",
             col

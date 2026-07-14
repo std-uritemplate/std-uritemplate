@@ -345,8 +345,8 @@ module StdUriTemplate
   end
 
   def self.check_varname(token, col)
-    if token.end_with?('.')
-      raise ArgumentError, "Variable name cannot end with a dot at col:#{col}"
+    if token.start_with?('.') || token.end_with?('.')
+      raise ArgumentError, "Variable name cannot start or end with a dot at col:#{col}"
     end
 
     if token.include?('..')

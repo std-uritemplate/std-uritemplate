@@ -369,8 +369,8 @@ class StdUriTemplate:
 
     @classmethod
     def __check_varname(cls, token: str, col: int) -> None:
-        if token.endswith("."):
-            raise ValueError(f"Variable name cannot end with a dot at col: {col}")
+        if token.startswith(".") or token.endswith("."):
+            raise ValueError(f"Variable name cannot start or end with a dot at col: {col}")
         if ".." in token:
             raise ValueError(f"Variable name cannot contain consecutive dots at col: {col}")
         i = 0

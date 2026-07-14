@@ -453,7 +453,7 @@ class StdUriTemplate {
   }
 
   static void _checkVarname(String token, int col) {
-    if (token.endsWith('.')) {
+    if (token.startsWith('.') || token.endsWith('.')) {
       throw ArgumentError(
         'Invalid variable name at col: $col',
       );

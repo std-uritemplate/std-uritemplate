@@ -23,7 +23,7 @@ class StdUriTemplate {
      * @throws InvalidArgumentException
      */
     private static function checkVarname(string $token, int $col): void {
-        if (substr($token, -1) === '.') {
+        if ($token[0] === '.' || substr($token, -1) === '.') {
             throw new InvalidArgumentException("Invalid variable name at col: $col");
         }
         if (strpos($token, '..') !== false) {

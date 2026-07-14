@@ -430,7 +430,7 @@ export class StdUriTemplate {
   }
 
   private static checkVarname(token: string, col: number): void {
-    if (token.endsWith('.')) {
+    if (token.startsWith('.') || token.endsWith('.')) {
       throw new Error(`Invalid variable name at col: ${col}`);
     }
     if (token.indexOf('..') !== -1) {

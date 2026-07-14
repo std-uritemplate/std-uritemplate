@@ -29,8 +29,8 @@ public class StdUriTemplate {
     }
 
     private static void checkVarname(String token, int col) {
-        if (token.endsWith(".")) {
-            throw new IllegalArgumentException("Variable name cannot end with a dot at col:" + col);
+        if (token.startsWith(".") || token.endsWith(".")) {
+            throw new IllegalArgumentException("Variable name cannot start or end with a dot at col:" + col);
         }
         if (token.contains("..")) {
             throw new IllegalArgumentException("Variable name cannot contain consecutive dots at col:" + col);

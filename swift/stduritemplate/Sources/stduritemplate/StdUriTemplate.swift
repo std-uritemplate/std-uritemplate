@@ -376,7 +376,7 @@ public class StdUriTemplate {
     }
     
     private static func checkVarname(_ token: String, _ col: Int) throws {
-        if token.hasSuffix(".") {
+        if token.hasPrefix(".") || token.hasSuffix(".") {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
         }
         if token.contains("..") {
