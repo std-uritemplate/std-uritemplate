@@ -82,10 +82,10 @@ class StdUriTemplate {
             if ($value === '') {
                 return -1;
             } else {
-                $intValue = (int)$value;
-                if (!is_int($intValue)) {
+                if (!ctype_digit($value)) {
                     throw new InvalidArgumentException("Cannot parse max chars at col: $col");
                 }
+                $intValue = (int)$value;
                 if ($value[0] === '0') {
                     throw new InvalidArgumentException("Cannot parse max chars at col: $col");
                 }

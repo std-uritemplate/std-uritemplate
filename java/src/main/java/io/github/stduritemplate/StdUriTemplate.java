@@ -191,17 +191,15 @@ public class StdUriTemplate {
                             }
                         }
                     } else {
-                        if (character > 0x7F || isSurrogate(character)) {
-                            try {
-                                String toEncode;
-                                if (isSurrogate(character) && i + 1 < str.length()) {
-                                    toEncode = new String(new char[]{character, str.charAt(++i)});
-                                } else {
-                                    toEncode = Character.toString(character);
-                                }
-                                result.append(URLEncoder.encode(toEncode, StandardCharsets.UTF_8.name()));
-                            } catch (UnsupportedEncodingException e) {
-                                throw new RuntimeException(e);
+                        if (character > 0x7F || Character.isHighSurrogate(character)) {
+                            String toEncode;
+                            if (Character.isHighSurrogate(character) && i + 1 < str.length() && Character.isLowSurrogate(str.charAt(i + 1))) {
+                                toEncode = new String(new char[]{character, str.charAt(++i)});
+                            } else {
+                                toEncode = Character.toString(character);
+                            }
+                            for (byte b : toEncode.getBytes(StandardCharsets.UTF_8)) {
+                                result.append(String.format("%%%02X", b & 0xFF));
                             }
                         } else {
                             result.append(character);

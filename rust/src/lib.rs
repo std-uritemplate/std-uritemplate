@@ -480,26 +480,25 @@ fn convert_native_types(value: &Value) -> Result<Cow<'_, str>, StdUriTemplateErr
 fn check_varname(token: &str, col: usize) -> Result<(), StdUriTemplateError> {
     if token.starts_with('.') || token.ends_with('.') {
         return Err(StdUriTemplateError::new(format!(
-            "Illegal character identified in the token at col:{}",
+            "Invalid variable name (leading/trailing dot) at col:{}",
             col
         )));
     }
     if token.contains("..") {
         return Err(StdUriTemplateError::new(format!(
-            "Illegal character identified in the token at col:{}",
+            "Invalid variable name (consecutive dots) at col:{}",
             col
         )));
     }
-    let chars: Vec<char> = token.chars().collect();
-    let len = chars.len();
-    for i in 0..len {
-        if chars[i] == '%' {
-            if i + 2 < len && chars[i + 1].is_ascii_hexdigit() && chars[i + 2].is_ascii_hexdigit()
+    let bytes = token.as_bytes();
+    for i in 0..bytes.len() {
+        if bytes[i] == b'%' {
+            if i + 2 < bytes.len() && bytes[i + 1].is_ascii_hexdigit() && bytes[i + 2].is_ascii_hexdigit()
             {
                 // valid percent-encoded sequence
             } else {
                 return Err(StdUriTemplateError::new(format!(
-                    "Illegal character identified in the token at col:{}",
+                    "Invalid percent-encoding in variable name at col:{}",
                     col
                 )));
             }
