@@ -447,9 +447,10 @@ class StdUriTemplate {
   }
 
   static bool _isHexDigit(String c) {
-    return (c.codeUnitAt(0) >= 0x30 && c.codeUnitAt(0) <= 0x39) ||
-        (c.codeUnitAt(0) >= 0x41 && c.codeUnitAt(0) <= 0x46) ||
-        (c.codeUnitAt(0) >= 0x61 && c.codeUnitAt(0) <= 0x66);
+    final cu = c.codeUnitAt(0);
+    return (cu >= 0x30 && cu <= 0x39) ||
+        (cu >= 0x41 && cu <= 0x46) ||
+        (cu >= 0x61 && cu <= 0x66);
   }
 
   static void _checkVarname(String token, int col) {
