@@ -66,28 +66,28 @@ jobs:
 
       # Typescript setup
       - name: Typescript - Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         if: matrix.language == 'typescript'
         with:
           node-version: 22
 
       # Typescript mjs setup
       - name: Typescript mjs - Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         if: matrix.language == 'typescript-mjs'
         with:
           node-version: 22
 
       # Go setup
       - name: Go - Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         if: matrix.language == 'go'
         with:
           go-version: '1.20'
 
       # C# setup
       - name: C# - Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         if: matrix.language == 'csharp'
         with:
           dotnet-version: 9

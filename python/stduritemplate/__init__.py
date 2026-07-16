@@ -55,9 +55,14 @@ class StdUriTemplate:
             return -1
         else:
             try:
-                return int("".join(buffer))
+                parsed = int("".join(buffer))
             except ValueError:
                 raise ValueError(f"Cannot parse max chars at col: {col}")
+            if buffer[0] == '0':
+                raise ValueError(f"Leading zeros are not allowed in max chars at col: {col}")
+            if parsed < 1 or parsed > 9999:
+                raise ValueError(f"Max chars must be between 1 and 9999 at col: {col}")
+            return parsed
 
     @staticmethod
     def __get_operator(character: str, token: List[str], col: int) -> str:
@@ -96,6 +101,8 @@ class StdUriTemplate:
                 first_token = True
             elif character == "}":
                 if token is not None:
+                    if max_char_buffer is not None and len(max_char_buffer) == 0:
+                        raise ValueError(f"Found an empty prefix at col: {i}")
                     expanded = StdUriTemplate.__expand_token(
                         operator,
                         "".join(token),
@@ -116,6 +123,8 @@ class StdUriTemplate:
                     raise ValueError(f"Failed to expand token, invalid at col: {i}")
             elif character == ",":
                 if token is not None:
+                    if max_char_buffer is not None and len(max_char_buffer) == 0:
+                        raise ValueError(f"Found an empty prefix at col: {i}")
                     expanded = StdUriTemplate.__expand_token(
                         operator,
                         "".join(token),
@@ -152,7 +161,12 @@ class StdUriTemplate:
                             StdUriTemplate.__validate_literal(character, i)
                             token.append(character)
                 else:
-                    result.append(character)
+                    if ord(character) > 0x7F:
+                        encoded_bytes = character.encode('utf-8')
+                        for b in encoded_bytes:
+                            result.append('%{:02X}'.format(b))
+                    else:
+                        result.append(character)
 
         if token is None:
             return "".join(result)
@@ -350,6 +364,25 @@ class StdUriTemplate:
             raise ValueError(f"Illegal class passed as substitution: {value}")
 
     @staticmethod
+    def __is_hex_digit(c: str) -> bool:
+        return c in '0123456789ABCDEFabcdef'
+
+    @classmethod
+    def __check_varname(cls, token: str, col: int) -> None:
+        if token.startswith(".") or token.endswith("."):
+            raise ValueError(f"Variable name cannot start or end with a dot at col: {col}")
+        if ".." in token:
+            raise ValueError(f"Variable name cannot contain consecutive dots at col: {col}")
+        i = 0
+        while i < len(token):
+            if token[i] == '%':
+                if i + 2 >= len(token) or not cls.__is_hex_digit(token[i + 1]) or not cls.__is_hex_digit(token[i + 2]):
+                    raise ValueError(f"Invalid percent encoding in variable name at col: {col}")
+                i += 3
+            else:
+                i += 1
+
+    @staticmethod
     def __expand_token(
         operator: str,
         token: str,
@@ -362,6 +395,7 @@ class StdUriTemplate:
     ) -> bool:
         if len(token) == 0:
             raise ValueError(f"Found an empty token at col: {col}")
+        StdUriTemplate.__check_varname(token, col)
         value = substitutions.get(token)
         subst_type = StdUriTemplate.__get_substitution_type(value, col)
         if subst_type is _SubstitutionType.EMPTY or StdUriTemplate.__is_empty(

@@ -37,10 +37,20 @@ module StdUriTemplate
       -1
     else
       begin
-        Integer(value)
+        parsed = Integer(value)
       rescue ArgumentError
         raise ArgumentError, "Cannot parse max chars at col:#{col}"
       end
+
+      if value.start_with?('0')
+        raise ArgumentError, "Leading zeros are not allowed in max chars at col:#{col}"
+      end
+
+      if parsed < 1 || parsed > 9999
+        raise ArgumentError, "Max chars must be between 1 and 9999 at col:#{col}"
+      end
+
+      parsed
     end
   end
 
@@ -82,6 +92,9 @@ module StdUriTemplate
         first_token = true
       when '}'
         if token
+          if !max_char_buffer.nil? && max_char_buffer.empty?
+            raise ArgumentError, "Empty prefix after colon at col:#{i}"
+          end
           expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
           first_token = false if expanded && first_token
           token = nil
@@ -93,6 +106,9 @@ module StdUriTemplate
         end
       when ','
         if token
+          if !max_char_buffer.nil? && max_char_buffer.empty?
+            raise ArgumentError, "Empty prefix after colon at col:#{i}"
+          end
           expanded = expand_token(operator, token, composite, get_max_char(max_char_buffer, i), first_token, substitutions, result, i)
           first_token = false if expanded && first_token
           token = ''
@@ -104,7 +120,7 @@ module StdUriTemplate
           if operator.nil?
             operator = get_operator(character, token, i)
           elsif max_char_buffer
-            if character =~ /\d/
+            if character >= '0' && character <= '9'
               max_char_buffer << character
             else
               raise ArgumentError, "Illegal character identified in the token at col:#{i}"
@@ -120,7 +136,11 @@ module StdUriTemplate
             end
           end
         else
-          result << character
+          if character.ord > 0x7F
+            character.encode('UTF-8').bytes.each { |b| result << sprintf("%%%02X", b) }
+          else
+            result << character
+          end
         end
       end
     end
@@ -320,8 +340,35 @@ module StdUriTemplate
     end
   end
 
+  def self.hex_digit?(c)
+    (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')
+  end
+
+  def self.check_varname(token, col)
+    if token.start_with?('.') || token.end_with?('.')
+      raise ArgumentError, "Variable name cannot start or end with a dot at col:#{col}"
+    end
+
+    if token.include?('..')
+      raise ArgumentError, "Variable name cannot contain consecutive dots at col:#{col}"
+    end
+
+    i = 0
+    while i < token.length
+      if token[i] == '%'
+        if i + 2 >= token.length || !hex_digit?(token[i + 1]) || !hex_digit?(token[i + 2])
+          raise ArgumentError, "Invalid percent encoding in variable name at col:#{col}"
+        end
+        i += 3
+      else
+        i += 1
+      end
+    end
+  end
+
   def self.expand_token(operator, token, composite, max_char, first_token, substitutions, result, col)
     raise ArgumentError, "Found an empty token at col:#{col}" if token.empty?
+    check_varname(token, col)
 
     value = substitutions[token]
     subst_type = get_substitution_type(value, col)
