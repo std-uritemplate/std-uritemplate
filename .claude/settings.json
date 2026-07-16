@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node test.cjs.mjs /tmp/test-template.txt /tmp/test-data.json)",
+      "Bash(node test.cjs.mjs /tmp/test-tpl.txt /tmp/test-data.json)",
+      "Bash(node -e \"import {StdUriTemplate} from './dist/index.mjs'; console.log\\(StdUriTemplate.expand\\('{hello}', {hello: 'world'}\\)\\);\")",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:tsup.egoist.dev)",
+      "Bash(/home/andreatp/workspace/std-uritemplate/typescript/node_modules/.bin/tsc --version)",
+      "WebFetch(domain:unpkg.com)",
+      "WebFetch(domain:app.unpkg.com)"
+    ]
+  }
+}
