@@ -18,6 +18,28 @@ class StdUriTemplate {
     }
 
     /**
+     * @param string $token
+     * @param int $col
+     * @throws InvalidArgumentException
+     */
+    private static function checkVarname(string $token, int $col): void {
+        if ($token[0] === '.' || substr($token, -1) === '.') {
+            throw new InvalidArgumentException("Invalid variable name at col: $col");
+        }
+        if (strpos($token, '..') !== false) {
+            throw new InvalidArgumentException("Invalid variable name at col: $col");
+        }
+        $len = strlen($token);
+        for ($i = 0; $i < $len; $i++) {
+            if ($token[$i] === '%') {
+                if ($i + 2 >= $len || !ctype_xdigit($token[$i + 1]) || !ctype_xdigit($token[$i + 2])) {
+                    throw new InvalidArgumentException("Invalid variable name at col: $col");
+                }
+            }
+        }
+    }
+
+    /**
      * @param string $c
      * @param int $col
      * @throws InvalidArgumentException
@@ -57,11 +79,17 @@ class StdUriTemplate {
         } else {
             $value = $buffer;
 
-            if (empty($value)) {
+            if ($value === '') {
                 return -1;
             } else {
+                if (!ctype_digit($value)) {
+                    throw new InvalidArgumentException("Cannot parse max chars at col: $col");
+                }
                 $intValue = (int)$value;
-                if (!is_int($intValue)) {
+                if ($value[0] === '0') {
+                    throw new InvalidArgumentException("Cannot parse max chars at col: $col");
+                }
+                if ($intValue < 1 || $intValue > 9999) {
                     throw new InvalidArgumentException("Cannot parse max chars at col: $col");
                 }
                 return $intValue;
@@ -115,6 +143,9 @@ class StdUriTemplate {
                     break;
                 case '}':
                     if ($token !== null) {
+                        if ($maxCharBuffer !== null && $maxCharBuffer === '') {
+                            throw new InvalidArgumentException("Found an empty prefix at col: $i");
+                        }
                         $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
@@ -129,6 +160,9 @@ class StdUriTemplate {
                     break;
                 case ',':
                     if ($token !== null) {
+                        if ($maxCharBuffer !== null && $maxCharBuffer === '') {
+                            throw new InvalidArgumentException("Found an empty prefix at col: $i");
+                        }
                         $expanded = self::expandToken($operator, $token, $composite, self::getMaxChar($maxCharBuffer, $i), $firstToken, $substitutions, $result, $i);
                         if ($expanded && $firstToken) {
                             $firstToken = false;
@@ -160,7 +194,11 @@ class StdUriTemplate {
                             }
                         }
                     } else {
-                        $result .= $character;
+                        if (ord($character) > 0x7F) {
+                            $result .= sprintf("%%%02X", ord($character));
+                        } else {
+                            $result .= $character;
+                        }
                     }
                     break;
             }
@@ -324,7 +362,8 @@ class StdUriTemplate {
      */
     private static function addExpandedValue($prefix, $value, string &$result, int $maxChar, bool $replaceReserved): void {
         $stringValue = self::convertNativeTypes($value);
-        $max = ($maxChar !== -1) ? min($maxChar, strlen($stringValue)) : strlen($stringValue);
+        $charLen = mb_strlen($stringValue, 'UTF-8');
+        $max = ($maxChar !== -1) ? min($maxChar, $charLen) : $charLen;
         $result .= '';
         $reservedBuffer = null;
 
@@ -333,14 +372,15 @@ class StdUriTemplate {
         }
 
         for ($i = 0; $i < $max; $i++) {
-            $character = $stringValue[$i];
+            $character = mb_substr($stringValue, $i, 1, 'UTF-8');
 
             if ($character === '%' && !$replaceReserved) {
                 $reservedBuffer = '';
             }
 
             $toAppend = $character;
-            if (self::isSurrogate(mb_ord($character, 'UTF-8')) || $replaceReserved || self::isUcschar(mb_ord($character, 'UTF-8')) || self::isIprivate(mb_ord($character, 'UTF-8'))) {
+            $codePoint = mb_ord($character, 'UTF-8');
+            if ($codePoint !== false && $codePoint > 0x7F || self::isSurrogate($character) || $replaceReserved || self::isUcschar($character) || self::isIprivate($character)) {
                 $toAppend = urlencode($toAppend);
             }
 
@@ -496,6 +536,8 @@ class StdUriTemplate {
         if (empty($token)) {
             throw new InvalidArgumentException("Found an empty token at col: $col");
         }
+
+        self::checkVarname($token, $col);
 
         $value = $substitutions[$token] ?? null;
         $substType = self::getSubstitutionType($value, $col);

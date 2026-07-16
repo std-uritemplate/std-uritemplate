@@ -28,6 +28,28 @@ public class StdUriTemplate {
         AMP;
     }
 
+    private static void checkVarname(String token, int col) {
+        if (token.startsWith(".") || token.endsWith(".")) {
+            throw new IllegalArgumentException("Variable name cannot start or end with a dot at col:" + col);
+        }
+        if (token.contains("..")) {
+            throw new IllegalArgumentException("Variable name cannot contain consecutive dots at col:" + col);
+        }
+        for (int i = 0; i < token.length(); i++) {
+            if (token.charAt(i) == '%') {
+                if (i + 2 >= token.length()
+                        || !isHexDigit(token.charAt(i + 1))
+                        || !isHexDigit(token.charAt(i + 2))) {
+                    throw new IllegalArgumentException("Invalid percent-encoding in variable name at col:" + col);
+                }
+            }
+        }
+    }
+
+    private static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+    }
+
     private static void validateLiteral(Character c, int col) {
         switch (c) {
             case '+':
@@ -61,7 +83,14 @@ public class StdUriTemplate {
                 return -1;
             } else {
                 try {
-                    return Integer.parseInt(value);
+                    if (value.charAt(0) == '0') {
+                        throw new IllegalArgumentException("Leading zero not allowed in max chars at col:" + col);
+                    }
+                    int result = Integer.parseInt(value);
+                    if (result < 1 || result > 9999) {
+                        throw new IllegalArgumentException("Max chars out of range (1-9999) at col:" + col);
+                    }
+                    return result;
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException("Cannot parse max chars at col:" + col);
                 }
@@ -107,6 +136,9 @@ public class StdUriTemplate {
                     break;
                 case '}':
                     if (toToken) {
+                        if (toMaxCharBuffer && maxCharBuffer.length() == 0) {
+                            throw new IllegalArgumentException("Empty prefix modifier at col:" + i);
+                        }
                         boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
@@ -123,6 +155,9 @@ public class StdUriTemplate {
                     break;
                 case ',':
                     if (toToken) {
+                        if (toMaxCharBuffer && maxCharBuffer.length() == 0) {
+                            throw new IllegalArgumentException("Empty prefix modifier at col:" + i);
+                        }
                         boolean expanded = expandToken(operator, token.toString(), composite, getMaxChar(maxCharBuffer, i), firstToken, substitutions, result, i);
                         if (expanded && firstToken) {
                             firstToken = false;
@@ -156,7 +191,19 @@ public class StdUriTemplate {
                             }
                         }
                     } else {
-                        result.append(character);
+                        if (character > 0x7F || Character.isHighSurrogate(character)) {
+                            String toEncode;
+                            if (Character.isHighSurrogate(character) && i + 1 < str.length() && Character.isLowSurrogate(str.charAt(i + 1))) {
+                                toEncode = new String(new char[]{character, str.charAt(++i)});
+                            } else {
+                                toEncode = Character.toString(character);
+                            }
+                            for (byte b : toEncode.getBytes(StandardCharsets.UTF_8)) {
+                                result.append(String.format("%%%02X", b & 0xFF));
+                            }
+                        } else {
+                            result.append(character);
+                        }
                     }
                     break;
             }
@@ -269,7 +316,8 @@ public class StdUriTemplate {
 
     private static void addExpandedValue(String prefix, Object value, StringBuilder result, int maxChar, boolean replaceReserved) {
         String stringValue = convertNativeTypes(value);
-        int max = (maxChar != -1) ? Math.min(maxChar, stringValue.length()) : stringValue.length();
+        int cpCount = stringValue.codePointCount(0, stringValue.length());
+        int max = (maxChar != -1) ? Math.min(maxChar, cpCount) : cpCount;
         result.ensureCapacity(max * 2); // hint to SB
         boolean toReserved = false;
         final StringBuilder reservedBuffer = new StringBuilder(3);
@@ -278,8 +326,10 @@ public class StdUriTemplate {
             result.append(prefix);
         }
 
-        for (int i = 0; i < max; i++) {
+        int charCount = 0;
+        for (int i = 0; i < stringValue.length() && charCount < max; i++) {
             char character = stringValue.charAt(i);
+            charCount++;
 
             if (character == '%' && !replaceReserved) {
                 toReserved = true;
@@ -420,6 +470,8 @@ public class StdUriTemplate {
         if (token.isEmpty()) {
             throw new IllegalArgumentException("Found an empty token at col:" + col);
         }
+
+        checkVarname(token, col);
 
         Object value = substitutions.get(token);
         SubstitutionType substType = getSubstitutionType(value, col);

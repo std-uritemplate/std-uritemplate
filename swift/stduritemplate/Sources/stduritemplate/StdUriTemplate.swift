@@ -38,6 +38,9 @@ public class StdUriTemplate {
             guard let maxChar = Int(value) else {
                 throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Cannot parse max chars at col: \(col)"])
             }
+            if value.hasPrefix("0") || maxChar < 1 || maxChar > 9999 {
+                throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid max char value at col: \(col)"])
+            }
             return maxChar
         }
     }
@@ -74,6 +77,9 @@ public class StdUriTemplate {
                     firstToken = true
                 case "}":
                     if let tk = token {
+                        if maxCharBuffer != nil && maxCharBuffer!.isEmpty {
+                            throw NSError(domain: "IllegalArgumentException", code: i, userInfo: [NSLocalizedDescriptionKey: "Empty prefix at col: \(i)"])
+                        }
                         let expanded = try expandToken(op, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
@@ -87,6 +93,9 @@ public class StdUriTemplate {
                     }
                 case ",":
                     if let tk = token {
+                        if maxCharBuffer != nil && maxCharBuffer!.isEmpty {
+                            throw NSError(domain: "IllegalArgumentException", code: i, userInfo: [NSLocalizedDescriptionKey: "Empty prefix at col: \(i)"])
+                        }
                         let expanded = try expandToken(op, tk, composite, try getMaxChar(maxCharBuffer, i), firstToken, substitutions, &result, i)
                         if expanded && firstToken {
                             firstToken = false
@@ -117,7 +126,11 @@ public class StdUriTemplate {
                             }
                         }
                     } else {
-                        result.append(character)
+                        if character.unicodeScalars.contains(where: { $0.value > 0x7F }) {
+                            String(character).utf8.forEach { result.append(String(format: "%%%02X", $0)) }
+                        } else {
+                            result.append(character)
+                        }
                     }
             }
         }
@@ -219,17 +232,17 @@ public class StdUriTemplate {
     
     private static func addExpandedValue(_ prefixStr: String, _ value: Any, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
         let stringValue = convertNativeTypes(value)
-        let max = (maxChar != -1) ? min(maxChar, stringValue.count) : stringValue.count
+        let scalars = Array(stringValue.unicodeScalars)
+        let max = (maxChar != -1) ? min(maxChar, scalars.count) : scalars.count
         result.reserveCapacity(max * 2)
         var reservedBuffer: String?
 
         if max > 0 && !prefixStr.isEmpty {
             result.append(prefixStr)
         }
-        
-        var index = stringValue.startIndex
-        for _ in 0..<max {
-            let character = stringValue[index]
+
+        for scalarIdx in 0..<max {
+            let character = Character(scalars[scalarIdx])
             if character == "%" && !replaceReserved {
                 reservedBuffer = String()
             }
@@ -238,8 +251,6 @@ public class StdUriTemplate {
             if isSurrogate(character) || replaceReserved || isUcschar(character) || isIprivate(character) {
                 toAppend = toAppend.addingPercentEncoding(withAllowedCharacters: unreserved) ?? ""
             }
-            index = stringValue.index(after: index)
-            
             if let _ = reservedBuffer {
                 reservedBuffer!.append(toAppend)
                 
@@ -364,10 +375,33 @@ public class StdUriTemplate {
         }
     }
     
+    private static func checkVarname(_ token: String, _ col: Int) throws {
+        if token.hasPrefix(".") || token.hasSuffix(".") {
+            throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
+        }
+        if token.contains("..") {
+            throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
+        }
+        let chars = Array(token)
+        for (i, c) in chars.enumerated() {
+            if c == "%" {
+                if i + 2 >= chars.count {
+                    throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
+                }
+                let h1 = chars[i + 1]
+                let h2 = chars[i + 2]
+                if !h1.isHexDigit || !h2.isHexDigit {
+                    throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
+                }
+            }
+        }
+    }
+
     private static func expandToken(_ op: Operator?, _ token: String, _ composite: Bool, _ maxChar: Int, _ firstToken: Bool, _ substitutions: [String: Any], _ result: inout String, _ col: Int) throws -> Bool {
         guard !token.isEmpty else {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Found an empty token at col: \(col)"])
         }
+        try checkVarname(token, col)
         
         let value = substitutions[token]
         let substType = try getSubstitutionType(value, col)

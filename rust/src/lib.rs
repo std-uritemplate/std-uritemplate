@@ -74,9 +74,25 @@ fn get_max_char(buffer: &str, col: usize) -> Result<i32, StdUriTemplateError> {
         return Ok(-1);
     }
 
-    buffer.parse::<i32>().map_err(|_| {
+    let value = buffer.parse::<i32>().map_err(|_| {
         StdUriTemplateError::new(format!("Cannot parse max chars at col:{}", col))
-    })
+    })?;
+
+    if buffer.starts_with('0') {
+        return Err(StdUriTemplateError::new(format!(
+            "Cannot parse max chars at col:{}",
+            col
+        )));
+    }
+
+    if value < 1 || value > 9999 {
+        return Err(StdUriTemplateError::new(format!(
+            "Cannot parse max chars at col:{}",
+            col
+        )));
+    }
+
+    Ok(value)
 }
 
 fn get_operator(
@@ -124,6 +140,12 @@ fn expand_impl(
             }
             '}' => {
                 if to_token {
+                    if to_max_char_buffer && max_char_buffer.is_empty() {
+                        return Err(StdUriTemplateError::new(format!(
+                            "Found an empty prefix at col:{}",
+                            i
+                        )));
+                    }
                     let max_char = get_max_char(&max_char_buffer, i)?;
                     let expanded = expand_token(
                         operator.unwrap_or(Operator::NoOp),
@@ -152,6 +174,12 @@ fn expand_impl(
                 }
             }
             ',' if to_token => {
+                if to_max_char_buffer && max_char_buffer.is_empty() {
+                    return Err(StdUriTemplateError::new(format!(
+                        "Found an empty prefix at col:{}",
+                        i
+                    )));
+                }
                 let max_char = get_max_char(&max_char_buffer, i)?;
                 let expanded = expand_token(
                     operator.unwrap_or(Operator::NoOp),
@@ -200,7 +228,16 @@ fn expand_impl(
                         }
                     }
                 } else {
-                    result.push(character);
+                    if (character as u32) > 0x7F {
+                        let mut buf = [0u8; 4];
+                        let encoded = character.encode_utf8(&mut buf);
+                        for b in encoded.bytes() {
+                            use std::fmt::Write;
+                            write!(result, "%{:02X}", b).unwrap();
+                        }
+                    } else {
+                        result.push(character);
+                    }
                 }
             }
         }
@@ -440,6 +477,36 @@ fn convert_native_types(value: &Value) -> Result<Cow<'_, str>, StdUriTemplateErr
     }
 }
 
+fn check_varname(token: &str, col: usize) -> Result<(), StdUriTemplateError> {
+    if token.starts_with('.') || token.ends_with('.') {
+        return Err(StdUriTemplateError::new(format!(
+            "Invalid variable name (leading/trailing dot) at col:{}",
+            col
+        )));
+    }
+    if token.contains("..") {
+        return Err(StdUriTemplateError::new(format!(
+            "Invalid variable name (consecutive dots) at col:{}",
+            col
+        )));
+    }
+    let bytes = token.as_bytes();
+    for i in 0..bytes.len() {
+        if bytes[i] == b'%' {
+            if i + 2 < bytes.len() && bytes[i + 1].is_ascii_hexdigit() && bytes[i + 2].is_ascii_hexdigit()
+            {
+                // valid percent-encoded sequence
+            } else {
+                return Err(StdUriTemplateError::new(format!(
+                    "Invalid percent-encoding in variable name at col:{}",
+                    col
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn expand_token(
     operator: Operator,
@@ -457,6 +524,8 @@ fn expand_token(
             col
         )));
     }
+
+    check_varname(token, col)?;
 
     let value = substitutions.get(token);
     let subst_type = get_substitution_type(value, col)?;

@@ -5,6 +5,7 @@ library;
 
 // ignore_for_file: constant_identifier_names
 
+import 'dart:convert';
 import 'dart:math';
 
 enum _SubstitutionType { EMPTY, STRING, LIST, MAP }
@@ -55,8 +56,16 @@ class StdUriTemplate {
     if (buffer.isEmpty) {
       return -1;
     } else {
-      return int.tryParse(buffer.toString()) ??
+      final str = buffer.toString();
+      final parsed = int.tryParse(str) ??
           (throw ArgumentError('Cannot parse max chars at col: $col'));
+      if (str.startsWith('0')) {
+        throw ArgumentError('Cannot parse max chars at col: $col');
+      }
+      if (parsed < 1 || parsed > 9999) {
+        throw ArgumentError('Cannot parse max chars at col: $col');
+      }
+      return parsed;
     }
   }
 
@@ -108,6 +117,9 @@ class StdUriTemplate {
             if (operator == null) {
               throw ArgumentError('Operator cannot be null');
             }
+            if (toMaxCharBuffer && maxCharBuffer.isEmpty) {
+              throw ArgumentError('Found an empty prefix at col: $i');
+            }
             final expanded = _expandToken(
               operator,
               token.toString(),
@@ -134,6 +146,9 @@ class StdUriTemplate {
           if (toToken) {
             if (operator == null) {
               throw ArgumentError('Operator cannot be null');
+            }
+            if (toMaxCharBuffer && maxCharBuffer.isEmpty) {
+              throw ArgumentError('Found an empty prefix at col: $i');
             }
 
             final expanded = _expandToken(
@@ -181,7 +196,18 @@ class StdUriTemplate {
               }
             }
           } else {
-            result.write(character);
+            final cu = character.codeUnitAt(0);
+            if (cu > 0x7F || (cu >= 0xD800 && cu <= 0xDFFF)) {
+              String toEncode;
+              if (cu >= 0xD800 && cu <= 0xDBFF && i + 1 < str.length) {
+                toEncode = character + str[++i];
+              } else {
+                toEncode = character;
+              }
+              utf8.encode(toEncode).forEach((b) => result.write('%${b.toRadixString(16).toUpperCase().padLeft(2, '0')}'));
+            } else {
+              result.write(character);
+            }
           }
           break;
       }
@@ -420,6 +446,37 @@ class StdUriTemplate {
     }
   }
 
+  static bool _isHexDigit(String c) {
+    final cu = c.codeUnitAt(0);
+    return (cu >= 0x30 && cu <= 0x39) ||
+        (cu >= 0x41 && cu <= 0x46) ||
+        (cu >= 0x61 && cu <= 0x66);
+  }
+
+  static void _checkVarname(String token, int col) {
+    if (token.startsWith('.') || token.endsWith('.')) {
+      throw ArgumentError(
+        'Invalid variable name at col: $col',
+      );
+    }
+    if (token.contains('..')) {
+      throw ArgumentError(
+        'Invalid variable name at col: $col',
+      );
+    }
+    for (var i = 0; i < token.length; i++) {
+      if (token[i] == '%') {
+        if (i + 2 >= token.length ||
+            !_isHexDigit(token[i + 1]) ||
+            !_isHexDigit(token[i + 2])) {
+          throw ArgumentError(
+            'Invalid variable name at col: $col',
+          );
+        }
+      }
+    }
+  }
+
   static bool _expandToken(
     _Operator operator,
     String token,
@@ -433,6 +490,8 @@ class StdUriTemplate {
     if (token.isEmpty) {
       throw ArgumentError('Found an empty token at col: $col');
     }
+
+    _checkVarname(token, col);
 
     final value = substitutions[token];
     final substType = _getSubstitutionType(value, col);
