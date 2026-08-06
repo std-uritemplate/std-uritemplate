@@ -336,7 +336,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Setup Dart
-        uses: dart-lang/setup-dart@v1.7.2
+        uses: dart-lang/setup-dart@v1.8.0
         with:
           sdk: stable
       - name: Download Changelog
