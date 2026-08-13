@@ -15,9 +15,9 @@ jobs:
   publish-gh-releases:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           token: ${{ secrets.GH_TOKEN }}
       # We faced problem like: https://github.com/cli/cli/issues/6599
@@ -25,12 +25,12 @@ jobs:
         run: sleep 60
       # Changelog is generated from GH releases
       - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v3
+        uses: rhysd/changelog-from-release/action@78b335bb7d059f35ad04c5428d50711726feee50 # v3.9.1
         with:
           file: CHANGELOG.md
           commit: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: changelog
           path: CHANGELOG.md
@@ -38,9 +38,9 @@ jobs:
   publish-java:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Maven Central Repository
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: '8'
           distribution: 'temurin'
@@ -65,14 +65,14 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: typescript
@@ -94,9 +94,9 @@ jobs:
   publish-go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Go
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '^1.20'
       - name: Release the tag
@@ -115,13 +115,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Python - Install Poetry
-        uses: snok/install-poetry@v1
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1.4.2
       - name: Python - Add Poetry to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: python
@@ -146,15 +146,15 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: 'true'
       - name: C# - Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 9
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: csharp
@@ -187,7 +187,7 @@ jobs:
           --timestamp-url http://timestamp.digicert.com
           --verbosity Debug
       - name: NuGet login
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         id: nuget-login
         with:
           user: ${{ secrets.NUGET_USER }}
@@ -201,13 +201,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Ruby - Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: '3.0'
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: ruby
@@ -225,9 +225,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: php
@@ -267,9 +267,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: swift
@@ -304,11 +304,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: rust
@@ -319,7 +319,7 @@ jobs:
           cp ../LICENSE .
           sed -i "s/^version = \".*\"/version = \"${GITHUB_REF_NAME}\"/" Cargo.toml
       - name: Authenticate with crates.io
-        uses: rust-lang/crates-io-auth-action@v1
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
         id: crates-io-auth
       - name: Publish to crates.io
         working-directory: rust
@@ -334,13 +334,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Dart
-        uses: dart-lang/setup-dart@v1.8.0
+        uses: dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1 # v1.8.0
         with:
           sdk: stable
       - name: Download Changelog
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: changelog
           path: dart
