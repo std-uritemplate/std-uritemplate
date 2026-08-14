@@ -40,7 +40,7 @@ jobs:
             php-version: '8.2'
     steps:
       - name: Common - Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: 'true'
       # Language specific setup
@@ -48,60 +48,60 @@ jobs:
       # Java setup
       - name: Java - Set up JDK
         if: matrix.language == 'java'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "8"
           distribution: "temurin"
       - name: Java - Install jbang
         if: matrix.language == 'java'
-        uses: jbangdev/setup-jbang@v0.1.1
+        uses: jbangdev/setup-jbang@2b1b465a7b75f4222b81426f23a01e013aa7b95c # v0.1.1
 
       # Python setup
       - name: Python - Install Poetry
         if: matrix.language == 'python'
-        uses: snok/install-poetry@v1
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1.4.2
       - name: Python - Add Poetry to PATH
         if: matrix.language == 'python'
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       # Typescript setup
       - name: Typescript - Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         if: matrix.language == 'typescript'
         with:
           node-version: 22
 
       # Typescript mjs setup
       - name: Typescript mjs - Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         if: matrix.language == 'typescript-mjs'
         with:
           node-version: 22
 
       # Go setup
       - name: Go - Setup Go
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         if: matrix.language == 'go'
         with:
           go-version: '1.20'
 
       # C# setup
       - name: C# - Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         if: matrix.language == 'csharp'
         with:
           dotnet-version: 9
 
       # Ruby setup
       - name: Ruby - Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         if: matrix.language == 'ruby'
         with:
           ruby-version: '3.0'
 
       # PHP setup
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         if: matrix.language == 'php'
         with:
           php-version: ${{ matrix.php-version }}
@@ -115,7 +115,7 @@ jobs:
           swift-version: "5.8"
 
       # Dart setup
-      - uses: dart-lang/setup-dart@v1.8.0
+      - uses: dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1 # v1.8.0
         if: matrix.language == 'dart'
         with:
           sdk: "stable"
