@@ -200,6 +200,9 @@ jobs:
   publish-ruby:
     runs-on: ubuntu-latest
     needs: publish-gh-releases
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - name: Ruby - Setup Ruby
@@ -211,15 +214,14 @@ jobs:
         with:
           name: changelog
           path: ruby
+      - name: Configure RubyGems trusted publishing credentials
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
       - name: Release to RubyGems
         working-directory: ruby
         run: |
           export VERSION="${GITHUB_REF_NAME}"
           gem build stduritemplate.gemspec
-          export GEM_HOST_API_KEY=${RUBYGEMS_TOKEN}
           gem push "stduritemplate-${GITHUB_REF_NAME}.gem"
-        env:
-          RUBYGEMS_TOKEN: ${{ secrets.RUBYGEMS_TOKEN }}
 
   publish-php:
     runs-on: ubuntu-latest
