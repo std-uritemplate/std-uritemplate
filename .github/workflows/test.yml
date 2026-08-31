@@ -115,7 +115,7 @@ jobs:
           swift-version: "5.8"
 
       # Dart setup
-      - uses: dart-lang/setup-dart@v1.8.0
+      - uses: dart-lang/setup-dart@v1.8.1
         if: matrix.language == 'dart'
         with:
           sdk: "stable"
