@@ -103,8 +103,10 @@ public class StdUriTemplate {
                         token = String()
                         composite = false
                         maxCharBuffer = nil
+                        break
                     }
                     // Intentional fall-through for commas outside the {}
+                    fallthrough
                 default:
                     if let _ = token {
                         if op == nil {

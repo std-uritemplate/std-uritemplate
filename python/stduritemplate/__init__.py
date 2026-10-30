@@ -141,6 +141,7 @@ class StdUriTemplate:
                     composite = False
                     max_char_buffer = None
                     continue
+                result.append(character)
             else:
                 if token is not None:
                     if operator is None:

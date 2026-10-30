@@ -114,6 +114,8 @@ module StdUriTemplate
           token = ''
           composite = false
           max_char_buffer = nil
+        else
+          result << character
         end
       else
         if token
