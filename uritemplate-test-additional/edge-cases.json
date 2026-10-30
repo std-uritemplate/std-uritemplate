@@ -51,5 +51,17 @@
          ["{+surrogate}", "%F0%9F%8C%89"],
          ["{displayName}", "%F0%9F%9B%A1%EF%B8%8F_"]
       ]
+  },
+  "Commas outside expressions" :
+  {
+    "variables": {
+       "row" : 1,
+       "column" : 2
+     },
+     "testcases" : [
+         ["/a,b", "/a,b"],
+         ["{row},{column}", "1,2"],
+         ["/cell(row={row},column={column})", "/cell(row=1,column=2)"]
+      ]
   }
 }

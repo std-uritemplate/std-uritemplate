@@ -171,7 +171,8 @@ class StdUriTemplate {
             break;
           }
           // Intentional fall-through for commas outside the {}
-          continue;
+          continue literal;
+        literal:
         default:
           if (toToken) {
             if (operator == null) {
