@@ -1,0 +1,90 @@
+name: Differential
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      examples:
+        description: 'random cases per implementation'
+        default: '1500'
+      seed:
+        description: 'Hypothesis seed (default: run id)'
+        default: ''
+      reference:
+        description: 'reference implementation'
+        default: 'java'
+
+jobs:
+  differential:
+    name: Differential
+    # TODO: Waiting for Swift to update the tooling for ubuntu 24
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Common - Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: 'true'
+
+      - name: Java - Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: "8"
+          distribution: "temurin"
+      - name: Java - Install jbang
+        uses: jbangdev/setup-jbang@v0.1.1
+      - name: Python - Install Poetry
+        uses: snok/install-poetry@v1
+      - name: Python - Add Poetry to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Typescript - Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Go - Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.20'
+      - name: C# - Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 9
+      - name: Ruby - Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      - name: PHP - Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      # WORKAROUND for: https://github.com/swift-actions/setup-swift/issues/591
+      - name: Swift - Setup Swift
+        uses: redsun82/setup-swift@b2b6f77ab14f6a9b136b520dc53ec8eca27d2b99
+        with:
+          swift-version: "5.8"
+      - name: Dart - Setup Dart
+        uses: dart-lang/setup-dart@v1.8.1
+        with:
+          sdk: "stable"
+      - name: Rust - Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install test dependencies
+        run: pip install hypothesis lark pytest pytest-xdist
+      - name: Restore Hypothesis example database
+        uses: actions/cache@v4
+        with:
+          path: tests/differential/.hypothesis
+          key: hypothesis-${{ github.run_id }}
+          restore-keys: hypothesis-
+      - name: Build implementations
+        run: for d in */; do [ -f "$d/init.sh" ] && bash "$d/init.sh"; done
+      - name: Run differential tests
+        env:
+          DIFF_EXAMPLES: ${{ inputs.examples || 1500 }}
+          DIFF_REFERENCE: ${{ inputs.reference || 'java' }}
+        run: |
+          pytest tests/differential -n auto -p no:cacheprovider \
+            --hypothesis-seed="${{ inputs.seed || github.run_id }}" \
+            -q --tb=short 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"

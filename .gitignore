@@ -9,3 +9,6 @@ publishing-notes
 .vscode
 
 .claude
+
+tests/differential/.hypothesis
+tests/differential/__pycache__
