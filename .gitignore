@@ -12,3 +12,4 @@ publishing-notes
 
 tests/differential/.hypothesis
 tests/differential/__pycache__
+tests/differential/.venv

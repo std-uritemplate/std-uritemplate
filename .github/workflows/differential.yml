@@ -70,8 +70,11 @@ jobs:
       - name: Rust - Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install test dependencies
-        run: pip install hypothesis lark pytest pytest-xdist
+      - name: Python - Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: tests/differential/uv.lock
       - name: Restore Hypothesis example database
         uses: actions/cache@v4
         with:
@@ -79,12 +82,12 @@ jobs:
           key: hypothesis-${{ github.run_id }}
           restore-keys: hypothesis-
       - name: Build implementations
-        run: for d in */; do [ -f "$d/init.sh" ] && bash "$d/init.sh"; done
+        run: for d in */; do if [ -f "$d/init.sh" ]; then bash "$d/init.sh"; fi; done
       - name: Run differential tests
         env:
           DIFF_EXAMPLES: ${{ inputs.examples || 1500 }}
           DIFF_REFERENCE: ${{ inputs.reference || 'java' }}
         run: |
-          pytest tests/differential -n auto -p no:cacheprovider \
+          uv run --directory tests/differential pytest -n auto \
             --hypothesis-seed="${{ inputs.seed || github.run_id }}" \
             -q --tb=short 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
