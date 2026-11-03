@@ -19,10 +19,12 @@ discovering cases the fixtures do not cover.
 `run.py` is the executor: it discovers every top-level directory with `init.sh` and
 `test.sh`, so a new implementation participates automatically.
 
+Dependencies and the Python version are pinned in `pyproject.toml`, `uv.lock` and
+`.python-version`; [uv](https://docs.astral.sh/uv/) sets everything up on first run.
+
 ```
-pip install hypothesis lark pytest pytest-xdist
-for d in */; do [ -f "$d/init.sh" ] && bash "$d/init.sh"; done
-pytest tests/differential -n auto --hypothesis-seed=1
+for d in */; do if [ -f "$d/init.sh" ]; then bash "$d/init.sh"; fi; done
+uv run --directory tests/differential pytest -n auto --hypothesis-seed=1
 ```
 
 Environment variables: `DIFF_REFERENCE` (default `java`), `DIFF_TARGETS` (comma-separated
