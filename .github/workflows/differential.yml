@@ -6,20 +6,19 @@ on:
   workflow_dispatch:
     inputs:
       examples:
-        description: 'random cases per implementation'
-        default: '1500'
+        description: 'random cases per pair of implementations'
+        default: '100'
       seed:
         description: 'Hypothesis seed (default: run id)'
         default: ''
       reference:
-        description: 'reference implementation'
-        default: 'java'
+        description: 'only compare pairs that include this implementation (default: all pairs)'
+        default: ''
 
 jobs:
   differential:
     name: Differential
-    # TODO: Waiting for Swift to update the tooling for ubuntu 24
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - name: Common - Checkout
@@ -58,11 +57,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-      # WORKAROUND for: https://github.com/swift-actions/setup-swift/issues/591
       - name: Swift - Setup Swift
-        uses: redsun82/setup-swift@b2b6f77ab14f6a9b136b520dc53ec8eca27d2b99
+        uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "5.8"
+          swift-version: "6.1"
       - name: Dart - Setup Dart
         uses: dart-lang/setup-dart@v1.8.1
         with:
@@ -85,8 +83,8 @@ jobs:
         run: for d in */; do if [ -f "$d/init.sh" ]; then bash "$d/init.sh"; fi; done
       - name: Run differential tests
         env:
-          DIFF_EXAMPLES: ${{ inputs.examples || 1500 }}
-          DIFF_REFERENCE: ${{ inputs.reference || 'java' }}
+          DIFF_EXAMPLES: ${{ inputs.examples || 100 }}
+          DIFF_REFERENCE: ${{ inputs.reference }}
         run: |
           uv run --directory tests/differential pytest -n auto \
             --hypothesis-seed="${{ inputs.seed || github.run_id }}" \
