@@ -33,5 +33,5 @@ def run_case(repo, target, case, timeout, workdir):
         return "TIMEOUT"
     if r.returncode != 0:
         return f"CRASH(rc={r.returncode})"
-    out = r.stdout.decode("utf-8", errors="backslashreplace")
-    return out[:-1] if out.endswith("\n") else out
+    # tests/test.sh compares through $(...), which drops every trailing newline
+    return r.stdout.decode("utf-8", errors="backslashreplace").rstrip("\n")
