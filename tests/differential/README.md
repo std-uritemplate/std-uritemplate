@@ -49,22 +49,50 @@ uv run --directory tests/differential pytest -n auto --hypothesis-seed=1
 - `-k random` runs only the property, `-k seed` only the seed replay, `-k go-rust` one pair.
 - `-rs` lists the skipped seeds with the `KNOWN` reason; any other failure is a new finding.
 
-## Triage
+## When the nightly run fails
 
-A failure prints the minimal case Hypothesis found, both outputs, and a
-`@reproduce_failure` line. Then:
+The `Differential` workflow runs every night and on demand (inputs: examples per pair, seed,
+reference). The job summary holds the pytest output; the full log is an artifact; the
+Hypothesis database is cached, so a failing example is retried first the next night until it
+is dealt with. A random-case failure names the pair, the minimal template and variables,
+both outputs and a `@reproduce_failure` line:
 
-1. Reproduce it by hand if needed: write the template and the substitutions JSON to two files
-   and run `<lang>/test.sh template.txt substitutions.json`.
-2. Decide what it is: a bug in one port (fix it), a bug in the reference that others mirrored
-   (fix `java` first), an accepted divergence, or a harness quirk.
-3. Add the case to `seeds.jsonl` with a descriptive id, so it is replayed on every run.
-4. While the divergence is open, add an entry to `KNOWN` in `test_differential.py` naming the
-   affected implementations and the reason; the seed is skipped for them and random cases of
-   that class are excluded. Remove the entry in the PR that fixes it.
-5. Once every implementation agrees on the intended output, add the case to
-   `uritemplate-test-additional/edge-cases.json` (the contract, run on every PR) and drop the
-   seed: seeds are pending cases, fixtures are settled ones.
+```
+FAILED test_differential.py::test_random_case_pair_agrees[go-java]
+AssertionError: go gave '', java gave '%C2%85'
+Failing test case: test_random_case_pair_agrees(a='go', b='java', template='\x85', variables={})
+```
+
+A seed failure groups the implementations by output, so the odd one out is visible at once:
+
+```
+FAILED test_differential.py::test_seed_case_all_agree[swift-literal-combining-mark]
+AssertionError: {'a%CC%81': ['java', 'python', 'go', ...], '%61%CC%81': ['swift']}
+```
+
+`CRASH(rc=N)` or `TIMEOUT` in place of an output is a harness that exited non-zero or hung.
+The same `CRASH` on every case of one implementation means its build or toolchain is broken,
+not the library.
+
+Procedure, the same day the run goes red:
+
+1. **Reproduce.** Write the template and the substitutions JSON to two files and run
+   `<lang>/test.sh template.txt substitutions.json` for the implementations involved. To
+   replay the whole night, trigger the workflow with the same seed, or locally
+   `DIFF_TARGETS=<a>,<b> uv run --directory tests/differential pytest -n auto --hypothesis-seed=<run id>`.
+2. **Classify.** A bug in one port; a bug in the reference that the others mirrored (fix
+   `java` first, then the followers); an accepted divergence (implementation-defined, or an
+   RFC decision not taken yet); or a harness quirk (trimming, exit code, stray output).
+3. **Pin it.** Add the minimal case to `seeds.jsonl` with a descriptive id. If the fix is not
+   in the same change, add a `KNOWN` entry (next section) for the affected implementations in
+   the same PR: the job is green again and the case stays visible as a skip with its reason.
+   Do not leave the nightly red: Hypothesis stops at the first counterexample per pair, so an
+   unaddressed failure hides whatever that pair would find next.
+4. **Fix.** The fixing PR deletes the `KNOWN` entry, so the seed asserts again and random
+   cases of that class are explored again. Run the affected pair locally before pushing.
+5. **Promote.** Once every implementation agrees on the intended output, move the case to
+   `uritemplate-test-additional/edge-cases.json`, which the regular suite enforces on every
+   PR, and drop the seed: seeds are pending cases, fixtures are settled ones.
 
 ## Excluding a known divergence
 
@@ -77,8 +105,9 @@ A failure prints the minimal case Hypothesis found, both outputs, and a
 - `reason`: one line, shown as the skip reason; say what differs and, if open, why.
 - `predicate(template, variables)`: returns true for the inputs to exclude. `template` is the
   template string, `variables` the parsed substitutions (strings, numbers, booleans, `None`,
-  lists, dicts). Keep it as narrow as you can: the broader the predicate, the less Hypothesis
-  explores. `walk(variables)` yields every nested value for checks on values.
+  lists, dicts). `walk(variables)` yields every nested value and `texts(variables)` every
+  string, keys included. Keep it as narrow as you can: everything it matches is removed from
+  what Hypothesis explores.
 
 ```python
 # only the named implementation, matched on the template
@@ -89,8 +118,3 @@ A failure prints the minimal case Hypothesis found, both outputs, and a
 (None, "number formatting is implementation-defined (floats, integers >= 1e6)",
  lambda t, v: any(isinstance(x, float) or (isinstance(x, int) and abs(x) >= 10 ** 6) for x in walk(v))),
 ```
-
-Add the entry in the same change that adds the seed; remove it in the change that fixes the
-implementation, and run the pair that was affected to confirm the area is clean again.
-
-The `Differential` workflow runs this nightly and on demand with the report in the job summary.
