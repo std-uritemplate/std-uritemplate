@@ -10,11 +10,13 @@ Environment: DIFF_TARGETS (comma-separated implementations, default all discover
 DIFF_REFERENCE (only compare pairs that include this implementation),
 DIFF_EXAMPLES (random cases per pair, default 200).
 """
+import atexit
 import functools
 import itertools
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
 
@@ -29,11 +31,18 @@ from run import discover, run_case  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
-IMPLS = (os.environ.get("DIFF_TARGETS") or ",".join(discover(REPO))).split(",")
-IMPLS = [i for i in IMPLS if i != "typescript-mjs"]  # same code as typescript
+if os.environ.get("DIFF_TARGETS"):
+    IMPLS = os.environ["DIFF_TARGETS"].split(",")
+else:
+    IMPLS = [i for i in discover(REPO) if i != "typescript-mjs"]  # same code as typescript
 REFERENCE = os.environ.get("DIFF_REFERENCE")
+if REFERENCE and REFERENCE not in IMPLS:
+    raise ValueError(f"DIFF_REFERENCE={REFERENCE!r} is not one of {IMPLS}")
 PAIRS = [p for p in itertools.combinations(IMPLS, 2) if not REFERENCE or REFERENCE in p]
+if not PAIRS:
+    raise ValueError(f"need at least two implementations to compare, got {IMPLS}")
 WORKDIR = tempfile.mkdtemp(prefix="differential-")
+atexit.register(shutil.rmtree, WORKDIR, ignore_errors=True)
 
 NAMES = ["v", "w", "list", "map", "a.b", "a_b", "%41", "undef", "constructor"]
 GRAMMAR = r"""
@@ -68,10 +77,14 @@ templates = st.one_of(
 def walk(v):
     yield v
     if isinstance(v, dict):
-        v = list(v.values())
+        v = list(v.keys()) + list(v.values())
     if isinstance(v, list):
         for x in v:
             yield from walk(x)
+
+
+def texts(v):
+    return [x for x in walk(v) if isinstance(x, str)]
 
 
 # Known divergences: (implementations or None for all, reason, predicate(template, variables)).
@@ -80,11 +93,11 @@ KNOWN = [
     (None, "harnesses trim the template file differently (leading/trailing whitespace incl. Unicode, NUL)",
      lambda t, v: t != t.strip().strip("\x00")),
     (None, "percent in values under + or #: reserved-buffer and %XX detection differ",
-     lambda t, v: re.search(r"\{[+#]", t) and "%" in json.dumps(v)),
+     lambda t, v: re.search(r"\{[+#]", t) and any("%" in s for s in texts(v))),
     (None, "~ * ' ( ) encoding differs between host encoders",
-     lambda t, v: any(c in json.dumps(v) for c in "~*'()")),
+     lambda t, v: any(c in s for s in texts(v) for c in "~*'()")),
     (None, "non-reserved ASCII and non-ucschar copied raw under + or # by some ports",
-     lambda t, v: re.search(r"\{[+#]", t) and re.search(r'["<>\\^`{|}\x00-\x1f\x7f\u0080-\u009f﷐￿]', json.dumps(v, ensure_ascii=False))),
+     lambda t, v: re.search(r"\{[+#]", t) and any(re.search(r'["<>\\^`{|}\x00-\x1f\x7f\u0080-\u009f﷐￿]', s) for s in texts(v))),
     (None, "number formatting is implementation-defined (floats, integers >= 1e6)",
      lambda t, v: any(isinstance(x, float) or (isinstance(x, int) and not isinstance(x, bool) and abs(x) >= 10 ** 6) for x in walk(v))),
     (None, "null or nested elements inside lists and maps crash or are dropped by some ports",

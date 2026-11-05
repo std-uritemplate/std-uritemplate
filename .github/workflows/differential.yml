@@ -74,7 +74,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: tests/differential/uv.lock
       - name: Restore Hypothesis example database
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: tests/differential/.hypothesis
           key: hypothesis-${{ github.run_id }}
@@ -86,6 +86,22 @@ jobs:
           DIFF_EXAMPLES: ${{ inputs.examples || 100 }}
           DIFF_REFERENCE: ${{ inputs.reference }}
         run: |
+          mkdir -p out
           uv run --directory tests/differential pytest -n auto \
             --hypothesis-seed="${{ inputs.seed || github.run_id }}" \
-            -q --tb=short 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+            -q --tb=short 2>&1 | tee out/pytest.log || status=$?
+          { echo '```'; tail -c 900000 out/pytest.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "${status:-0}"
+      # the database only gains content on failures, so save it even when the job fails
+      - name: Save Hypothesis example database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: tests/differential/.hypothesis
+          key: hypothesis-${{ github.run_id }}
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: differential-${{ github.run_id }}
+          path: out/pytest.log
