@@ -63,5 +63,785 @@
          ["{row},{column}", "1,2"],
          ["/cell(row={row},column={column})", "/cell(row=1,column=2)"]
       ]
+  },
+  "Prefix modifier and code points: non-BMP, must not split surrogate": {
+    "variables": {
+      "v": "🌉",
+      "list": [
+        "ab",
+        "cd"
+      ],
+      "map": {
+        "a": "b"
+      }
+    },
+    "testcases": [
+      ["{v:1}", "%F0%9F%8C%89"],
+      ["{list:1}", "a,c"],
+      ["{map*:1}", false]
+    ]
+  },
+  "Prefix modifier and code points: non-BMP then ASCII": {
+    "variables": {
+      "v": "🌉x"
+    },
+    "testcases": [
+      ["{v:1}", "%F0%9F%8C%89"],
+      ["{v:2}", "%F0%9F%8C%89x"]
+    ]
+  },
+  "Prefix modifier and code points: combining mark split": {
+    "variables": {
+      "v": "é"
+    },
+    "testcases": [
+      ["{v:1}", "e"],
+      ["{v:2}", "e%CC%81"]
+    ]
+  },
+  "Prefix modifier and code points: ZWJ split at scalar 2": {
+    "variables": {
+      "v": "👨‍👩‍👧"
+    },
+    "testcases": [
+      ["{v:2}", "%F0%9F%91%A8%E2%80%8D"]
+    ]
+  },
+  "Prefix modifier and code points: flag = 2 scalars": {
+    "variables": {
+      "v": "🇮🇹"
+    },
+    "testcases": [
+      ["{v:1}", "%F0%9F%87%AE"]
+    ]
+  },
+  "Prefix modifier and code points: prefix > length": {
+    "variables": {
+      "v": "abc"
+    },
+    "testcases": [
+      ["{v:5}", "abc"],
+      ["{v:99999999999}", false],
+      ["{v:12345}", false],
+      ["{v:0}", false],
+      ["{v:1:2}", false],
+      ["{v:a}", false],
+      ["{v:-1}", false],
+      ["{v:+1}", false]
+    ]
+  },
+  "Prefix modifier and code points: prefix on number": {
+    "variables": {
+      "v": 1234
+    },
+    "testcases": [
+      ["{v:2}", "12"]
+    ]
+  },
+  "Prefix modifier and code points: prefix on boolean": {
+    "variables": {
+      "v": true
+    },
+    "testcases": [
+      ["{v:2}", "tr"]
+    ]
+  },
+  "Prefix modifier and code points: ifemp with prefix": {
+    "variables": {
+      "v": ""
+    },
+    "testcases": [
+      ["{;v:1}", ";v"],
+      ["{?v:1}", "?v="]
+    ]
+  },
+  "Prefix modifier and code points: triplet cut by prefix": {
+    "variables": {
+      "v": "%41"
+    },
+    "testcases": [
+      ["{+v:2}", "%254"],
+      ["{+v:3}", "%41"],
+      ["{v:2}", "%254"]
+    ]
+  },
+  "Percent triplets in values: valid triplet kept": {
+    "variables": {
+      "v": "%41"
+    },
+    "testcases": [
+      ["{+v}", "%41"],
+      ["{v}", "%2541"],
+      ["{?v}", "?v=%2541"]
+    ]
+  },
+  "Percent triplets in values: lowercase hex kept": {
+    "variables": {
+      "v": "%2f"
+    },
+    "testcases": [
+      ["{+v}", "%2f"]
+    ]
+  },
+  "Percent triplets in values: invalid hex": {
+    "variables": {
+      "v": "%zz"
+    },
+    "testcases": [
+      ["{+v}", "%25zz"]
+    ]
+  },
+  "Percent triplets in values: truncated triplet": {
+    "variables": {
+      "v": "%4"
+    },
+    "testcases": [
+      ["{+v}", "%254"]
+    ]
+  },
+  "Percent triplets in values: lone percent": {
+    "variables": {
+      "v": "%"
+    },
+    "testcases": [
+      ["{+v}", "%25"]
+    ]
+  },
+  "Percent triplets in values: sign after percent": {
+    "variables": {
+      "v": "%-1"
+    },
+    "testcases": [
+      ["{+v}", "%25-1"]
+    ]
+  },
+  "Percent triplets in values: multibyte after %, buffer length != 3": {
+    "variables": {
+      "v": "%é"
+    },
+    "testcases": [
+      ["{+v}", "%25%C3%A9"]
+    ]
+  },
+  "Percent triplets in values: trailing lone %": {
+    "variables": {
+      "v": "%41%"
+    },
+    "testcases": [
+      ["{+v}", "%41%25"]
+    ]
+  },
+  "Percent triplets in values: fragment op, mixed": {
+    "variables": {
+      "v": "%41%zz"
+    },
+    "testcases": [
+      ["{#v}", "#%41%25zz"]
+    ]
+  },
+  "Percent triplets in values: second hex invalid": {
+    "variables": {
+      "v": "%1G"
+    },
+    "testcases": [
+      ["{+v}", "%251G"]
+    ]
+  },
+  "Percent in literals: literal triplet": {
+    "variables": {
+      "v": "x"
+    },
+    "testcases": [
+      ["/a%20b{v}", "/a%20bx"],
+      ["/%C3%A9{v}", "/%C3%A9x"]
+    ]
+  },
+  "ASCII punctuation: gen-delims": {
+    "variables": {
+      "v": ":/?#[]@"
+    },
+    "testcases": [
+      ["{v}", "%3A%2F%3F%23%5B%5D%40"],
+      ["{+v}", ":/?#[]@"]
+    ]
+  },
+  "ASCII punctuation: sub-delims": {
+    "variables": {
+      "v": "$&+,;="
+    },
+    "testcases": [
+      ["{v}", "%24%26%2B%2C%3B%3D"],
+      ["{+v}", "$&+,;="]
+    ]
+  },
+  "ASCII punctuation: non-reserved ASCII, simple": {
+    "variables": {
+      "v": "\"<>\\^`{|}"
+    },
+    "testcases": [
+      ["{v}", "%22%3C%3E%5C%5E%60%7B%7C%7D"]
+    ]
+  },
+  "ASCII punctuation: space never +": {
+    "variables": {
+      "v": " "
+    },
+    "testcases": [
+      ["{v}", "%20"]
+    ]
+  },
+  "ASCII punctuation: reserved op, unreserved": {
+    "variables": {
+      "v": "-._~"
+    },
+    "testcases": [
+      ["{+v}", "-._~"]
+    ]
+  },
+  "ASCII punctuation: reserved kept": {
+    "variables": {
+      "v": "!*'()"
+    },
+    "testcases": [
+      ["{+v}", "!*'()"]
+    ]
+  },
+  "ASCII punctuation: = encoded in value": {
+    "variables": {
+      "v": "="
+    },
+    "testcases": [
+      ["{;v}", ";v=%3D"]
+    ]
+  },
+  "ASCII punctuation: dot unreserved": {
+    "variables": {
+      "v": "."
+    },
+    "testcases": [
+      ["{.v}", ".."]
+    ]
+  },
+  "ASCII punctuation: control simple": {
+    "variables": {
+      "v": "a\nb"
+    },
+    "testcases": [
+      ["{v}", "a%0Ab"]
+    ]
+  },
+  "ASCII punctuation: NUL simple": {
+    "variables": {
+      "v": "a\u0000b"
+    },
+    "testcases": [
+      ["{v}", "a%00b"]
+    ]
+  },
+  "Non-ASCII values: basic UTF-8": {
+    "variables": {
+      "v": "é"
+    },
+    "testcases": [
+      ["{v}", "%C3%A9"],
+      ["{+v}", "%C3%A9"]
+    ]
+  },
+  "Non-ASCII values: ucschar lower bound": {
+    "variables": {
+      "v": " "
+    },
+    "testcases": [
+      ["{+v}", "%C2%A0"]
+    ]
+  },
+  "Non-ASCII values: non-BMP under +": {
+    "variables": {
+      "v": "🌉"
+    },
+    "testcases": [
+      ["{+v}", "%F0%9F%8C%89"]
+    ]
+  },
+  "Non-ASCII values: CJK": {
+    "variables": {
+      "v": "中文"
+    },
+    "testcases": [
+      ["{v}", "%E4%B8%AD%E6%96%87"]
+    ]
+  },
+  "Non-ASCII values: fragment mixed": {
+    "variables": {
+      "v": "é/x"
+    },
+    "testcases": [
+      ["{#v}", "#%C3%A9/x"]
+    ]
+  },
+  "Literals: literal UTF-8": {
+    "variables": {
+      "v": "x"
+    },
+    "testcases": [
+      ["/café/{v}", "/caf%C3%A9/x"],
+      ["/🌉/{v}", "/%F0%9F%8C%89/x"],
+      ["", ""],
+      ["http://ex.com/a,b;c?d=e&f#g", "http://ex.com/a,b;c?d=e&f#g"],
+      ["/a{v}b{v}c", "/axbxc"],
+      ["{v},{v}", "x,x"]
+    ]
+  },
+  "Expression syntax: trailing comma": {
+    "variables": {
+      "v": "x",
+      "w": "y"
+    },
+    "testcases": [
+      ["{v,}", false],
+      ["{v", false],
+      ["v}", false],
+      ["{{v}}", false],
+      ["{v}}", false],
+      ["{v,,w}", false],
+      ["{+v,+w}", false],
+      ["{v,v}", "x,x"],
+      ["{?v,v}", "?v=x&v=x"]
+    ]
+  },
+  "Expression syntax: per-var prefix reset": {
+    "variables": {
+      "v": "abc",
+      "w": "defg"
+    },
+    "testcases": [
+      ["{v:1,w:2}", "a,de"]
+    ]
+  },
+  "Variable names: digit-first name": {
+    "variables": {
+      "1a": "x",
+      "a.b.c": "x",
+      "a_B9": "x",
+      "%41": "x",
+      "%2f": "x",
+      "v%4": "x",
+      "v%": "x"
+    },
+    "testcases": [
+      ["{1a}", "x"],
+      ["{a.b.c}", "x"],
+      ["{a_B9}", "x"],
+      ["{%41}", "x"],
+      ["{%2f}", "x"],
+      ["{v%4}", false],
+      ["{v%}", false]
+    ]
+  },
+  "Variable names: no decoding of name": {
+    "variables": {
+      "A": "x"
+    },
+    "testcases": [
+      ["{%41}", ""]
+    ]
+  },
+  "Numbers: six digits": {
+    "variables": {
+      "v": 100000
+    },
+    "testcases": [
+      ["{v}", "100000"]
+    ]
+  },
+  "Numbers: plain float": {
+    "variables": {
+      "v": 1.5
+    },
+    "testcases": [
+      ["{v}", "1.5"]
+    ]
+  },
+  "Numbers: shortest round-trip": {
+    "variables": {
+      "v": 0.1
+    },
+    "testcases": [
+      ["{v}", "0.1"]
+    ]
+  },
+  "Numbers: negative int": {
+    "variables": {
+      "v": -42
+    },
+    "testcases": [
+      ["{v}", "-42"]
+    ]
+  },
+  "Numbers: zero": {
+    "variables": {
+      "v": 0
+    },
+    "testcases": [
+      ["{v}", "0"]
+    ]
+  },
+  "Booleans and null: lowercase in list": {
+    "variables": {
+      "list": [
+        true,
+        false
+      ],
+      "map": {
+        "a": false
+      },
+      "v": false
+    },
+    "testcases": [
+      ["{list}", "true,false"],
+      ["{map*}", "a=false"],
+      ["{?v}", "?v=false"]
+    ]
+  },
+  "Booleans and null: null top-level skipped": {
+    "variables": {
+      "v": null,
+      "a": 1,
+      "b": 2
+    },
+    "testcases": [
+      ["{v}", ""],
+      ["{?v}", ""],
+      ["{?a,v,b}", "?a=1&b=2"]
+    ]
+  },
+  "Empty collections: empty list": {
+    "variables": {
+      "list": [],
+      "map": {},
+      "a": 1,
+      "b": 2
+    },
+    "testcases": [
+      ["{list}", ""],
+      ["{?list*}", ""],
+      ["{;list*}", ""],
+      ["{/list*}", ""],
+      ["{#list}", ""],
+      ["{map}", ""],
+      ["{?map*}", ""],
+      ["{/map*}", ""],
+      ["{?a,list,b}", "?a=1&b=2"],
+      ["{?list,b}", "?b=2"],
+      ["{/list*,b}", "/2"],
+      ["{a,map,b}", "1,2"]
+    ]
+  },
+  "Empty strings in collections: single empty item": {
+    "variables": {
+      "list": [
+        ""
+      ],
+      "map": {
+        "a": ""
+      },
+      "v": "",
+      "w": "b"
+    },
+    "testcases": [
+      ["{list}", ""],
+      ["{?list}", "?list="],
+      ["{;list}", ";list"],
+      ["{#list}", "#"],
+      ["{map}", "a,"],
+      ["{map*}", "a="],
+      ["{;map}", ";map=a,"],
+      ["{#v}", "#"],
+      ["{v,w}", ",b"]
+    ]
+  },
+  "Empty strings in collections: two empties exploded": {
+    "variables": {
+      "list": [
+        "",
+        ""
+      ],
+      "map": {
+        "a": "",
+        "b": ""
+      }
+    },
+    "testcases": [
+      ["{list*}", ","],
+      ["{?list*}", "?list=&list="],
+      ["{;list}", ";list,"],
+      ["{/list*}", "//"],
+      ["{.list*}", ".."],
+      ["{?map*}", ["?a=&b=", "?b=&a="]]
+    ]
+  },
+  "Empty strings in collections: ifemp per item": {
+    "variables": {
+      "list": [
+        "",
+        "a"
+      ],
+      "map": {
+        "": "x"
+      }
+    },
+    "testcases": [
+      ["{;list*}", ";list;list=a"],
+      ["{map}", ",x"],
+      ["{map*}", "=x"]
+    ]
+  },
+  "Empty strings in collections: empty key and value": {
+    "variables": {
+      "map": {
+        "": ""
+      }
+    },
+    "testcases": [
+      ["{?map*}", "?="]
+    ]
+  },
+  "Map keys and values: key encoding": {
+    "variables": {
+      "map": {
+        "a b": "c d"
+      }
+    },
+    "testcases": [
+      ["{map}", "a%20b,c%20d"],
+      ["{map*}", "a%20b=c%20d"]
+    ]
+  },
+  "Map keys and values: reserved in key under +": {
+    "variables": {
+      "map": {
+        "a/b": "c?d"
+      }
+    },
+    "testcases": [
+      ["{+map*}", "a/b=c?d"],
+      ["{map*}", "a%2Fb=c%3Fd"]
+    ]
+  },
+  "Map keys and values: & and = in key/value": {
+    "variables": {
+      "map": {
+        "a&b": "c=d"
+      }
+    },
+    "testcases": [
+      ["{?map*}", "?a%26b=c%3Dd"]
+    ]
+  },
+  "Map keys and values: = in key semicolon": {
+    "variables": {
+      "map": {
+        "a=b": "c"
+      }
+    },
+    "testcases": [
+      ["{;map*}", ";a%3Db=c"]
+    ]
+  },
+  "Map keys and values: non-ASCII key": {
+    "variables": {
+      "map": {
+        "é": "ü"
+      }
+    },
+    "testcases": [
+      ["{map*}", "%C3%A9=%C3%BC"]
+    ]
+  },
+  "Map keys and values: fragment map": {
+    "variables": {
+      "map": {
+        "a": "x/y"
+      }
+    },
+    "testcases": [
+      ["{#map*}", "#a=x/y"]
+    ]
+  },
+  "Map keys and values: path map": {
+    "variables": {
+      "map": {
+        "a": "1",
+        "b": "2"
+      }
+    },
+    "testcases": [
+      ["{/map}", ["/a,1,b,2", "/b,2,a,1"]],
+      ["{/map*}", ["/a=1/b=2", "/b=2/a=1"]],
+      ["{.map*}", [".a=1.b=2", ".b=2.a=1"]],
+      ["{&map*}", ["&a=1&b=2", "&b=2&a=1"]]
+    ]
+  },
+  "Map keys and values: numeric string keys": {
+    "variables": {
+      "map": {
+        "1": "a",
+        "2": "b"
+      }
+    },
+    "testcases": [
+      ["{map}", ["1,a,2,b", "2,b,1,a"]]
+    ]
+  },
+  "Map keys and values: mixed types": {
+    "variables": {
+      "map": {
+        "a": 1,
+        "b": 2.5,
+        "c": true
+      }
+    },
+    "testcases": [
+      ["{map*}", ["a=1,b=2.5,c=true", "a=1,c=true,b=2.5", "b=2.5,a=1,c=true", "b=2.5,c=true,a=1", "c=true,a=1,b=2.5", "c=true,b=2.5,a=1"]]
+    ]
+  },
+  "Map keys and values: comma in key/value": {
+    "variables": {
+      "map": {
+        "a,b": "c,d"
+      }
+    },
+    "testcases": [
+      ["{map*}", "a%2Cb=c%2Cd"],
+      ["{+map}", "a,b,c,d"]
+    ]
+  },
+  "Map keys and values: pct in map value simple": {
+    "variables": {
+      "map": {
+        "a": "%41"
+      }
+    },
+    "testcases": [
+      ["{map*}", "a=%2541"],
+      ["{+map*}", "a=%41"]
+    ]
+  },
+  "Lists: comma inside item encoded": {
+    "variables": {
+      "list": [
+        "a,b",
+        "c"
+      ]
+    },
+    "testcases": [
+      ["{list*}", "a%2Cb,c"],
+      ["{+list}", "a,b,c"]
+    ]
+  },
+  "Lists: mixed types": {
+    "variables": {
+      "list": [
+        1,
+        true,
+        "a",
+        1.5
+      ]
+    },
+    "testcases": [
+      ["{list}", "1,true,a,1.5"]
+    ]
+  },
+  "Lists: continuation exploded": {
+    "variables": {
+      "list": [
+        "a",
+        "b"
+      ]
+    },
+    "testcases": [
+      ["{&list*}", "&list=a&list=b"],
+      ["{;list*}", ";list=a;list=b"],
+      ["{;list}", ";list=a,b"],
+      ["{.list*}", ".a.b"]
+    ]
+  },
+  "Lists: fragment exploded": {
+    "variables": {
+      "list": [
+        "a/b",
+        "c"
+      ]
+    },
+    "testcases": [
+      ["{#list*}", "#a/b,c"]
+    ]
+  },
+  "Lists: non-ASCII items": {
+    "variables": {
+      "list": [
+        "é",
+        "🌉"
+      ]
+    },
+    "testcases": [
+      ["{list}", "%C3%A9,%F0%9F%8C%89"]
+    ]
+  },
+  "Undefined variables in the middle: simple": {
+    "variables": {
+      "a": 1,
+      "c": 3
+    },
+    "testcases": [
+      ["{a,b,c}", "1,3"],
+      ["{/a,b,c}", "/1/3"],
+      ["{?a,b,c}", "?a=1&c=3"],
+      ["{;a,b,c}", ";a=1;c=3"],
+      ["{#a,b,c}", "#1,3"],
+      ["{.a,b,c}", ".1.3"],
+      ["{&a,b,c}", "&a=1&c=3"],
+      ["{?b,c}", "?c=3"]
+    ]
+  },
+  "Combined operators: all operators chained": {
+    "variables": {
+      "base": "http://ex.com",
+      "path": [
+        "a",
+        "b"
+      ],
+      "q": "x y",
+      "frag": "s/1",
+      "a": "1",
+      "b": "2",
+      "c": "3",
+      "d": "4",
+      "e": "5",
+      "v": "a+b c"
+    },
+    "testcases": [
+      ["{+base}{/path*}{?q,lang}{#frag}", "http://ex.com/a/b?q=x%20y#s/1"],
+      ["{a}{.b}{;c}{&d}{#e}", "1.2;c=3&d=4#5"],
+      ["{?v}", "?v=a%2Bb%20c"]
+    ]
+  },
+  "Combined operators: query then continuation": {
+    "variables": {
+      "a": "x",
+      "b": "y",
+      "list": [
+        "1",
+        "2"
+      ],
+      "map": {
+        "k": "v"
+      },
+      "q": "x"
+    },
+    "testcases": [
+      ["/{a}/{b}{?list*}{&map*}", "/x/y?list=1&list=2&k=v"],
+      ["{?q}{&q}", "?q=x&q=x"]
+    ]
   }
 }
