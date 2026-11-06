@@ -1,0 +1,18 @@
+[project]
+name = "std-uritemplate-differential"
+version = "0"
+description = "Differential property tests across the std-uritemplate implementations"
+requires-python = ">=3.12"
+dependencies = [
+    "hypothesis>=6.130",
+    "lark>=1.2",
+    "pytest>=8",
+    "pytest-xdist>=3.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+testpaths = ["."]
