@@ -107,7 +107,7 @@ jobs:
 
       # Swift setup
       - name: Swift - Setup Swift
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@v3
         if: matrix.language == 'swift'
         with:
           swift-version: "6.1"
