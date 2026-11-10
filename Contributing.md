@@ -20,6 +20,7 @@ This section explains the steps that are currently used to add a new language im
     - `./tests/test.sh <lang> edge-cases.json`
 7. If a test doesn't pass you can easily re-run just the latest invocation by running: `./tests/re-test.sh <lang>`
 8. Verify one last time that everything works by running `./tests/test.sh <lang>`
+    - optionally compare against the reference implementation on generated inputs: `DIFF_TARGETS=java,<lang> uv run --directory tests/differential pytest -n auto` (see `tests/differential/README.md`)
 9. Add the language to the GH Action Matrix CI:
     - add the language to the matrix
     - add the setup with appropriate conditionals
