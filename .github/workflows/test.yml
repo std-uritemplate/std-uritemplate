@@ -11,7 +11,8 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    # setup-swift v2 does not support ubuntu-26.04: swift-actions/setup-swift#805
+    runs-on: ${{ (matrix.language == 'swift' && 'ubuntu-24.04') || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -113,7 +114,7 @@ jobs:
           swift-version: "6.1"
 
       # Dart setup
-      - uses: dart-lang/setup-dart@v1.8.1
+      - uses: dart-lang/setup-dart@v1.8.2
         if: matrix.language == 'dart'
         with:
           sdk: "stable"
