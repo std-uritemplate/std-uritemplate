@@ -1,0 +1,107 @@
+name: Differential
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      examples:
+        description: 'random cases per pair of implementations'
+        default: '100'
+      seed:
+        description: 'Hypothesis seed (default: run id)'
+        default: ''
+      reference:
+        description: 'only compare pairs that include this implementation (default: all pairs)'
+        default: ''
+
+jobs:
+  differential:
+    name: Differential
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Common - Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: 'true'
+
+      - name: Java - Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: "8"
+          distribution: "temurin"
+      - name: Java - Install jbang
+        uses: jbangdev/setup-jbang@v0.1.1
+      - name: Python - Install Poetry
+        uses: snok/install-poetry@v1
+      - name: Python - Add Poetry to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Typescript - Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Go - Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.20'
+      - name: C# - Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 9
+      - name: Ruby - Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      - name: PHP - Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Swift - Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.1"
+      - name: Dart - Setup Dart
+        uses: dart-lang/setup-dart@v1.8.1
+        with:
+          sdk: "stable"
+      - name: Rust - Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Python - Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: tests/differential/uv.lock
+      - name: Restore Hypothesis example database
+        uses: actions/cache/restore@v4
+        with:
+          path: tests/differential/.hypothesis
+          key: hypothesis-${{ github.run_id }}
+          restore-keys: hypothesis-
+      - name: Build implementations
+        run: for d in */; do if [ -f "$d/init.sh" ]; then bash "$d/init.sh"; fi; done
+      - name: Run differential tests
+        env:
+          DIFF_EXAMPLES: ${{ inputs.examples || 100 }}
+          DIFF_REFERENCE: ${{ inputs.reference }}
+        run: |
+          mkdir -p out
+          uv run --directory tests/differential pytest -n auto \
+            --hypothesis-seed="${{ inputs.seed || github.run_id }}" \
+            -q --tb=short 2>&1 | tee out/pytest.log || status=$?
+          { echo '```'; tail -c 900000 out/pytest.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "${status:-0}"
+      # the database only gains content on failures, so save it even when the job fails
+      - name: Save Hypothesis example database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: tests/differential/.hypothesis
+          key: hypothesis-${{ github.run_id }}
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: differential-${{ github.run_id }}
+          path: out/pytest.log
