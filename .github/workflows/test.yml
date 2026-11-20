@@ -11,7 +11,8 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    # setup-swift v2 does not support ubuntu-26.04: swift-actions/setup-swift#805
+    runs-on: ${{ (matrix.language == 'swift' && 'ubuntu-24.04') || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,14 +30,14 @@ jobs:
           - rust
         php-version:
           - '7.4'
-          - '8.2'
+          - '8.5'
         exclude:
-          - php-version: '8.2'
+          - php-version: '8.5'
         include:
           - language: php
             php-version: '7.4'
           - language: php
-            php-version: '8.2'
+            php-version: '8.5'
     steps:
       - name: Common - Checkout
         uses: actions/checkout@v7
@@ -68,35 +69,35 @@ jobs:
         uses: actions/setup-node@v7
         if: matrix.language == 'typescript'
         with:
-          node-version: 22
+          node-version: 24
 
       # Typescript mjs setup
       - name: Typescript mjs - Setup Node
         uses: actions/setup-node@v7
         if: matrix.language == 'typescript-mjs'
         with:
-          node-version: 22
+          node-version: 24
 
       # Go setup
       - name: Go - Setup Go
         uses: actions/setup-go@v7
         if: matrix.language == 'go'
         with:
-          go-version: '1.20'
+          go-version: '^1.26'
 
       # C# setup
       - name: C# - Setup .NET
         uses: actions/setup-dotnet@v6
         if: matrix.language == 'csharp'
         with:
-          dotnet-version: 9
+          dotnet-version: 11
 
       # Ruby setup
       - name: Ruby - Setup Ruby
         uses: ruby/setup-ruby@v1
         if: matrix.language == 'ruby'
         with:
-          ruby-version: '3.0'
+          ruby-version: '3.4'
 
       # PHP setup
       - name: Setup PHP
@@ -113,7 +114,7 @@ jobs:
           swift-version: "6.1"
 
       # Dart setup
-      - uses: dart-lang/setup-dart@v1.8.1
+      - uses: dart-lang/setup-dart@v1.8.2
         if: matrix.language == 'dart'
         with:
           sdk: "stable"
