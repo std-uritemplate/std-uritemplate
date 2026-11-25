@@ -18,7 +18,8 @@ on:
 jobs:
   differential:
     name: Differential
-    runs-on: ubuntu-latest
+    # Swift 6.1 toolchains are published for Ubuntu 24.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Common - Checkout
@@ -40,41 +41,41 @@ jobs:
       - name: Typescript - Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
       - name: Go - Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.20'
+          go-version: '^1.26'
       - name: C# - Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 9
+          dotnet-version: 11
       - name: Ruby - Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.0'
+          ruby-version: '3.4'
       - name: PHP - Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.5'
       - name: Swift - Setup Swift
         uses: swift-actions/setup-swift@v2
         with:
           swift-version: "6.1"
       - name: Dart - Setup Dart
-        uses: dart-lang/setup-dart@v1.8.1
+        uses: dart-lang/setup-dart@v1.8.2
         with:
           sdk: "stable"
       - name: Rust - Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Python - Setup uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: tests/differential/uv.lock
       - name: Restore Hypothesis example database
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: tests/differential/.hypothesis
           key: hypothesis-${{ github.run_id }}
@@ -95,13 +96,13 @@ jobs:
       # the database only gains content on failures, so save it even when the job fails
       - name: Save Hypothesis example database
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: tests/differential/.hypothesis
           key: hypothesis-${{ github.run_id }}
       - name: Upload log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: differential-${{ github.run_id }}
           path: out/pytest.log

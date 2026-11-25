@@ -40,3 +40,7 @@ updates:
     directory: "/rust"
     schedule:
       interval: "daily"
+  - package-ecosystem: "uv"
+    directory: "/tests/differential"
+    schedule:
+      interval: "daily"

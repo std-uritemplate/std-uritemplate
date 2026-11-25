@@ -2,7 +2,7 @@
 name = "std-uritemplate-differential"
 version = "0"
 description = "Differential property tests across the std-uritemplate implementations"
-requires-python = ">=3.12"
+requires-python = ">=3.15"
 dependencies = [
     "hypothesis>=6.130",
     "lark>=1.2",

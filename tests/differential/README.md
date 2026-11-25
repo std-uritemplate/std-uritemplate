@@ -21,7 +21,7 @@ directory with `init.sh` and `test.sh`, so a new implementation participates aut
 
 ## Running
 
-You need [uv](https://docs.astral.sh/uv/) and the toolchains of the implementations you want
+You need a recent [uv](https://docs.astral.sh/uv/) (0.10 or newer, for Python 3.15) and the toolchains of the implementations you want
 to compare. uv installs Python and the test dependencies (pinned in `pyproject.toml`,
 `uv.lock`, `.python-version`) on first run. Build each implementation once with its
 `init.sh`, then run from the repository root:
