@@ -496,8 +496,7 @@ class StdUriTemplate {
         if (is_string($value) ||
             is_bool($value) ||
             is_int($value) ||
-            is_float($value) ||
-            is_double($value)) {
+            is_float($value)) {
             return true;
         }
         return false;
@@ -514,7 +513,7 @@ class StdUriTemplate {
             } else {
                 return "false";
             }
-        } else if (is_string($value) || is_int($value) || is_float($value) || is_double($value)) {
+        } else if (is_string($value) || is_int($value) || is_float($value)) {
             return (string)$value;
         } else {
             throw new InvalidArgumentException("Illegal class passed as substitution: $value");
