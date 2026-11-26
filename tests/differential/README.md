@@ -72,7 +72,8 @@ AssertionError: {'a%CC%81': ['java', 'python', 'go', ...], '%61%CC%81': ['swift'
 
 `CRASH(rc=N)` or `TIMEOUT` in place of an output is a harness that exited non-zero or hung.
 The same `CRASH` on every case of one implementation means its build or toolchain is broken,
-not the library.
+not the library. In the nightly job a failing `init.sh` fails the "Build implementations" step
+instead, before any case runs.
 
 Procedure, the same day the run goes red:
 

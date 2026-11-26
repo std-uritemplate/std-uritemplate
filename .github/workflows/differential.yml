@@ -70,7 +70,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Python - Setup uv
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.4.0
         with:
           enable-cache: true
           cache-dependency-glob: tests/differential/uv.lock
@@ -87,6 +87,7 @@ jobs:
           DIFF_EXAMPLES: ${{ inputs.examples || 100 }}
           DIFF_REFERENCE: ${{ inputs.reference }}
         run: |
+          set -o pipefail
           mkdir -p out
           uv run --directory tests/differential pytest -n auto \
             --hypothesis-seed="${{ inputs.seed || github.run_id }}" \
