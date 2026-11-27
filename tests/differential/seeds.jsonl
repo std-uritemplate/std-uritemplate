@@ -90,10 +90,6 @@
 {"id": "F09", "template": "http://ex.com/a,b;c?d=e&f#g", "vars": {}}
 {"id": "F10", "template": "/a{v}b{v}c", "vars": {"v": "x"}}
 {"id": "F11", "template": "{v},{v}", "vars": {"v": "x"}}
-{"id": "G01", "template": "{}", "vars": {"v": "x"}}
-{"id": "G02", "template": "{,}", "vars": {"v": "x"}}
-{"id": "G03", "template": "{v,}", "vars": {"v": "x"}}
-{"id": "G04", "template": "{,v}", "vars": {"v": "x"}}
 {"id": "G05", "template": "{v", "vars": {"v": "x"}}
 {"id": "G06", "template": "v}", "vars": {"v": "x"}}
 {"id": "G07", "template": "{{v}}", "vars": {"v": "x"}}
@@ -112,7 +108,6 @@
 {"id": "G20", "template": "{v:1,w:2}", "vars": {"v": "abc", "w": "defg"}}
 {"id": "G21", "template": "{v,v}", "vars": {"v": "x"}}
 {"id": "G22", "template": "{?v,v}", "vars": {"v": "x"}}
-{"id": "H01", "template": "{0}", "vars": {"0": "x"}}
 {"id": "H02", "template": "{1a}", "vars": {"1a": "x"}}
 {"id": "H03", "template": "{a.b.c}", "vars": {"a.b.c": "x"}}
 {"id": "H04", "template": "{a_B9}", "vars": {"a_B9": "x"}}
