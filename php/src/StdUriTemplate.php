@@ -624,7 +624,9 @@ class StdUriTemplate {
                     self::addSeparator($operator, $result);
                 }
                 self::addValueElement($operator, $token, (string)$k, $result, $maxChar);
-                $result .= '=';
+                if ($operator !== 'SEMICOLON' || self::convertNativeTypes($v) !== '') {
+                    $result .= '=';
+                }
             } else {
                 if ($first) {
                     self::addValue($operator, $token, (string)$k, $result, $maxChar);

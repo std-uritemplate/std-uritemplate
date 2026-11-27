@@ -762,7 +762,9 @@ func addMapValue(operator Op, token string, value map[string]string, result *str
 				addSeparator(operator, result)
 			}
 			addValueElement(operator, token, k, result, maxChar)
-			result.WriteString("=")
+			if operator != OpSemicolon || v != "" {
+				result.WriteString("=")
+			}
 		} else {
 			if i == 0 {
 				addValue(operator, token, k, result, maxChar)

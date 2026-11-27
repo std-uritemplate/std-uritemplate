@@ -466,7 +466,9 @@ public class StdUriTemplate {
                     addSeparator(op, &result)
                 }
                 addValueElement(op, token, k, &result, maxChar)
-                result.append("=")
+                if op != .SEMICOLON || !convertNativeTypes(v).isEmpty {
+                    result.append("=")
+                }
             } else {
                 if first {
                     addValue(op, token, k, &result, maxChar)

@@ -102,8 +102,6 @@ KNOWN = [
      lambda t, v: any(isinstance(x, float) or (isinstance(x, int) and not isinstance(x, bool) and abs(x) >= 10 ** 6) for x in walk(v))),
     (None, "null or nested elements inside lists and maps crash or are dropped by some ports",
      lambda t, v: any(isinstance(x, (list, dict)) and any(y is None or isinstance(y, (list, dict)) for y in walk(x) if y is not x) for x in walk(v))),
-    (None, "exploded map under ; with an empty value ignores ifemp",
-     lambda t, v: "{;" in t and "*" in t and any(x == "" for x in walk(v))),
     (("php",), "empty expression crashes with TypeError; numeric-string map keys become lists",
      lambda t, v: re.search(r"\{[+#./;?&]?(,|\})", t) or any(isinstance(x, dict) and any(k.isdigit() for k in x) for x in walk(v))),
     (("swift",), "grapheme clusters: a combining mark merges with the preceding character",

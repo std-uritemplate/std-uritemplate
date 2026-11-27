@@ -466,7 +466,11 @@ class StdUriTemplate:
                 if not first:
                     StdUriTemplate.__add_separator(operator, result)
                 StdUriTemplate.__add_value_element(operator, token, k, result, max_char)
-                result.append("=")
+                if (
+                    operator != _Operator.SEMICOLON
+                    or StdUriTemplate.__convert_native_types(v) != ""
+                ):
+                    result.append("=")
             else:
                 if first:
                     StdUriTemplate.__add_value(operator, token, k, result, max_char)
