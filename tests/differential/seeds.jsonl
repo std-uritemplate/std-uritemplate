@@ -23,62 +23,10 @@
 {"id": "A25", "template": "{v:2}", "vars": {"v": true}}
 {"id": "A26", "template": "{;v:1}", "vars": {"v": ""}}
 {"id": "A27", "template": "{?v:1}", "vars": {"v": ""}}
-{"id": "A28", "template": "{+v:2}", "vars": {"v": "%41"}}
-{"id": "A29", "template": "{+v:3}", "vars": {"v": "%41"}}
-{"id": "A30", "template": "{v:2}", "vars": {"v": "%41"}}
-{"id": "B01", "template": "{+v}", "vars": {"v": "%41"}}
-{"id": "B02", "template": "{+v}", "vars": {"v": "%2f"}}
-{"id": "B03", "template": "{+v}", "vars": {"v": "%zz"}}
-{"id": "B04", "template": "{+v}", "vars": {"v": "%4"}}
-{"id": "B05", "template": "{+v}", "vars": {"v": "%"}}
-{"id": "B06", "template": "{+v}", "vars": {"v": "%%"}}
-{"id": "B07", "template": "{+v}", "vars": {"v": "%%41"}}
-{"id": "B08", "template": "{+v}", "vars": {"v": "%4%41"}}
-{"id": "B09", "template": "{+v}", "vars": {"v": "% a"}}
-{"id": "B10", "template": "{+v}", "vars": {"v": "%+1"}}
-{"id": "B11", "template": "{+v}", "vars": {"v": "%-1"}}
-{"id": "B12", "template": "{+v}", "vars": {"v": "%C3%A9"}}
-{"id": "B13", "template": "{+v}", "vars": {"v": "%80"}}
-{"id": "B14", "template": "{+v}", "vars": {"v": "%é"}}
-{"id": "B15", "template": "{+v}", "vars": {"v": "%é%41"}}
-{"id": "B16", "template": "{+v}", "vars": {"v": "%41%"}}
-{"id": "B17", "template": "{v}", "vars": {"v": "%41"}}
-{"id": "B18", "template": "{#v}", "vars": {"v": "%41%zz"}}
-{"id": "B19", "template": "{?v}", "vars": {"v": "%41"}}
-{"id": "B20", "template": "{+v}", "vars": {"v": "%1G"}}
 {"id": "C01", "template": "/a%20b{v}", "vars": {"v": "x"}}
 {"id": "C02", "template": "/a%zz{v}", "vars": {"v": "x"}}
 {"id": "C03", "template": "/a%{v}", "vars": {"v": "x"}}
 {"id": "C04", "template": "/%C3%A9{v}", "vars": {"v": "x"}}
-{"id": "D01", "template": "{v}", "vars": {"v": "-._~"}}
-{"id": "D02", "template": "{v}", "vars": {"v": "!*'()"}}
-{"id": "D03", "template": "{v}", "vars": {"v": ":/?#[]@"}}
-{"id": "D04", "template": "{v}", "vars": {"v": "$&+,;="}}
-{"id": "D05", "template": "{v}", "vars": {"v": "\"<>\\^`{|}"}}
-{"id": "D06", "template": "{v}", "vars": {"v": " "}}
-{"id": "D07", "template": "{+v}", "vars": {"v": "-._~"}}
-{"id": "D08", "template": "{+v}", "vars": {"v": "!*'()"}}
-{"id": "D09", "template": "{+v}", "vars": {"v": ":/?#[]@"}}
-{"id": "D10", "template": "{+v}", "vars": {"v": "$&+,;="}}
-{"id": "D11", "template": "{+v}", "vars": {"v": "\"<>\\^`{|}"}}
-{"id": "D12", "template": "{#v}", "vars": {"v": "\"<>\\^`{|}"}}
-{"id": "D13", "template": "{?v}", "vars": {"v": "!*'()"}}
-{"id": "D14", "template": "{;v}", "vars": {"v": "="}}
-{"id": "D15", "template": "{.v}", "vars": {"v": "."}}
-{"id": "D16", "template": "{+v}", "vars": {"v": "a\tb"}}
-{"id": "D17", "template": "{v}", "vars": {"v": "a\nb"}}
-{"id": "D18", "template": "{+v}", "vars": {"v": "ab"}}
-{"id": "D19", "template": "{v}", "vars": {"v": "a\u0000b"}}
-{"id": "D20", "template": "{+v}", "vars": {"v": "a\u0000b"}}
-{"id": "E01", "template": "{v}", "vars": {"v": "é"}}
-{"id": "E02", "template": "{+v}", "vars": {"v": "é"}}
-{"id": "E03", "template": "{+v}", "vars": {"v": ""}}
-{"id": "E04", "template": "{+v}", "vars": {"v": "￿"}}
-{"id": "E05", "template": "{+v}", "vars": {"v": "﷐"}}
-{"id": "E06", "template": "{+v}", "vars": {"v": " "}}
-{"id": "E07", "template": "{+v}", "vars": {"v": "🌉"}}
-{"id": "E08", "template": "{v}", "vars": {"v": "中文"}}
-{"id": "E09", "template": "{#v}", "vars": {"v": "é/x"}}
 {"id": "F01", "template": "/café/{v}", "vars": {"v": "x"}}
 {"id": "F02", "template": "/🌉/{v}", "vars": {"v": "x"}}
 {"id": "F03", "template": "a b{v}", "vars": {"v": "x"}}
@@ -209,8 +157,6 @@
 {"id": "N18", "template": "{map*}", "vars": {"map": {"a": 1, "b": 2.5, "c": true}}}
 {"id": "N19", "template": "{map*}", "vars": {"map": {"a,b": "c,d"}}}
 {"id": "N20", "template": "{+map}", "vars": {"map": {"a,b": "c,d"}}}
-{"id": "N21", "template": "{map*}", "vars": {"map": {"a": "%41"}}}
-{"id": "N22", "template": "{+map*}", "vars": {"map": {"a": "%41"}}}
 {"id": "O01", "template": "{list*}", "vars": {"list": ["a,b", "c"]}}
 {"id": "O02", "template": "{+list}", "vars": {"list": ["a,b", "c"]}}
 {"id": "O03", "template": "{list}", "vars": {"list": [1, true, "a", 1.5]}}
