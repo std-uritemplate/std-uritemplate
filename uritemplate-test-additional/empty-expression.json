@@ -1,0 +1,18 @@
+{
+  "Empty expressions and numeric variable names" :
+  {
+    "variables" : {
+      "v" : "x",
+      "0" : "zero"
+    },
+    "testcases" : [
+      ["{}", false],
+      ["{,}", false],
+      ["{,v}", false],
+      ["{v,}", false],
+      ["{+}", false],
+      ["{0}", "zero"],
+      ["{0,v}", "zero,x"]
+    ]
+  }
+}

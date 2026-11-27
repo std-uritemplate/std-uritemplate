@@ -521,7 +521,7 @@ class StdUriTemplate {
     }
 
     /**
-     * @param string $operator
+     * @param string|null $operator
      * @param string $token
      * @param bool $composite
      * @param int $maxChar
@@ -531,8 +531,8 @@ class StdUriTemplate {
      * @param int $col
      * @return bool
      */
-    private static function expandToken(string $operator, string $token, bool $composite, int $maxChar, bool $firstToken, array $substitutions, string &$result, int $col): bool {
-        if (empty($token)) {
+    private static function expandToken(?string $operator, string $token, bool $composite, int $maxChar, bool $firstToken, array $substitutions, string &$result, int $col): bool {
+        if ($token === '') {
             throw new InvalidArgumentException("Found an empty token at col: $col");
         }
 
