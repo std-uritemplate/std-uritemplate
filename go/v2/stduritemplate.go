@@ -2,11 +2,9 @@ package stduritemplate
 
 import (
 	"fmt"
-	"net/url"
 	"sort"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 )
 
 type Substitutions map[string]any
@@ -279,87 +277,61 @@ func addValueElement(op Op, _, value string, result *strings.Builder, maxChar in
 	}
 }
 
-func isSurrogate(str string) bool {
-	_, width := utf8.DecodeRuneInString(str)
-	return width > 1
+func isUnreserved(c byte) bool {
+	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+		c == '-' || c == '.' || c == '_' || c == '~'
 }
 
-func isIprivate(cp rune) bool {
-	return 0xE000 <= cp && cp <= 0xF8FF
+func isReserved(c byte) bool {
+	switch c {
+	case ':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=':
+		return true
+	default:
+		return false
+	}
 }
 
-func isUcschar(cp rune) bool {
-	return (0xA0 <= cp && cp <= 0xD7FF) ||
-		(0xF900 <= cp && cp <= 0xFDCF) ||
-		(0xFDF0 <= cp && cp <= 0xFFEF)
+func truncate(value string, maxChar int) string {
+	if maxChar < 0 {
+		return value
+	}
+	count := 0
+	for i := range value {
+		if count == maxChar {
+			return value[:i]
+		}
+		count++
+	}
+	return value
 }
+
+const upperHex = "0123456789ABCDEF"
 
 func addExpandedValue(prefix string, value string, result *strings.Builder, maxChar int, replaceReserved bool) {
-	runeCount := utf8.RuneCountInString(value)
-	max := maxChar
-	if maxChar == -1 || maxChar > runeCount {
-		max = runeCount
+	value = truncate(value, maxChar)
+	if value == "" {
+		return
 	}
-	reservedBuffer := &strings.Builder{}
-	toReserved := false
+	result.WriteString(prefix)
+	result.Grow(len(value))
 
-	if max > 0 && prefix != "" {
-		result.WriteString(prefix)
-	}
-
-	charCount := 0
-	for _, character := range value {
-		if charCount >= max {
-			break
+	allowReserved := !replaceReserved
+	// Bytes >= 0x80 are always encoded, so this encodes each rune as its UTF-8 bytes.
+	for i := 0; i < len(value); {
+		c := value[i]
+		switch {
+		case isUnreserved(c), allowReserved && isReserved(c):
+			result.WriteByte(c)
+			i++
+		case allowReserved && c == '%' && i+2 < len(value) && isHexDigit(value[i+1]) && isHexDigit(value[i+2]):
+			result.WriteString(value[i : i+3])
+			i += 3
+		default:
+			result.WriteByte('%')
+			result.WriteByte(upperHex[c>>4])
+			result.WriteByte(upperHex[c&0x0F])
+			i++
 		}
-		charCount++
-
-		if character == '%' && !replaceReserved {
-			reservedBuffer.Reset()
-			toReserved = true
-		}
-
-		toAppend := string(character)
-		if isSurrogate(toAppend) || replaceReserved || isUcschar(character) || isIprivate(character) {
-			toAppend = url.QueryEscape(toAppend)
-		}
-
-		if toReserved {
-			reservedBuffer.WriteString(toAppend)
-
-			if reservedBuffer.Len() == 3 {
-				encoded := true
-				reserved := reservedBuffer.String()
-				unescaped, err := url.QueryUnescape(reserved)
-				if err != nil {
-					encoded = (reserved == unescaped)
-				}
-
-				if encoded {
-					result.WriteString(reserved)
-				} else {
-					result.WriteString("%25")
-					// only if !replaceReserved
-					result.WriteString(reservedBuffer.String()[1:])
-				}
-				reservedBuffer.Reset()
-				toReserved = false
-			}
-		} else {
-			switch character {
-			case ' ':
-				result.WriteString("%20")
-			case '%':
-				result.WriteString("%25")
-			default:
-				result.WriteString(toAppend)
-			}
-		}
-	}
-
-	if toReserved {
-		result.WriteString("%25")
-		result.WriteString(reservedBuffer.String()[1:])
 	}
 }
 
