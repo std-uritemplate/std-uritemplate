@@ -1,5 +1,3 @@
-require 'uri'
-
 module StdUriTemplate
 
   # Public API
@@ -212,75 +210,28 @@ module StdUriTemplate
     end
   end
 
-  def self.is_surrogate(cp)
-    cp.bytes.length > 1
-  end
-  
-  def self.is_iprivate(cp)
-    (0xE000..0xF8FF).include?(cp.ord)
-  end
-  
-  def self.is_ucschar(cp)
-    (0xA0..0xD7FF).include?(cp.ord) ||
-      (0xF900..0xFDCF).include?(cp.ord) ||
-      (0xFDF0..0xFFEF).include?(cp.ord)
-  end
+  UNRESERVED = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'.freeze
+  RESERVED = ":/?#[]@!$&'()*+,;=".freeze
+  private_constant :UNRESERVED, :RESERVED
 
   def self.add_expanded_value(prefix, value, result, max_char, replace_reserved)
-    string_value = convert_native_types(value)
-    max = (max_char != -1) ? [max_char, string_value.length].min : string_value.length
-    reserved_buffer = nil
+    chars = convert_native_types(value).chars
+    chars = chars.first(max_char) if max_char != -1
 
-    if (max > 0 && !prefix.nil?)
-      result << prefix
-    end
+    result << prefix if !chars.empty? && !prefix.nil?
 
-    max.times do |i|
-      character = string_value[i]
-
-      if character == '%' && !replace_reserved
-        reserved_buffer = ''
-      end
-
-      to_append = character
-      if is_surrogate(character) || replace_reserved || is_ucschar(character) || is_iprivate(character)
-        to_append = URI.encode_www_form_component(character)
-      end
-
-      if reserved_buffer
-        reserved_buffer << to_append
-
-        if reserved_buffer.length == 3
-          is_encoded = false
-          begin
-            encoded = URI.decode_www_form_component(reserved_buffer)
-            is_encoded = !(encoded == reserved_buffer)
-          rescue StandardError
-          end
-
-          if is_encoded
-            result << reserved_buffer
-          else
-            result << "%25"
-            result << reserved_buffer[1..-1] unless replace_reserved
-          end
-
-          reserved_buffer = nil
-        end
+    i = 0
+    while i < chars.length
+      character = chars[i]
+      if UNRESERVED.include?(character) || (!replace_reserved && RESERVED.include?(character))
+        result << character
+      elsif !replace_reserved && character == '%' && i + 2 < chars.length && hex_digit?(chars[i + 1]) && hex_digit?(chars[i + 2])
+        result << character << chars[i + 1] << chars[i + 2]
+        i += 2
       else
-        if character == ' '
-          result << "%20"
-        elsif character == '%'
-          result << "%25"
-        else
-          result << to_append
-        end
+        character.bytes.each { |b| result << sprintf("%%%02X", b) }
       end
-    end
-
-    if reserved_buffer
-      result << "%25"
-      result << reserved_buffer[1..-1]
+      i += 1
     end
   end
 
