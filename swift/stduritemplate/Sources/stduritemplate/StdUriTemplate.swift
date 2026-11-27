@@ -203,87 +203,54 @@ public class StdUriTemplate {
         }
     }
 
-    // from https://github.com/kylef/URITemplate.swift/blob/a309673fdf86e4919a0250730e461ac533a03b3a/Sources/URITemplate.swift#L590C1-L607C8
-    private static let unreserved = {
-      let upperAlpha = CharacterSet(charactersIn: "A"..."Z")
-      let lowerAlpha = CharacterSet(charactersIn: "a"..."z")
-
-      let digits = CharacterSet(charactersIn: "0"..."9")
-      let unreservedSymbols = CharacterSet(charactersIn: "-._~")
-      return upperAlpha.union(lowerAlpha).union(digits).union(unreservedSymbols)
-    }()
-
-    private static func isSurrogate(_ cp: Character) -> Bool {
-        let utf16CodeUnit = cp.utf16.first!
-        return 0xD800 <= utf16CodeUnit && utf16CodeUnit <= 0xDBFF
-    }
-
-    private static func isIprivate(_ cp: Character) -> Bool {
-        return 0xE000 <= cp.utf16.first! && cp.utf16.first! <= 0xF8FF
-    }
-
-    private static func isUcschar(_ cp: Character) -> Bool {
-        guard let codePoint = cp.unicodeScalars.first?.value else {
-            return false
+    private static func isUnreserved(_ s: Unicode.Scalar) -> Bool {
+        switch s {
+            case "A"..."Z", "a"..."z", "0"..."9", "-", ".", "_", "~": return true
+            default: return false
         }
-
-        return (0xA0 <= codePoint && codePoint <= 0xD7FF) ||
-            (0xF900 <= codePoint && codePoint <= 0xFDCF) ||
-            (0xFDF0 <= codePoint && codePoint <= 0xFFEF)
     }
-    
+
+    private static func isReserved(_ s: Unicode.Scalar) -> Bool {
+        switch s {
+            case ":", "/", "?", "#", "[", "]", "@", "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "=": return true
+            default: return false
+        }
+    }
+
+    private static func isHexDigit(_ s: Unicode.Scalar) -> Bool {
+        switch s {
+            case "0"..."9", "A"..."F", "a"..."f": return true
+            default: return false
+        }
+    }
+
+    private static let hexDigits = Array("0123456789ABCDEF".unicodeScalars)
+
     private static func addExpandedValue(_ prefixStr: String, _ value: Any, _ result: inout String, _ maxChar: Int, replaceReserved: Bool) {
         let stringValue = convertNativeTypes(value)
         let scalars = Array(stringValue.unicodeScalars)
         let max = (maxChar != -1) ? min(maxChar, scalars.count) : scalars.count
-        result.reserveCapacity(max * 2)
-        var reservedBuffer: String?
 
         if max > 0 && !prefixStr.isEmpty {
             result.append(prefixStr)
         }
 
-        for scalarIdx in 0..<max {
-            let character = Character(scalars[scalarIdx])
-            if character == "%" && !replaceReserved {
-                reservedBuffer = String()
-            }
-
-            var toAppend = String(character)
-            if isSurrogate(character) || replaceReserved || isUcschar(character) || isIprivate(character) {
-                toAppend = toAppend.addingPercentEncoding(withAllowedCharacters: unreserved) ?? ""
-            }
-            if let _ = reservedBuffer {
-                reservedBuffer!.append(toAppend)
-                
-                if reservedBuffer!.count == 3 {
-                    var isEncoded = false
-                    if let decoded = reservedBuffer!.removingPercentEncoding {
-                        isEncoded = (decoded != reservedBuffer!)
-                    }
-                    
-                    if isEncoded {
-                        result.append(reservedBuffer!)
-                    } else {
-                        result.append("%25")
-                        result.append(String(reservedBuffer![reservedBuffer!.index(after: reservedBuffer!.startIndex)...]))
-                    }
-                    reservedBuffer = nil
-                }
+        var i = 0
+        while i < max {
+            let scalar = scalars[i]
+            if isUnreserved(scalar) || (!replaceReserved && isReserved(scalar)) {
+                result.unicodeScalars.append(scalar)
+            } else if !replaceReserved && scalar == "%" && i + 2 < max && isHexDigit(scalars[i + 1]) && isHexDigit(scalars[i + 2]) {
+                result.unicodeScalars.append(contentsOf: scalars[i...(i + 2)])
+                i += 2
             } else {
-                if character == " " {
-                    result.append("%20")
-                } else if character == "%" {
-                    result.append("%25")
-                } else {
-                    result.append(toAppend)
+                for byte in String(scalar).utf8 {
+                    result.unicodeScalars.append("%")
+                    result.unicodeScalars.append(hexDigits[Int(byte >> 4)])
+                    result.unicodeScalars.append(hexDigits[Int(byte & 0xF)])
                 }
             }
-        }
-        
-        if let reservedBuffer = reservedBuffer {
-            result.append("%25")
-            result.append((reservedBuffer as NSString).substring(from: 1))
+            i += 1
         }
     }
     

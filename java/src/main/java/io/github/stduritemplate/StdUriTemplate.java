@@ -1,8 +1,5 @@
 package io.github.stduritemplate;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -300,91 +297,73 @@ public class StdUriTemplate {
         }
     }
 
-    private static boolean isSurrogate(char cp) {
-        return (cp >= 0xD800 && cp <= 0xDFFF);
+    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+
+    private static boolean isUnreserved(char c) {
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                || c == '-' || c == '.' || c == '_' || c == '~';
     }
 
-    private static boolean isIprivate(char cp) {
-        return (0xE000 <= cp && cp <= 0xF8FF);
+    private static boolean isReserved(char c) {
+        switch (c) {
+            case ':': case '/': case '?': case '#': case '[': case ']': case '@':
+            case '!': case '$': case '&': case '\'': case '(': case ')':
+            case '*': case '+': case ',': case ';': case '=':
+                return true;
+            default:
+                return false;
+        }
     }
 
-    private static boolean isUcschar(char cp) {
-        return (0xA0 <= cp && cp <= 0xD7FF)
-                || (0xF900 <= cp && cp <= 0xFDCF)
-                || (0xFDF0 <= cp && cp <= 0xFFEF);
+    private static void appendPctEncoded(StringBuilder result, int octet) {
+        result.append('%').append(HEX_DIGITS[octet >> 4]).append(HEX_DIGITS[octet & 0xF]);
     }
 
+    private static void appendPctEncodedUtf8(StringBuilder result, int cp) {
+        if (cp < 0x80) {
+            appendPctEncoded(result, cp);
+        } else if (cp < 0x800) {
+            appendPctEncoded(result, 0xC0 | (cp >> 6));
+            appendPctEncoded(result, 0x80 | (cp & 0x3F));
+        } else if (cp < 0x10000) {
+            appendPctEncoded(result, 0xE0 | (cp >> 12));
+            appendPctEncoded(result, 0x80 | ((cp >> 6) & 0x3F));
+            appendPctEncoded(result, 0x80 | (cp & 0x3F));
+        } else {
+            appendPctEncoded(result, 0xF0 | (cp >> 18));
+            appendPctEncoded(result, 0x80 | ((cp >> 12) & 0x3F));
+            appendPctEncoded(result, 0x80 | ((cp >> 6) & 0x3F));
+            appendPctEncoded(result, 0x80 | (cp & 0x3F));
+        }
+    }
+
+    // RFC 6570 section 3.2.1
     private static void addExpandedValue(String prefix, Object value, StringBuilder result, int maxChar, boolean replaceReserved) {
         String stringValue = convertNativeTypes(value);
-        int cpCount = stringValue.codePointCount(0, stringValue.length());
-        int max = (maxChar != -1) ? Math.min(maxChar, cpCount) : cpCount;
-        result.ensureCapacity(max * 2); // hint to SB
-        boolean toReserved = false;
-        final StringBuilder reservedBuffer = new StringBuilder(3);
+        int end = stringValue.length();
+        if (maxChar != -1 && maxChar < stringValue.codePointCount(0, end)) {
+            end = stringValue.offsetByCodePoints(0, maxChar);
+        }
 
-        if (max > 0 && prefix != null) {
+        if (end > 0 && prefix != null) {
             result.append(prefix);
         }
 
-        int charCount = 0;
-        for (int i = 0; i < stringValue.length() && charCount < max; i++) {
+        int i = 0;
+        while (i < end) {
             char character = stringValue.charAt(i);
-            charCount++;
-
-            if (character == '%' && !replaceReserved) {
-                toReserved = true;
-                reservedBuffer.setLength(0);
-            }
-
-            String toAppend = Character.toString(character);
-            try {
-                if (isSurrogate(character)) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(Character.toChars(stringValue.codePointAt(i++)));
-                    toAppend = URLEncoder.encode(sb.toString(), StandardCharsets.UTF_8.name());
-                } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
-                    toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8.name());
-                }
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
-            }
-
-            if (toReserved) {
-                reservedBuffer.append(toAppend);
-
-                if (reservedBuffer.length() == 3) {
-                    boolean isEncoded = false;
-                    try {
-                        URLDecoder.decode(reservedBuffer.toString(), StandardCharsets.UTF_8.name());
-                        isEncoded = true;
-                    } catch (Exception e) {
-                        // ignore
-                    }
-
-                    if (isEncoded) {
-                        result.append(reservedBuffer);
-                    } else {
-                        result.append("%25");
-                        // only if !replaceReserved
-                        result.append(reservedBuffer.substring(1));
-                    }
-                    toReserved = false;
-                    reservedBuffer.setLength(0);
-                }
+            if (isUnreserved(character) || (!replaceReserved && isReserved(character))) {
+                result.append(character);
+                i++;
+            } else if (!replaceReserved && character == '%' && i + 2 < end
+                    && isHexDigit(stringValue.charAt(i + 1)) && isHexDigit(stringValue.charAt(i + 2))) {
+                result.append(stringValue, i, i + 3);
+                i += 3;
             } else {
-                if (character == ' ') {
-                    result.append("%20");
-                } else if (character == '%') {
-                    result.append("%25");
-                } else {
-                    result.append(toAppend);
-                }
+                int cp = stringValue.codePointAt(i);
+                appendPctEncodedUtf8(result, cp);
+                i += Character.charCount(cp);
             }
-        }
-
-        if (toReserved) {
-            result.append("%25");
-            result.append(reservedBuffer.substring(1));
         }
     }
 

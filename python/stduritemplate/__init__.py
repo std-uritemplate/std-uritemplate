@@ -1,4 +1,3 @@
-import urllib.parse
 from typing import Any, Dict, List
 from enum import Enum
 
@@ -233,23 +232,10 @@ class StdUriTemplate:
         ):
             StdUriTemplate.__add_expanded_value(None, value, result, max_char, True)
 
-    @staticmethod
-    def __is_surrogate(cp):
-        return len(cp.encode("utf-8")) > 1
-
-    @staticmethod
-    def __is_iprivate(cp):
-        val = ord(cp)
-        return 0xE000 <= val <= 0xF8FF
-
-    @staticmethod
-    def __is_ucschar(cp):
-        val = ord(cp)
-        return (
-            (0xA0 <= val <= 0xD7FF)
-            or (0xF900 <= val <= 0xFDCF)
-            or (0xFDF0 <= val <= 0xFFEF)
-        )
+    __unreserved = frozenset(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+    )
+    __reserved = frozenset(":/?#[]@!$&'()*+,;=")
 
     @staticmethod
     def __add_expanded_value(
@@ -259,53 +245,32 @@ class StdUriTemplate:
         max_char: int,
         replace_reserved: bool,
     ) -> None:
-        stringValue = StdUriTemplate.__convert_native_types(value)
-        max_val = (
-            min(max_char, len(stringValue)) if max_char != -1 else len(stringValue)
-        )
-        reserved_buffer = None
-        if max_val > 0 and prefix is not None:
+        string_value = StdUriTemplate.__convert_native_types(value)
+        if max_char != -1:
+            string_value = string_value[:max_char]
+        if string_value and prefix is not None:
             result.append(prefix)
-        for i in range(max_val):
-            character = stringValue[i]
-            if character == "%" and not replace_reserved:
-                reserved_buffer = []
-            to_append = character
-            if (
-                StdUriTemplate.__is_surrogate(character)
-                or replace_reserved
-                or StdUriTemplate.__is_ucschar(character)
-                or StdUriTemplate.__is_iprivate(character)
+        length = len(string_value)
+        i = 0
+        while i < length:
+            character = string_value[i]
+            if character in StdUriTemplate.__unreserved or (
+                not replace_reserved and character in StdUriTemplate.__reserved
             ):
-                to_append = urllib.parse.quote(to_append, encoding="utf-8", safe="")
-            if reserved_buffer is not None:
-                reserved_buffer.append(to_append)
-                if len(reserved_buffer) == 3:
-                    try:
-                        reserved = "".join(reserved_buffer)
-                        decoded = urllib.parse.unquote(
-                            reserved, encoding="utf-8", errors="strict"
-                        )
-                        is_encoded = decoded != reserved
-                    except Exception:
-                        is_encoded = False
-                    if is_encoded:
-                        result.append("".join(reserved_buffer))
-                    else:
-                        result.append("%25")
-                        result.append("".join(reserved_buffer[1:]))
-                    reserved_buffer = None
+                result.append(character)
+            elif (
+                not replace_reserved
+                and character == "%"
+                and i + 2 < length
+                and StdUriTemplate.__is_hex_digit(string_value[i + 1])
+                and StdUriTemplate.__is_hex_digit(string_value[i + 2])
+            ):
+                result.append(string_value[i : i + 3])
+                i += 2
             else:
-                if character == " ":
-                    result.append("%20")
-                elif character == "%":
-                    result.append("%25")
-                else:
-                    result.append(to_append)
-
-        if reserved_buffer is not None:
-            result.append("%25")
-            result.append("".join(reserved_buffer[1:]))
+                for b in character.encode("utf-8"):
+                    result.append("%{:02X}".format(b))
+            i += 1
 
     @staticmethod
     def __is_list(value: Any) -> bool:

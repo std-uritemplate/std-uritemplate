@@ -92,12 +92,6 @@ def texts(v):
 KNOWN = [
     (None, "harnesses trim the template file differently (leading/trailing whitespace incl. Unicode, NUL)",
      lambda t, v: t != t.strip().strip("\x00")),
-    (None, "percent in values under + or #: reserved-buffer and %XX detection differ",
-     lambda t, v: re.search(r"\{[+#]", t) and any("%" in s for s in texts(v))),
-    (None, "~ * ' ( ) encoding differs between host encoders",
-     lambda t, v: any(c in s for s in texts(v) for c in "~*'()")),
-    (None, "non-reserved ASCII and non-ucschar copied raw under + or # by some ports",
-     lambda t, v: re.search(r"\{[+#]", t) and any(re.search(r'["<>\\^`{|}\x00-\x1f\x7f\u0080-\u009f﷐￿]', s) for s in texts(v))),
     (None, "number formatting is implementation-defined (floats, integers >= 1e6)",
      lambda t, v: any(isinstance(x, float) or (isinstance(x, int) and not isinstance(x, bool) and abs(x) >= 10 ** 6) for x in walk(v))),
     (None, "null or nested elements inside lists and maps crash or are dropped by some ports",

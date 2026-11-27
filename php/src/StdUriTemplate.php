@@ -3,7 +3,6 @@ namespace StdUriTemplate;
 
 use InvalidArgumentException;
 use TypeError;
-use Exception;
 
 class StdUriTemplate {
 
@@ -318,40 +317,8 @@ class StdUriTemplate {
         }
     }
 
-    /**
-     * @param string $cp
-     */
-    private static function isSurrogate(string $cp) {
-        if (empty($cp)) {
-            return true;
-        }
-        $codePoint = mb_ord($cp, 'UTF-8');
-        return ($codePoint >= 0xD800 && $codePoint <= 0xDFFF);
-    }
-    
-    /**
-     * @param string $cp
-     */
-    private static function isIprivate(string $cp) {
-        if (empty($cp)) {
-            return false;
-        }
-        $codePoint = mb_ord($cp, 'UTF-8');
-        return (0xE000 <= $codePoint && $codePoint <= 0xF8FF);
-    }
-    
-    /**
-     * @param string $cp
-     */
-    private static function isUcschar(string $cp) {
-        if (empty($cp)) {
-            return false;
-        }
-        $codePoint = mb_ord($cp, 'UTF-8');
-        return (0xA0 <= $codePoint && $codePoint <= 0xD7FF)
-            || (0xF900 <= $codePoint && $codePoint <= 0xFDCF)
-            || (0xFDF0 <= $codePoint && $codePoint <= 0xFFEF);
-    }
+    private const UNRESERVED = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    private const RESERVED = ":/?#[]@!$&'()*+,;=";
 
     /**
      * @param mixed $prefix
@@ -362,63 +329,28 @@ class StdUriTemplate {
      */
     private static function addExpandedValue($prefix, $value, string &$result, int $maxChar, bool $replaceReserved): void {
         $stringValue = self::convertNativeTypes($value);
-        $charLen = mb_strlen($stringValue, 'UTF-8');
-        $max = ($maxChar !== -1) ? min($maxChar, $charLen) : $charLen;
-        $result .= '';
-        $reservedBuffer = null;
-
-        if ($max > 0 && $prefix !== null) {
+        if ($maxChar !== -1) {
+            $stringValue = mb_substr($stringValue, 0, $maxChar, 'UTF-8');
+        }
+        if ($stringValue === '') {
+            return;
+        }
+        if ($prefix !== null) {
             $result .= $prefix;
         }
 
-        for ($i = 0; $i < $max; $i++) {
-            $character = mb_substr($stringValue, $i, 1, 'UTF-8');
-
-            if ($character === '%' && !$replaceReserved) {
-                $reservedBuffer = '';
-            }
-
-            $toAppend = $character;
-            $codePoint = mb_ord($character, 'UTF-8');
-            if ($codePoint !== false && $codePoint > 0x7F || self::isSurrogate($character) || $replaceReserved || self::isUcschar($character) || self::isIprivate($character)) {
-                $toAppend = urlencode($toAppend);
-            }
-
-            if ($reservedBuffer !== null) {
-                $reservedBuffer .= $toAppend;
-
-                if (strlen($reservedBuffer) === 3) {
-                    $isEncoded = false;
-                    try {
-                        $decoded = urldecode($reservedBuffer);
-                        $isEncoded = ($decoded !== $reservedBuffer);
-                    } catch (Exception $e) {
-                        // ignore
-                    }
-
-                    if ($isEncoded) {
-                        $result .= $reservedBuffer;
-                    } else {
-                        $result .= "%25";
-                        // only if !$replaceReserved
-                        $result .= substr($reservedBuffer, 1);
-                    }
-                    $reservedBuffer = null;
-                }
+        $chars = mb_str_split($stringValue, 1, 'UTF-8');
+        $len = count($chars);
+        for ($i = 0; $i < $len; $i++) {
+            $character = $chars[$i];
+            if (strpos(self::UNRESERVED, $character) !== false || (!$replaceReserved && strpos(self::RESERVED, $character) !== false)) {
+                $result .= $character;
+            } elseif (!$replaceReserved && $character === '%' && $i + 2 < $len && ctype_xdigit($chars[$i + 1]) && ctype_xdigit($chars[$i + 2])) {
+                $result .= $character . $chars[$i + 1] . $chars[$i + 2];
+                $i += 2;
             } else {
-                if ($character === ' ') {
-                    $result .= "%20";
-                } elseif ($character === '%') {
-                    $result .= "%25";
-                } else {
-                    $result .= $toAppend;
-                }
+                $result .= rawurlencode($character);
             }
-        }
-
-        if ($reservedBuffer !== null) {
-            $result .= "%25";
-            $result .= substr($reservedBuffer, 1);
         }
     }
 
