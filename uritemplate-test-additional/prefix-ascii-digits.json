@@ -1,0 +1,13 @@
+{
+  "Prefix length accepts only ASCII digits": {
+    "variables": {
+      "v": "abc"
+    },
+    "testcases": [
+      ["{v:1}", "a"],
+      ["{v:١}", false],
+      ["{v:２}", false],
+      ["{v:1١}", false]
+    ]
+  }
+}
