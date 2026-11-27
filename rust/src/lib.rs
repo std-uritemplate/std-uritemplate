@@ -308,19 +308,16 @@ fn add_value_element(op: Operator, _token: &str, value: &str, result: &mut Strin
     }
 }
 
-fn is_iprivate(cp: char) -> bool {
-    (0xE000..=0xF8FF).contains(&(cp as u32))
-}
-
-fn is_ucschar(cp: char) -> bool {
-    let code = cp as u32;
-    (0xA0..=0xD7FF).contains(&code)
-        || (0xF900..=0xFDCF).contains(&code)
-        || (0xFDF0..=0xFFEF).contains(&code)
-}
-
 fn is_unreserved(c: char) -> bool {
-    c.is_ascii_alphanumeric() || c == '-' || c == '.' || c == '_' || c == '~'
+    c.is_ascii_alphanumeric() || matches!(c, '-' | '.' | '_' | '~')
+}
+
+fn is_reserved(c: char) -> bool {
+    matches!(c, ':' | '/' | '?' | '#' | '[' | ']' | '@')
+        || matches!(
+            c,
+            '!' | '$' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | ';' | '='
+        )
 }
 
 fn percent_encode_char(c: char, result: &mut String) {
@@ -330,14 +327,6 @@ fn percent_encode_char(c: char, result: &mut String) {
         result.push('%');
         result.push(to_hex_digit(byte >> 4));
         result.push(to_hex_digit(byte & 0x0F));
-    }
-}
-
-fn url_encode_char(c: char, result: &mut String) {
-    if is_unreserved(c) {
-        result.push(c);
-    } else {
-        percent_encode_char(c, result);
     }
 }
 
@@ -356,69 +345,38 @@ fn add_expanded_value(
     max_char: i32,
     replace_reserved: bool,
 ) {
-    let max = if max_char != -1 {
-        max_char as usize
-    } else {
-        usize::MAX
+    let value = match usize::try_from(max_char) {
+        Ok(max) => value
+            .char_indices()
+            .nth(max)
+            .map_or(value, |(end, _)| &value[..end]),
+        Err(_) => value,
     };
+    if value.is_empty() {
+        return;
+    }
+    if let Some(p) = prefix {
+        result.push_str(p);
+    }
+    result.reserve(value.len());
 
-    let mut to_reserved = false;
-    let mut reserved_buffer = String::with_capacity(3);
-    let mut to_append = String::with_capacity(12);
-    let mut prefix_pending = prefix;
-
-    for character in value.chars().take(max) {
-        if let Some(p) = prefix_pending.take() {
-            result.push_str(p);
-        }
-
-        if character == '%' && !replace_reserved {
-            to_reserved = true;
-            reserved_buffer.clear();
-        }
-
-        to_append.clear();
-        if replace_reserved || is_ucschar(character) || is_iprivate(character) {
-            url_encode_char(character, &mut to_append);
-        } else if !character.is_ascii() {
-            percent_encode_char(character, &mut to_append);
+    let allow_reserved = !replace_reserved;
+    let mut chars = value.char_indices();
+    while let Some((i, c)) = chars.next() {
+        if is_unreserved(c) || (allow_reserved && is_reserved(c)) {
+            result.push(c);
+        } else if allow_reserved
+            && c == '%'
+            && value
+                .get(i + 1..i + 3)
+                .is_some_and(|hex| hex.bytes().all(|b| b.is_ascii_hexdigit()))
+        {
+            result.push_str(&value[i..i + 3]);
+            chars.nth(1); // skip the two hex digits
         } else {
-            to_append.push(character);
-        }
-
-        if to_reserved {
-            reserved_buffer.push_str(&to_append);
-
-            if reserved_buffer.len() == 3 {
-                let is_encoded = is_valid_percent_encoded(&reserved_buffer);
-
-                if is_encoded {
-                    result.push_str(&reserved_buffer);
-                } else {
-                    result.push_str("%25");
-                    result.push_str(&reserved_buffer[1..]);
-                }
-                to_reserved = false;
-                reserved_buffer.clear();
-            }
-        } else if character == ' ' {
-            result.push_str("%20");
-        } else if character == '%' {
-            result.push_str("%25");
-        } else {
-            result.push_str(&to_append);
+            percent_encode_char(c, result);
         }
     }
-
-    if to_reserved {
-        result.push_str("%25");
-        result.push_str(&reserved_buffer[1..]);
-    }
-}
-
-fn is_valid_percent_encoded(s: &str) -> bool {
-    let b = s.as_bytes();
-    b.len() == 3 && b[0] == b'%' && b[1].is_ascii_hexdigit() && b[2].is_ascii_hexdigit()
 }
 
 fn get_substitution_type(
