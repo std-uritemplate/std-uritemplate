@@ -106,8 +106,6 @@ KNOWN = [
      lambda t, v: "{;" in t and "*" in t and any(x == "" for x in walk(v))),
     (("php",), "empty expression crashes with TypeError; numeric-string map keys become lists",
      lambda t, v: re.search(r"\{[+#./;?&]?(,|\})", t) or any(isinstance(x, dict) and any(k.isdigit() for k in x) for x in walk(v))),
-    (("typescript",), "Object.prototype names resolve through the substitutions object",
-     lambda t, v: re.search(r"constructor|toString|valueOf|hasOwnProperty|__proto__|isPrototypeOf|propertyIsEnumerable|toLocaleString", t)),
     (("swift",), "grapheme clusters: a combining mark merges with the preceding character",
      lambda t, v: re.search(r"[́️‍]", t)),
 ]

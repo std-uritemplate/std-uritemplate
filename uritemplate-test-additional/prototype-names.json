@@ -1,0 +1,15 @@
+{
+  "Object.prototype names are undefined variables" :
+  {
+    "variables" : {
+      "v" : "x"
+    },
+    "testcases" : [
+      ["{constructor}", ""],
+      ["{toString}", ""],
+      ["{hasOwnProperty}", ""],
+      ["{__proto__}", ""],
+      ["{v}{toString}", "x"]
+    ]
+  }
+}

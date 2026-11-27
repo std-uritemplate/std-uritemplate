@@ -461,7 +461,7 @@ export class StdUriTemplate {
 
     StdUriTemplate.checkVarname(token, col);
 
-    const value = substitutions[token];
+    const value = Object.prototype.hasOwnProperty.call(substitutions, token) ? substitutions[token] : undefined;
     const substType = StdUriTemplate.getSubstitutionType(value, col);
     if (substType === SubstitutionType.EMPTY || StdUriTemplate.isEmpty(substType, value)) {
       return false;
@@ -529,7 +529,7 @@ export class StdUriTemplate {
     if (maxChar !== -1) {
       throw new Error('Value trimming is not allowed on Maps');
     }
-    for (const key in value) {
+    for (const key of Object.keys(value)) {
       const v = value[key];
       if (composite) {
         if (!first) {
