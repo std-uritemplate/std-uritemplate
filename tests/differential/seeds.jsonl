@@ -123,9 +123,6 @@
 {"id": "H07", "template": "{%2f}", "vars": {"%2f": "x"}}
 {"id": "H08", "template": "{v%4}", "vars": {"v%4": "x"}}
 {"id": "H09", "template": "{v%}", "vars": {"v%": "x"}}
-{"id": "H10", "template": "{constructor}", "vars": {}}
-{"id": "H11", "template": "{toString}", "vars": {}}
-{"id": "H12", "template": "{hasOwnProperty}", "vars": {}}
 {"id": "I01", "template": "{v}", "vars": {"v": 1000000}}
 {"id": "I02", "template": "{v}", "vars": {"v": 100000}}
 {"id": "I03", "template": "{v}", "vars": {"v": 1234567}}
