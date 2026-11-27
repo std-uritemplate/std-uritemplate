@@ -286,87 +286,47 @@ export class StdUriTemplate {
     }
   }
 
-  private static isSurrogate(cp: string): boolean {
-    const codeUnit = cp.charCodeAt(0);
-    return (codeUnit >= 0xD800 && codeUnit <= 0xDBFF);
+  private static isUnreserved(c: string): boolean {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+      c === '-' || c === '.' || c === '_' || c === '~';
   }
 
-  private static isIprivate(cp: string): boolean {
-      return 0xE000 <= cp.charCodeAt(0) && cp.charCodeAt(0) <= 0xF8FF;
+  private static isReserved(c: string): boolean {
+    return ":/?#[]@!$&'()*+,;=".includes(c);
   }
 
-  private static isUcschar(cp: string): boolean {
-      const codePoint = cp.codePointAt(0) || 0;
-      return (0xA0 <= codePoint && codePoint <= 0xD7FF) ||
-          (0xF900 <= codePoint && codePoint <= 0xFDCF) ||
-          (0xFDF0 <= codePoint && codePoint <= 0xFFEF);
+  private static pctEncode(cp: number): string {
+    if (cp < 0x80) {
+      return (cp < 0x10 ? '%0' : '%') + cp.toString(16).toUpperCase();
+    }
+    // encodeURIComponent throws on lone surrogates
+    return encodeURIComponent(String.fromCodePoint(cp >= 0xD800 && cp <= 0xDFFF ? 0xFFFD : cp));
   }
 
   private static addExpandedValue(prefix: string | null, value: any, result: string[], maxChar: number, replaceReserved: boolean): void {
     const stringValue = StdUriTemplate.convertNativeTypes(value);
-    const codePoints = Array.from(stringValue);
-    const max = maxChar !== -1 ? Math.min(maxChar, codePoints.length) : codePoints.length;
-    let reservedBuffer: string[] | undefined = undefined;
+    const max = maxChar !== -1 ? maxChar : stringValue.length;
 
-    if (max > 0 && prefix != null) {
-      result.push(prefix)
+    if (stringValue.length > 0 && prefix != null) {
+      result.push(prefix);
     }
 
-    for (let i = 0; i < max; i++) {
-      const character = codePoints[i];
-
-      if (character === '%' && !replaceReserved) {
-        reservedBuffer = [];
-      }
-
-      let toAppend: string = character;
-      const cp = character.codePointAt(0) || 0;
-      if (cp > 0xFFFF) {
-          toAppend = encodeURIComponent(character);
-      } else if (replaceReserved || StdUriTemplate.isUcschar(character) || StdUriTemplate.isIprivate(character)) {
-        if (character === '!') { // Specific to JS/TS: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#description
-          toAppend = '%21'
-        } else {
-          toAppend = encodeURIComponent(toAppend);
-        }
-      }
-
-      if (reservedBuffer) {
-        reservedBuffer.push(toAppend);
-
-        if (reservedBuffer.length === 3) {
-          let isEncoded = false;
-          try {
-            const reserved = reservedBuffer.join('')
-            const decoded = decodeURIComponent(reservedBuffer.join(''));
-            isEncoded = (reserved !== decoded);
-          } catch (e) {
-            // ignore
-          }
-
-          if (isEncoded) {
-            result.push(reservedBuffer.join(''));
-          } else {
-            result.push('%25');
-            // only if !replaceReserved
-            result.push(reservedBuffer.slice(1).join(''));
-          }
-          reservedBuffer = undefined;
-        }
+    // i indexes UTF-16 code units, n counts code points against max
+    for (let i = 0, n = 0; i < stringValue.length && n < max; n++) {
+      const character = stringValue.charAt(i);
+      if (StdUriTemplate.isUnreserved(character) || (!replaceReserved && StdUriTemplate.isReserved(character))) {
+        result.push(character);
+        i++;
+      } else if (!replaceReserved && character === '%' && n + 2 < max &&
+          StdUriTemplate.isHexDigit(stringValue.charAt(i + 1)) && StdUriTemplate.isHexDigit(stringValue.charAt(i + 2))) {
+        result.push(stringValue.slice(i, i + 3));
+        i += 3;
+        n += 2;
       } else {
-        if (character === ' ') {
-          result.push('%20');
-        } else if (character === '%') {
-          result.push('%25');
-        } else {
-          result.push(toAppend);
-        }
+        const cp = stringValue.codePointAt(i)!;
+        result.push(StdUriTemplate.pctEncode(cp));
+        i += cp > 0xFFFF ? 2 : 1;
       }
-    }
-
-    if (reservedBuffer) {
-      result.push('%25');
-      result.push(reservedBuffer.slice(1).join(''));
     }
   }
 
