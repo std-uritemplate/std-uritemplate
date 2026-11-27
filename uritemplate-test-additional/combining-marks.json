@@ -1,0 +1,17 @@
+{
+  "Combining marks and joiners next to expressions" :
+  {
+    "variables": {
+       "v" : "x"
+     },
+     "testcases" : [
+        ["{v}\u0301", "x%CC%81"],
+        ["/\u0301{v}", "/%CC%81x"],
+        ["{v}\uFE0F", "x%EF%B8%8F"],
+        ["{v}\u200D", "x%E2%80%8D"],
+        ["{%\uFF14\uFF11}", false],
+        ["{+.\u0301v}", false],
+        ["{v..\u0301}", false]
+     ]
+  }
+}
