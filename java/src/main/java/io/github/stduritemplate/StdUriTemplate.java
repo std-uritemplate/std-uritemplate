@@ -174,7 +174,7 @@ public class StdUriTemplate {
                         if (operator == null) {
                             operator = getOperator(character, token, i);
                         } else if (toMaxCharBuffer) {
-                            if (Character.isDigit(character)) {
+                            if (character >= '0' && character <= '9') {
                                 maxCharBuffer.append(character);
                             } else {
                                 throw new IllegalArgumentException("Illegal character identified in the token at col:" + i);

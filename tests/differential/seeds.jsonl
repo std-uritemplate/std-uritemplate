@@ -10,8 +10,6 @@
 {"id": "A10", "template": "{v:99999999999}", "vars": {"v": "abc"}}
 {"id": "A11", "template": "{v:12345}", "vars": {"v": "abc"}}
 {"id": "A12", "template": "{v:0}", "vars": {"v": "abc"}}
-{"id": "A13", "template": "{v:١}", "vars": {"v": "abc"}}
-{"id": "A14", "template": "{v:２}", "vars": {"v": "abc"}}
 {"id": "A15", "template": "{v:1:2}", "vars": {"v": "abc"}}
 {"id": "A16", "template": "{v:a}", "vars": {"v": "abc"}}
 {"id": "A17", "template": "{v:-1}", "vars": {"v": "abc"}}

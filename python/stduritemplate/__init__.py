@@ -147,7 +147,7 @@ class StdUriTemplate:
                     if operator is None:
                         operator = StdUriTemplate.__get_operator(character, token, i)
                     elif max_char_buffer is not None:
-                        if character.isdigit():
+                        if "0" <= character <= "9":
                             max_char_buffer.append(character)
                         else:
                             raise ValueError(
