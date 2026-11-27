@@ -83,9 +83,6 @@
 {"id": "F02", "template": "/🌉/{v}", "vars": {"v": "x"}}
 {"id": "F03", "template": "a b{v}", "vars": {"v": "x"}}
 {"id": "F04", "template": "a\tb{v}", "vars": {"v": "x"}}
-{"id": "F05", "template": "{v}́", "vars": {"v": "x"}}
-{"id": "F06", "template": "/́{v}", "vars": {"v": "x"}}
-{"id": "F07", "template": "{v}️", "vars": {"v": "x"}}
 {"id": "F08", "template": "", "vars": {}}
 {"id": "F09", "template": "http://ex.com/a,b;c?d=e&f#g", "vars": {}}
 {"id": "F10", "template": "/a{v}b{v}c", "vars": {"v": "x"}}

@@ -19,7 +19,7 @@ public class StdUriTemplate {
         case AMP
     }
     
-    private static func validateLiteral(_ c: Character, _ col: Int) throws {
+    private static func validateLiteral(_ c: Unicode.Scalar, _ col: Int) throws {
         switch c {
             case "+", "#", "/", ";", "?", "&", " ", "!", "=", "$", "|", "*", ":", "~", "-":
                 throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Illegal character identified in the token at col: \(col)"])
@@ -45,7 +45,7 @@ public class StdUriTemplate {
         }
     }
     
-    private static func getOperator(_ c: Character, _ token: inout String, _ col: Int) throws -> Operator {
+    private static func getOperator(_ c: Unicode.Scalar, _ token: inout String, _ col: Int) throws -> Operator {
         switch c {
             case "+": return .PLUS
             case "#": return .HASH
@@ -56,7 +56,7 @@ public class StdUriTemplate {
             case "&": return .AMP
             default:
                 try validateLiteral(c, col)
-                token.append(c)
+                token.unicodeScalars.append(c)
                 return .NO_OP
         }
     }
@@ -70,7 +70,7 @@ public class StdUriTemplate {
         var maxCharBuffer: String?
         var firstToken = true
         
-        for (i, character) in str.enumerated() {
+        for (i, character) in str.unicodeScalars.enumerated() {
             switch character {
                 case "{":
                     token = String()
@@ -112,8 +112,8 @@ public class StdUriTemplate {
                         if op == nil {
                             op = try getOperator(character, &token!, i)
                         } else if let _ = maxCharBuffer {
-                            if character.isNumber {
-                                maxCharBuffer!.append(character)
+                            if ("0"..."9").contains(character) {
+                                maxCharBuffer!.unicodeScalars.append(character)
                             } else {
                                 throw NSError(domain: "IllegalArgumentException", code: i, userInfo: [NSLocalizedDescriptionKey: "Illegal character identified in the token at col: \(i)"])
                             }
@@ -124,14 +124,14 @@ public class StdUriTemplate {
                                 composite = true
                             } else {
                                 try validateLiteral(character, i)
-                                token!.append(character)
+                                token!.unicodeScalars.append(character)
                             }
                         }
                     } else {
-                        if character.unicodeScalars.contains(where: { $0.value > 0x7F }) {
+                        if character.value > 0x7F {
                             String(character).utf8.forEach { result.append(String(format: "%%%02X", $0)) }
                         } else {
-                            result.append(character)
+                            result.unicodeScalars.append(character)
                         }
                     }
             }
@@ -378,13 +378,13 @@ public class StdUriTemplate {
     }
     
     private static func checkVarname(_ token: String, _ col: Int) throws {
-        if token.hasPrefix(".") || token.hasSuffix(".") {
+        let chars = Array(token.unicodeScalars)
+        if chars.first == "." || chars.last == "." {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
         }
-        if token.contains("..") {
+        if zip(chars, chars.dropFirst()).contains(where: { $0 == "." && $1 == "." }) {
             throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
         }
-        let chars = Array(token)
         for (i, c) in chars.enumerated() {
             if c == "%" {
                 if i + 2 >= chars.count {
@@ -392,7 +392,7 @@ public class StdUriTemplate {
                 }
                 let h1 = chars[i + 1]
                 let h2 = chars[i + 2]
-                if !h1.isHexDigit || !h2.isHexDigit {
+                if !h1.properties.isASCIIHexDigit || !h2.properties.isASCIIHexDigit {
                     throw NSError(domain: "IllegalArgumentException", code: col, userInfo: [NSLocalizedDescriptionKey: "Invalid variable name at col: \(col)"])
                 }
             }
