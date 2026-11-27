@@ -13,7 +13,7 @@ echo "Initialization done"
 
 echo 0 > "${SCRIPT_DIR}/result"
 RESULT=$(${SCRIPT_DIR}/../${LANGUAGE}/test.sh "${SCRIPT_DIR}/template.txt" "${SCRIPT_DIR}/substitutions.json")
-cat ${SCRIPT_DIR}/possible-results.json | jq -rc ".[]" | while read -r possible_result; do
+cat ${SCRIPT_DIR}/possible-results.json | jq -rc ".[]" | while IFS= read -r possible_result; do
   if [ "${possible_result}" == "${RESULT}" ]; then
     echo 1 > "${SCRIPT_DIR}/result"
   fi

@@ -91,9 +91,10 @@ Procedure, the same day the run goes red:
    unaddressed failure hides whatever that pair would find next.
 4. **Fix.** The fixing PR deletes the `KNOWN` entry, so the seed asserts again and random
    cases of that class are explored again. Run the affected pair locally before pushing.
-5. **Promote.** Once every implementation agrees on the intended output, move the case to
-   `uritemplate-test-additional/edge-cases.json`, which the regular suite enforces on every
-   PR, and drop the seed: seeds are pending cases, fixtures are settled ones.
+5. **Promote.** Once every implementation agrees on the intended output, move the case to a
+   fixture in `uritemplate-test-additional/` (a new `<topic>.json` per fix keeps concurrent PRs
+   apart), which the regular suite enforces on every PR, and drop the seed: seeds are pending
+   cases, fixtures are settled ones.
 
 ## Excluding a known divergence
 
