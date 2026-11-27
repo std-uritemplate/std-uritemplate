@@ -303,21 +303,14 @@ class StdUriTemplate {
     }
   }
 
-  static bool _isSurrogate(String cp) {
-    final codePoint = cp.codeUnitAt(0);
-    return codePoint >= 0xD800 && codePoint <= 0xDFFF;
-  }
+  static const _reserved = r":/?#[]@!$&'()*+,;=";
+  static const _hexDigits = '0123456789ABCDEF';
 
-  static bool _isIprivate(String cp) {
-    final codePoint = cp.codeUnitAt(0);
-    return 0xE000 <= codePoint && codePoint <= 0xF8FF;
-  }
-
-  static bool _isUcschar(String cp) {
-    final codePoint = cp.codeUnitAt(0);
-    return (0xA0 <= codePoint && codePoint <= 0xD7FF) ||
-        (0xF900 <= codePoint && codePoint <= 0xFDCF) ||
-        (0xFDF0 <= codePoint && codePoint <= 0xFFEF);
+  static bool _isUnreserved(int cp) {
+    return (cp >= 0x30 && cp <= 0x39) ||
+        (cp >= 0x41 && cp <= 0x5A) ||
+        (cp >= 0x61 && cp <= 0x7A) ||
+        '-._~'.codeUnits.contains(cp);
   }
 
   static void _addExpandedValue(
@@ -328,70 +321,36 @@ class StdUriTemplate {
     bool replaceReserved,
   ) {
     final stringValue = _convertNativeTypes(value);
-    final runes = stringValue.runes;
+    final runes = stringValue.runes.toList();
     final max = (maxChar != -1) ? min(maxChar, runes.length) : runes.length;
-
-    var toReserved = false;
-    final reservedBuffer = StringBuffer();
 
     if (max > 0 && prefix != null) {
       result.write(prefix);
     }
 
     for (var i = 0; i < max; i++) {
-      final character = String.fromCharCode(runes.elementAt(i));
-
-      if (character == '%' && !replaceReserved) {
-        toReserved = true;
-        reservedBuffer.clear();
-      }
-
-      var toAppend = character;
-      if (replaceReserved ||
-          _isSurrogate(character) ||
-          _isUcschar(character) ||
-          _isIprivate(character)) {
-        toAppend = Uri.encodeQueryComponent(toAppend);
-      }
-
-      if (toReserved) {
-        reservedBuffer.write(toAppend);
-
-        if (reservedBuffer.length == 3) {
-          var isEncoded = false;
-          try {
-            final decoded = Uri.decodeComponent(reservedBuffer.toString());
-            isEncoded = (decoded != reservedBuffer.toString());
-          } catch (e) {
-            // ignore
-          }
-
-          if (isEncoded) {
-            result.write(reservedBuffer);
-          } else {
-            result
-              ..write('%25')
-              // only if !replaceReserved
-              ..write(reservedBuffer.toString().substring(1));
-          }
-          toReserved = false;
-          reservedBuffer.clear();
-        }
+      final cp = runes[i];
+      if (_isUnreserved(cp) ||
+          (!replaceReserved && _reserved.codeUnits.contains(cp))) {
+        result.writeCharCode(cp);
+      } else if (!replaceReserved &&
+          cp == 0x25 &&
+          i + 2 < max &&
+          _isHexDigit(runes[i + 1]) &&
+          _isHexDigit(runes[i + 2])) {
+        result
+          ..writeCharCode(cp)
+          ..writeCharCode(runes[++i])
+          ..writeCharCode(runes[++i]);
       } else {
-        if (character == ' ') {
-          result.write('%20');
-        } else if (character == '%') {
-          result.write('%25');
-        } else {
-          result.write(toAppend);
+        // a lone surrogate encodes as U+FFFD
+        for (final b in utf8.encode(String.fromCharCode(cp))) {
+          result
+            ..write('%')
+            ..write(_hexDigits[b >> 4])
+            ..write(_hexDigits[b & 0xF]);
         }
       }
-    }
-
-    if (toReserved) {
-      result
-        ..write('%25')
-        ..write(reservedBuffer.toString().substring(1));
     }
   }
 
@@ -447,8 +406,7 @@ class StdUriTemplate {
     }
   }
 
-  static bool _isHexDigit(String c) {
-    final cu = c.codeUnitAt(0);
+  static bool _isHexDigit(int cu) {
     return (cu >= 0x30 && cu <= 0x39) ||
         (cu >= 0x41 && cu <= 0x46) ||
         (cu >= 0x61 && cu <= 0x66);
@@ -468,8 +426,8 @@ class StdUriTemplate {
     for (var i = 0; i < token.length; i++) {
       if (token[i] == '%') {
         if (i + 2 >= token.length ||
-            !_isHexDigit(token[i + 1]) ||
-            !_isHexDigit(token[i + 2])) {
+            !_isHexDigit(token.codeUnitAt(i + 1)) ||
+            !_isHexDigit(token.codeUnitAt(i + 2))) {
           throw ArgumentError(
             'Invalid variable name at col: $col',
           );
