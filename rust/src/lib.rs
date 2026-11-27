@@ -622,7 +622,9 @@ fn add_map_value(
                     add_separator(operator, result);
                 }
                 add_value_element(operator, token, key, result, max_char);
-                result.push('=');
+                if operator != Operator::Semicolon || !v.is_empty() {
+                    result.push('=');
+                }
             } else {
                 if first {
                     add_value(operator, token, key, result, max_char);

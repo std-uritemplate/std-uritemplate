@@ -535,7 +535,9 @@ public class StdUriTemplate {
                     addSeparator(operator, result);
                 }
                 addValueElement(operator, token, v.getKey(), result, maxChar);
-                result.append('=');
+                if (operator != Operator.SEMICOLON || !convertNativeTypes(v.getValue()).isEmpty()) {
+                    result.append('=');
+                }
             } else {
                 if (first) {
                     addValue(operator, token, v.getKey(), result, maxChar);

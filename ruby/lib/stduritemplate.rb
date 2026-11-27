@@ -429,7 +429,7 @@ module StdUriTemplate
       if composite
         add_separator(operator, result) unless first
         add_value_element(operator, token, key.to_s, result, max_char)
-        result << '='
+        result << '=' if operator != Operator::SEMICOLON || !convert_native_types(val).empty?
       else
         if first
           add_value(operator, token, key.to_s, result, max_char)

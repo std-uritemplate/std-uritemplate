@@ -536,7 +536,9 @@ export class StdUriTemplate {
           StdUriTemplate.addSeparator(operator, result);
         }
         StdUriTemplate.addValueElement(operator, token, key, result, maxChar);
-        result.push('=');
+        if (operator !== Operator.SEMICOLON || StdUriTemplate.convertNativeTypes(v) !== '') {
+          result.push('=');
+        }
       } else {
         if (first) {
           StdUriTemplate.addValue(operator, token, key, result, maxChar);

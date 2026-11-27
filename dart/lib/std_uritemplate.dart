@@ -589,7 +589,10 @@ class StdUriTemplate {
           _addSeparator(operator, result);
         }
         _addValueElement(operator, token, k, result, maxChar);
-        result.write('=');
+        if (operator != _Operator.SEMICOLON ||
+            _convertNativeTypes(v).isNotEmpty) {
+          result.write('=');
+        }
       } else {
         if (first) {
           _addValue(operator, token, k, result, maxChar);

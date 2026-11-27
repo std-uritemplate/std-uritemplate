@@ -1,0 +1,21 @@
+{
+  "Exploded map with empty values applies ifemp": {
+    "variables": {
+      "map": {
+        "a": "",
+        "b": "c"
+      },
+      "empty": {
+        "a": ""
+      }
+    },
+    "testcases": [
+      ["{;map*}", ";a;b=c"],
+      ["{;empty*}", ";a"],
+      ["{?map*}", "?a=&b=c"],
+      ["{&map*}", "&a=&b=c"],
+      ["{map*}", "a=,b=c"],
+      ["{;map}", ";map=a,,b,c"]
+    ]
+  }
+}

@@ -182,7 +182,6 @@
 {"id": "M11", "template": "{map}", "vars": {"map": {"a": ""}}}
 {"id": "M12", "template": "{map*}", "vars": {"map": {"a": ""}}}
 {"id": "M13", "template": "{?map*}", "vars": {"map": {"a": "", "b": ""}}}
-{"id": "M14", "template": "{;map*}", "vars": {"map": {"a": ""}}}
 {"id": "M15", "template": "{;map}", "vars": {"map": {"a": ""}}}
 {"id": "M16", "template": "{map}", "vars": {"map": {"": "x"}}}
 {"id": "M17", "template": "{map*}", "vars": {"map": {"": "x"}}}
